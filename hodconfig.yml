@@ -1,0 +1,24 @@
+database:
+    path: "_hod_"
+    buildings:
+        soda: berkeley.ttl
+    ontologies:
+        - "./BrickFrame.ttl"
+        - "./Brick.ttl"
+
+http:
+    enable: false
+    address: localhost
+    port: 47808
+
+grpc:
+    enable: false
+    address: localhost
+    port: 47808
+
+profile:
+    enableCpu: false
+    enableMem: false
+    enableBlock: false
+    enableHttp: false
+    httpPort: 8080

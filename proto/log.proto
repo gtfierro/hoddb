@@ -1,0 +1,182 @@
+syntax = "proto3";
+package proto;
+
+service HodDB {
+    rpc Select(SelectQuery) returns (Response);
+    rpc Count(SelectQuery) returns (Response);
+    rpc Versions(VersionQuery) returns (Response);
+
+    rpc TagInsert(TagInsertRequest) returns (TagInsertResponse);
+    rpc RegisterTrigger(RegisterTriggerRequest) returns (TriggerResponse);
+    rpc DeleteTrigger(DeleteTriggerRequest) returns (TriggerResponse);
+    rpc ListTriggers(ListTriggersRequest) returns (TriggerResponse);
+}
+
+enum Op {
+    // Adds the target triple to the target graph
+    ADD = 0;
+    // Deletes the target triple from the target graph
+    DEL = 1;
+    // Commits the outstanding log entries to a new version
+    FLUSH = 2;
+    // opens the given file and loads it into the target graph
+    REGISTER_TRIGGER = 3;
+}
+
+enum TimeFilter {
+    At = 0;
+    Before = 1;
+    After = 2;
+}
+
+enum Pattern {
+    Single = 0;
+    ZeroOne = 1;
+    ZeroPlus = 2;
+    OnePlus = 3;
+}
+
+message Response {
+    string error = 1;
+    int64 version = 2;
+    int64 count = 3;
+    repeated string variables = 4;
+    repeated Row rows = 5;
+}
+
+message URI {
+    // full URI
+    string namespace = 1;
+    string value = 2;
+
+    // variable
+    string variable = 3;
+    Pattern pattern = 4;
+}
+
+message LogEntry {
+    // operation of the log
+    Op op = 1;
+    // the graph this applies to
+    string graph = 2;
+    // timestamp of the version. Used during COMMIT
+    int64 timestamp = 3;
+    // source tag
+    string tag = 4;
+
+    // Triple that is the subject of the operation
+    Triple triple = 5;
+    // when this is true, seal the version as all uncommitted
+    // log entries since the last commit=true entry
+    bool commit = 6;
+
+    // Triggers
+    Trigger trigger = 7;
+}
+
+message Triple {
+    URI subject = 1;
+    repeated URI predicate = 2; // can have more than 1 predicate for queries
+    URI object = 3;
+}
+
+message SelectQuery {
+    // list of vars to select, including '*'
+    repeated string vars = 1;
+    // list of graphs to select, including '*'
+    repeated string graphs = 2;
+    // time filter
+    TimeFilter filter = 3;
+    int64 timestamp = 4;
+    //where clause
+    repeated Triple where = 5;
+}
+
+message InsertQuery {
+    // insert terms
+    repeated Triple insert = 1;
+    // list of graphs to insert into, including '*'
+    repeated string graphs = 2;
+    //where clause
+    repeated Triple where = 3;
+    // whether or not to wait for flush to disk
+    bool blocking = 4;
+}
+
+message VersionQuery {
+    TimeFilter filter = 1;
+    repeated string graphs = 2;
+    int64 limit = 3;
+}
+
+message Entity {
+    bytes EntityKey  = 1;
+    
+    // for nodes
+    message Edge {
+        bytes Predicate = 1;
+        bytes Value = 2;
+        Pattern Pattern = 3;
+    }
+    // handles 1-hop and + and * 
+    repeated Edge in = 2;
+    repeated Edge out = 3;
+
+    // for edges
+    message Endpoints {
+        bytes Src = 1;
+        bytes Dst = 2;
+    }
+    repeated Endpoints endpoints = 4;
+}
+
+message Row {
+    repeated URI values = 1;
+}
+
+/*** Operation Logs ***/
+
+message TagInsertRequest {
+    string graph = 1;
+    string tag = 2;
+    repeated Triple triples = 3;
+    Op operation = 4;
+}
+
+message TagInsertResponse {
+    // error that ocurred, if any
+    string error = 1;
+    // if true, the inserts were processed; else, the tag was the ignored
+    bool processed = 2;
+    // the version these inserts were added to
+    int64 timestamp = 3;
+}
+
+/*** Triggers ***/
+
+message Trigger {
+    string graph = 1;
+    string name = 2;
+    repeated Triple where = 3;
+    repeated Triple insert = 4;
+}
+
+message RegisterTriggerRequest {
+    Trigger trigger = 1;
+}
+
+message DeleteTriggerRequest {
+    string graph = 1;
+    string name = 2;
+}
+
+message ListTriggersRequest {
+    string graph = 1;
+    // if name is empty, return all triggers
+    string name = 2;
+}
+
+message TriggerResponse {
+    string error = 1;
+    repeated Trigger triggers = 2;
+}
