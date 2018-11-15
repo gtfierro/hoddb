@@ -9,7 +9,7 @@ proto: proto/log.proto
 	protoc -I proto --go_out=plugins=grpc:proto proto/log.proto 
 	# protoc -I proto proto/log.proto
 
-build: proto
+build:
 	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go build
 
 test: proto
