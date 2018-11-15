@@ -1,7 +1,4 @@
-image: debian/jesse
-packages:
-- libraptor2-dev
-- golang-go
+image: debian/jessie
 sources:
 - https://git.sr.ht/~gabe/hod
 tasks:
