@@ -6,4 +6,4 @@ sources:
 - https://git.sr.ht/~gabe/hod
 tasks:
   say-world: |
-      make build
+      echo "hello"
