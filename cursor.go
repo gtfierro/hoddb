@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
-	logpb "github.com/gtfierro/hod/log/proto"
+	logpb "github.com/gtfierro/hodlog/proto"
 	"strings"
 	"sync"
 )
@@ -113,15 +113,11 @@ func (c *Cursor) Iterate(f func(EntityKey, *Entity) bool) error {
 				e:   new(logpb.Entity),
 				key: key,
 			}
-			var unmarshalErr error
-			err := item.Value(func(b []byte) {
-				unmarshalErr = proto.Unmarshal(b, entity.e)
+			err := item.Value(func(b []byte) error {
+				return proto.Unmarshal(b, entity.e)
 			})
 			if err != nil {
 				return err
-			}
-			if unmarshalErr != nil {
-				return unmarshalErr
 			}
 			if f(entity.key, entity) {
 				break

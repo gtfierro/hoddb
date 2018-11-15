@@ -10,21 +10,21 @@ proto: proto/log.proto
 	# protoc -I proto proto/log.proto
 
 build: proto
-	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hod/turtle go build
+	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go build
 
 test: proto
 	rm -rf _log_test_
-	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hod/turtle go test -v  -test.run=.
+	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go test -v  -test.run=.
 
 test-insert: proto
 	rm -rf _log_test_
-	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hod/turtle go test -v -test.run=TestInsert
+	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go test -v -test.run=TestInsert
 
 bench: proto
-	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hod/turtle go test -bench=. -test.run=xxxx -v
+	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go test -bench=. -test.run=xxxx -v
 
 bench-util: proto
-	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hod/turtle go test -bench=Util -test.run=xxxx -v
+	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go test -bench=Util -test.run=xxxx -v
 
 clean:
 	rm -rf _hod_

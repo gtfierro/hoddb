@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/golang/protobuf/proto"
-	logpb "github.com/gtfierro/hod/log/proto"
+	logpb "github.com/gtfierro/hodlog/proto"
 	"github.com/spaolacci/murmur3"
 	"github.com/zhangxinngang/murmur"
 )

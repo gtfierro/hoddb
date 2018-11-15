@@ -1,7 +1,7 @@
 package main
 
 import (
-	logpb "github.com/gtfierro/hod/log/proto"
+	logpb "github.com/gtfierro/hodlog/proto"
 )
 
 type edge struct {

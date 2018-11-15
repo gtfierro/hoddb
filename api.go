@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
-	logpb "github.com/gtfierro/hod/log/proto"
-	"github.com/gtfierro/hod/turtle"
+	logpb "github.com/gtfierro/hodlog/proto"
+	"github.com/gtfierro/hodlog/turtle"
 	"github.com/pkg/errors"
 	logrus "github.com/sirupsen/logrus"
 	"time"
@@ -130,16 +130,12 @@ func (L *Log) ListTriggers(ctx context.Context, req *logpb.ListTriggersRequest) 
 		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
 			var entry = new(logpb.LogEntry)
-			var unmarshalErr error
-			err := item.Value(func(b []byte) {
-				unmarshalErr = proto.Unmarshal(b, entry)
+			err := item.Value(func(b []byte) error {
+				return proto.Unmarshal(b, entry)
 			})
 
 			if err != nil {
 				return err
-			}
-			if unmarshalErr != nil {
-				return unmarshalErr
 			}
 			if entry.Trigger != nil {
 				resp.Triggers = append(resp.Triggers, entry.Trigger)

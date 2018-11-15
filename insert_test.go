@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	logpb "github.com/gtfierro/hod/log/proto"
+	logpb "github.com/gtfierro/hodlog/proto"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"

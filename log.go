@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
-	query "github.com/gtfierro/hod/lang"
-	sparql "github.com/gtfierro/hod/lang/ast"
-	logpb "github.com/gtfierro/hod/log/proto"
+	query "github.com/gtfierro/hodlog/lang"
+	sparql "github.com/gtfierro/hodlog/lang/ast"
+	logpb "github.com/gtfierro/hodlog/proto"
 	"github.com/pkg/errors"
 	"github.com/pkg/profile"
 	logrus "github.com/sirupsen/logrus"
@@ -216,19 +216,15 @@ func (l *Log) readUntilTimestamp(timestamp int64) chan *logpb.LogEntry {
 			for it.Rewind(); it.Valid(); it.Next() {
 				item := it.Item()
 				var entry = new(logpb.LogEntry)
-				var unmarshalErr error
-				err := item.Value(func(b []byte) {
+				err := item.Value(func(b []byte) error {
 					if len(b) <= 8 {
-						return
+						return nil
 					}
-					unmarshalErr = proto.Unmarshal(b, entry)
+					return proto.Unmarshal(b, entry)
 				})
 
 				if err != nil {
 					return err
-				}
-				if unmarshalErr != nil {
-					return errors.Wrap(unmarshalErr, "readuntiltimestamp")
 				}
 				if entry != nil {
 					entries <- entry
@@ -265,16 +261,13 @@ func (l *Log) readRangeGraph(graph string, timestamp_start, timestamp_end int64)
 			for it.Rewind(); it.Valid(); it.Next() {
 				item := it.Item()
 				var entry = &logpb.LogEntry{}
-				var unmarshalErr error
-				if err := item.Value(func(b []byte) {
+				if err := item.Value(func(b []byte) error {
 					if len(b) <= 8 {
-						return
+						return nil
 					}
-					unmarshalErr = proto.Unmarshal(b, entry)
+					return proto.Unmarshal(b, entry)
 				}); err != nil {
 					return err
-				} else if unmarshalErr != nil {
-					return unmarshalErr
 				}
 
 				if entry == nil {
@@ -314,16 +307,13 @@ func (l *Log) readRange(timestamp_start, timestamp_end int64) chan *logpb.LogEnt
 			for it.Rewind(); it.Valid(); it.Next() {
 				item := it.Item()
 				var entry = &logpb.LogEntry{}
-				var unmarshalErr error
-				if err := item.Value(func(b []byte) {
+				if err := item.Value(func(b []byte) error {
 					if len(b) <= 8 {
-						return
+						return nil
 					}
-					unmarshalErr = proto.Unmarshal(b, entry)
+					return proto.Unmarshal(b, entry)
 				}); err != nil {
 					return err
-				} else if unmarshalErr != nil {
-					return errors.Wrap(unmarshalErr, "readrange")
 				}
 
 				if entry == nil || entry.Timestamp == 0 {
@@ -351,20 +341,16 @@ func (l *Log) GetEntity(key EntityKey) (*Entity, error) {
 		e:   new(logpb.Entity),
 		key: key,
 	}
-	var unmarshalErr error
 	err := l.db.View(func(t *badger.Txn) error {
 		it, err := t.Get(key.Bytes())
 		if err != nil {
 			return err
 		}
-		err = it.Value(func(b []byte) {
-			unmarshalErr = proto.Unmarshal(b, entity.e)
+		err = it.Value(func(b []byte) error {
+			return proto.Unmarshal(b, entity.e)
 		})
 		if err != nil {
 			return err
-		}
-		if unmarshalErr != nil {
-			return unmarshalErr
 		}
 		return nil
 	})
@@ -384,7 +370,6 @@ func (l *Log) GetRecentEntity(key EntityKey) (entity *Entity, err error) {
 		it := txn.NewIterator(opt)
 		defer it.Close()
 
-		var unmarshalErr error
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
 			key := EntityKeyFromBytes(item.Key())
@@ -394,14 +379,11 @@ func (l *Log) GetRecentEntity(key EntityKey) (entity *Entity, err error) {
 				e:   new(logpb.Entity),
 				key: key,
 			}
-			err := item.Value(func(b []byte) {
-				unmarshalErr = proto.Unmarshal(b, entity.e)
+			err := item.Value(func(b []byte) error {
+				return proto.Unmarshal(b, entity.e)
 			})
 			if err != nil {
 				return err
-			}
-			if unmarshalErr != nil {
-				return unmarshalErr
 			}
 			//break
 		}
