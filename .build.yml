@@ -1,0 +1,9 @@
+image: debian/jesse
+packages:
+- libraptor2-dev
+- golang-go
+sources:
+- https://git.sr.ht/~gabe/hod
+tasks:
+  say-world: |
+      make build
