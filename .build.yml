@@ -14,4 +14,7 @@ tasks:
       export PATH=$PATH:/usr/local/go/bin
       cd hod
       make build
+  - test-hod: |
+      export PATH=$PATH:/usr/local/go/bin
+      cd hod
       make test
