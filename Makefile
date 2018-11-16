@@ -12,18 +12,18 @@ proto: proto/log.proto
 build:
 	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go build
 
-test: proto
+test:
 	rm -rf _log_test_
 	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go test -v  -test.run=.
 
-test-insert: proto
+test-insert:
 	rm -rf _log_test_
 	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go test -v -test.run=TestInsert
 
-bench: proto
+bench:
 	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go test -bench=. -test.run=xxxx -v
 
-bench-util: proto
+bench-util:
 	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go test -bench=Util -test.run=xxxx -v
 
 clean:
