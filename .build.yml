@@ -1,6 +1,16 @@
-image: debian/jessie
+image: debian/sid
+packages:
+- curl
+- protobuf-compiler
+- libprotoc-dev
 sources:
 - https://git.sr.ht/~gabe/hod
 tasks:
-  - say-world: |
-      echo "hello"
+  - setup-go: |
+      curl -O https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
+      sudo tar -C /usr/local -xzf go1.11.2.linux-amd64.tar.gz
+  - build-hod: |
+      export PATH=$PATH:/usr/local/go/bin
+      cd hod
+      go get
+      make build
