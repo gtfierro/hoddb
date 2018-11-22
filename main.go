@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 	//"fmt"
-	//logpb "github.com/gtfierro/hod/log/proto"
+	//logpb "github.com/gtfierro/hodlog/proto"
 	"github.com/pkg/errors"
 	"log"
 )

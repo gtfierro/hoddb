@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
-	logpb "github.com/gtfierro/hod/log/proto"
+	logpb "github.com/gtfierro/hodlog/proto"
 	"github.com/pkg/errors"
 	logrus "github.com/sirupsen/logrus"
 	"github.com/zhangxinngang/murmur"
@@ -39,15 +39,11 @@ func (L *Log) triggersByGraph(graph string) (triggers []*logpb.Trigger, err erro
 		for it.Seek(key); it.ValidForPrefix(key); it.Next() {
 			item := it.Item()
 			var trigger = new(logpb.Trigger)
-			var unmarshalErr error
-			err = item.Value(func(b []byte) {
-				unmarshalErr = proto.Unmarshal(b, trigger)
+			err = item.Value(func(b []byte) error {
+				return proto.Unmarshal(b, trigger)
 			})
 			if err != nil {
 				return err
-			}
-			if unmarshalErr != nil {
-				return unmarshalErr
 			}
 			triggers = append(triggers, trigger)
 		}
@@ -66,14 +62,10 @@ func (L *Log) triggerByName(graph, name string) (*logpb.Trigger, error) {
 		if err != nil {
 			return err
 		}
-		var unmarshalErr error
-		err = item.Value(func(b []byte) {
-			unmarshalErr = proto.Unmarshal(b, trigger)
+		err = item.Value(func(b []byte) error {
+			return proto.Unmarshal(b, trigger)
 		})
-		if err != nil {
-			return err
-		}
-		return unmarshalErr
+		return err
 	})
 	return trigger, err
 }

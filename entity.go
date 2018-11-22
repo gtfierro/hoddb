@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	logpb "github.com/gtfierro/hod/log/proto"
-	"github.com/gtfierro/hod/turtle"
+	logpb "github.com/gtfierro/hodlog/proto"
+	"github.com/gtfierro/hodlog/turtle"
 	"time"
 )
 

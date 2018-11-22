@@ -3,6 +3,7 @@ packages:
 - curl
 - protobuf-compiler
 - libprotoc-dev
+- libraptor2-dev
 sources:
 - https://git.sr.ht/~gabe/hod
 tasks:
@@ -14,3 +15,7 @@ tasks:
       cd hod
       go get
       make build
+  - test-hod: |
+      export PATH=$PATH:/usr/local/go/bin
+      cd hod
+      make test

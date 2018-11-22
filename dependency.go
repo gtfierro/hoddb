@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	sparql "github.com/gtfierro/hod/lang/ast"
-	logpb "github.com/gtfierro/hod/log/proto"
+	sparql "github.com/gtfierro/hodlog/lang/ast"
+	logpb "github.com/gtfierro/hodlog/proto"
 	//"reflect"
 	"strings"
 )

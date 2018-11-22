@@ -1,0 +1,13 @@
+3 LR-1 conflicts: 
+	S112
+		symbol: .
+			Reduce(68:GroupGraphPatternSub : TriplesBlock	<< ast.GraphGroupFromTriples(X[0]) >>)
+			Shift(140)
+	S166
+		symbol: .
+			Shift(140)
+			Reduce(69:GroupGraphPatternSub : GraphPatternNotTriples "." TriplesBlock	<< ast.AddTriplesToGraphGroup(X[0], X[2]) >>)
+	S175
+		symbol: .
+			Reduce(70:GroupGraphPatternSub : GroupGraphPatternSub GraphPatternNotTriples "." TriplesBlock	<<  >>)
+			Shift(140)
