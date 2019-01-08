@@ -10,7 +10,7 @@ proto: proto/log.proto
 	# protoc -I proto proto/log.proto
 
 build:
-	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go build
+	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hodlog/turtle go build -o log
 
 test:
 	rm -rf _log_test_
