@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	logpb "git.sr.ht/~gabe/hod/proto"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
-	logpb "git.sr.ht/~gabe/hod/proto"
 	"strings"
 	"sync"
 )
@@ -166,11 +166,13 @@ func (c *Cursor) join(other *relation, on []string) {
 
 func (c *Cursor) GetRowsWithVar(mandatory []string) (returnRows []*logpb.Row) {
 	var seen = make(map[uint32]struct{})
-	fmt.Println("dumping rows with vars ", mandatory)
+	//fmt.Println("dumping rows with vars ", mandatory)
 rows:
-	for idx, row := range c.rel.rows {
+	//for idx, row := range c.rel.rows {
+	for _, row := range c.rel.rows {
 		var addRow = new(logpb.Row)
-		for idx2, varname := range mandatory {
+		//for idx2, varname := range mandatory {
+		for _, varname := range mandatory {
 			key := row.valueAt(c.variablePosition[varname])
 			if key.Empty() {
 				continue rows
@@ -178,7 +180,7 @@ rows:
 			s.RLock()
 			val := LOOKUPURI[key.Hash]
 			s.RUnlock()
-			fmt.Println("> ", idx, "| ", val.String(), " (", idx2, ") @ ", key.Timestamp())
+			//fmt.Println("> ", idx, "| ", val.String(), " (", idx2, ") @ ", key.Timestamp())
 			addRow.Values = append(addRow.Values, &val)
 		}
 		h := hashRow2(addRow)
