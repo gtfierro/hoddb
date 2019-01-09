@@ -167,8 +167,8 @@ func (vm *versionmanager) latestVersion(graph string, before int64) (int64, erro
 
 // compute the file hash of the given file name. If the most recent version of the tag
 // for the graph has this file hash, then we don't need to load the file.
-func (vm *versionmanager) addFileHashToTag(filename, tag, graph string) error {
-	stmt, err := vm.db.Prepare("INSERT INTO versions(graph, tag, sourcehash) VALUES (?, ?, ?)")
+func (vm *versionmanager) addFileHashToTag(filename, tag, graph string, version int64) error {
+	stmt, err := vm.db.Prepare("UPDATE versions SET sourcehash=? WHERE graph=? AND  tag=? AND version=?")
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (vm *versionmanager) addFileHashToTag(filename, tag, graph string) error {
 	filehasher := sha256.New()
 	filehash := filehasher.Sum(nil)
 
-	_, err = stmt.Exec(graph, tag, filehash)
+	_, err = stmt.Exec(filehash, graph, tag, version)
 	if err != nil {
 		return err
 	}

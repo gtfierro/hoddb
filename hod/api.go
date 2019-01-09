@@ -270,5 +270,9 @@ func (L *Log) LoadFile(graphname, ttlfile, tag string) (int64, error) {
 	if len(resp.Error) != 0 {
 		return 0, errors.New(resp.Error)
 	}
+	err := L.versionDB.addFileHashToTag(ttlfile, tag, graphname, resp.Timestamp)
+	if err != nil {
+		return 0, errors.Wrapf(err, "could not tag hash of file %s for graph %s", ttlfile, graphname)
+	}
 	return resp.Timestamp, nil
 }

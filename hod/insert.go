@@ -2,9 +2,9 @@ package hod
 
 import (
 	"encoding/binary"
+	logpb "git.sr.ht/~gabe/hod/proto"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
-	logpb "git.sr.ht/~gabe/hod/proto"
 	"github.com/pkg/errors"
 	logrus "github.com/sirupsen/logrus"
 	"time"

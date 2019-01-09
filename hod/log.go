@@ -157,13 +157,9 @@ func NewLog(cfg *Config) (*Log, error) {
 		s := time.Now()
 		for _, ontologyfile := range cfg.Database.Ontologies {
 			if exists, _ := L.versionDB.filehashExists(ontologyfile, ontologyfile, graphname); !exists {
-				_, err = L.LoadFile(graphname, ontologyfile, ontologyfile)
+				_, err := L.LoadFile(graphname, ontologyfile, ontologyfile)
 				if err != nil {
 					logrus.Fatal(errors.Wrapf(err, "could not load file %s for graph %s", ontologyfile, graphname))
-				}
-				err = L.versionDB.addFileHashToTag(ontologyfile, ontologyfile, graphname)
-				if err != nil {
-					logrus.Fatal(errors.Wrapf(err, "could not load file %s for graph %s", graphfile, graphname))
 				}
 			}
 		}
@@ -173,13 +169,9 @@ func NewLog(cfg *Config) (*Log, error) {
 			if err != nil {
 				logrus.Fatal(errors.Wrapf(err, "could not load file %s for graph %s", graphfile, graphname))
 			}
-			err = L.versionDB.addFileHashToTag(graphfile, graphfile, graphname)
-			if err != nil {
-				logrus.Fatal(errors.Wrapf(err, "could not load file %s for graph %s", graphfile, graphname))
-			}
 		}
 
-		//c, err := L.createCursor(graphname, 0, version)
+		//c, err := L.createCursor(graphname, 0, s)
 		//if err != nil {
 		//	logrus.Fatal(errors.Wrapf(err, "Could not create cursor for graph %s", graphname))
 		//}
