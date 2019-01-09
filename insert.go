@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
-	logpb "github.com/gtfierro/hodlog/proto"
+	logpb "git.sr.ht/~gabe/hod/proto"
 	"github.com/pkg/errors"
 	logrus "github.com/sirupsen/logrus"
 	"time"

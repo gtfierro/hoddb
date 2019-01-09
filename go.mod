@@ -1,4 +1,4 @@
-module github.com/gtfierro/hodlog
+module git.sr.ht/~gabe/hod
 
 require (
 	cloud.google.com/go v0.33.0 // indirect

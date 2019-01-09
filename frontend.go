@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	logpb "github.com/gtfierro/hodlog/proto"
+	logpb "git.sr.ht/~gabe/hod/proto"
 	logrus "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"

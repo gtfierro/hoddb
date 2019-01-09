@@ -1,10 +1,10 @@
-//go:generate gocc -p github.com/gtfierro/hodlog/lang -a sparql.bnf
+//go:generate gocc -p git.sr.ht/~gabe/hod/lang -a sparql.bnf
 package sparql
 
 import (
-	"github.com/gtfierro/hodlog/lang/ast"
-	"github.com/gtfierro/hodlog/lang/lexer"
-	"github.com/gtfierro/hodlog/lang/parser"
+	"git.sr.ht/~gabe/hod/lang/ast"
+	"git.sr.ht/~gabe/hod/lang/lexer"
+	"git.sr.ht/~gabe/hod/lang/parser"
 	"sync"
 )
 

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	logpb "github.com/gtfierro/hodlog/proto"
+	logpb "git.sr.ht/~gabe/hod/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"

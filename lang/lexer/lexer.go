@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"unicode/utf8"
 
-	"github.com/gtfierro/hodlog/lang/token"
+	"git.sr.ht/~gabe/hod/lang/token"
 )
 
 const (

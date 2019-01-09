@@ -3,7 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"database/sql"
-	logpb "github.com/gtfierro/hodlog/proto"
+	logpb "git.sr.ht/~gabe/hod/proto"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 	logrus "github.com/sirupsen/logrus"

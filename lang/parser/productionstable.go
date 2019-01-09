@@ -2,7 +2,7 @@
 
 package parser
 
-import "github.com/gtfierro/hodlog/lang/ast"
+import "git.sr.ht/~gabe/hod/lang/ast"
 
 type (
 	//TODO: change type and variable names to be consistent with other tables

@@ -1,7 +1,7 @@
 package main
 
 import (
-	logpb "github.com/gtfierro/hodlog/proto"
+	logpb "git.sr.ht/~gabe/hod/proto"
 	"testing"
 )
 

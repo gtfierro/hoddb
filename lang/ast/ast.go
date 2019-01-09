@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gtfierro/hodlog/lang/token"
-	"github.com/gtfierro/hodlog/turtle"
+	"git.sr.ht/~gabe/hod/lang/token"
+	"git.sr.ht/~gabe/hod/turtle"
 
 	"github.com/kr/pretty"
 )

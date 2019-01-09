@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
-	logpb "github.com/gtfierro/hodlog/proto"
+	logpb "git.sr.ht/~gabe/hod/proto"
 	"strings"
 	"sync"
 )

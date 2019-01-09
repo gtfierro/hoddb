@@ -1,6 +1,6 @@
 package turtle
 
-// #cgo CFLAGS: -I. -Lgithub.com/gtfierro/hodlog/turtle
+// #cgo CFLAGS: -I. -Lgit.sr.ht/%7Egabe/hod/turtle
 // #cgo LDFLAGS: -lraptor2
 // #include <stdio.h>
 // #include <raptor2.h>
