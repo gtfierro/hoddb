@@ -1,4 +1,4 @@
-image: ubuntu/18.04
+image: ubuntu/lts
 packages:
 - curl
 - protobuf-compiler
