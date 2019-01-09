@@ -14,7 +14,6 @@ tasks:
       export PATH=$PATH:/usr/local/go/bin
       export GO111MODULE=on
       cd hod
-      go get
       make build
   - test-hod: |
       export PATH=$PATH:/usr/local/go/bin
