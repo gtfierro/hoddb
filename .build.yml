@@ -12,6 +12,7 @@ tasks:
       sudo tar -C /usr/local -xzf go1.11.2.linux-amd64.tar.gz
   - build-hod: |
       export PATH=$PATH:/usr/local/go/bin
+      export GO111MODULE=on
       cd hod
       go get
       make build
