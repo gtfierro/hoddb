@@ -66,7 +66,7 @@ func TestInsertQueryParse(t *testing.T) {
 			"INSERT { ?x rdf:type brick:Location . ?x bf:isLocatedIn brick:Floor } WHERE { ?ax rdf:type brick:Room };",
 		},
 		{
-			"INSERT { ?x rdf:type brick:Location . ?x bf:isLocatedIn brick:Floor } FROM ciee WHERE { ?ax rdf:type brick:Room };",
+			"INSERT { ?x rdf:type brick:Location . ?x bf:isLocatedIn brick:Floor } TO ciee WHERE { ?ax rdf:type brick:Room };",
 		},
 		{
 			"INSERT { ?x rdf:type ?y } WHERE { ?x rdf:type/rdfs:subClassOf* ?y };",

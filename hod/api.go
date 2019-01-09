@@ -1,16 +1,18 @@
-package main
+package hod
 
 import (
 	"context"
 	"fmt"
-	"github.com/dgraph-io/badger"
-	"github.com/golang/protobuf/proto"
 	logpb "git.sr.ht/~gabe/hod/proto"
 	"git.sr.ht/~gabe/hod/turtle"
+	"github.com/dgraph-io/badger"
+	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	logrus "github.com/sirupsen/logrus"
 	"time"
 )
+
+var debug = false
 
 // when we get new graphs, make sure we register the triggers
 func (L *Log) TagInsert(ctx context.Context, req *logpb.TagInsertRequest) (resp *logpb.TagInsertResponse, err error) {

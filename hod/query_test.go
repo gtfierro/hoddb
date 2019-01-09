@@ -1,4 +1,4 @@
-package main
+package hod
 
 import (
 	"context"
@@ -244,7 +244,7 @@ database:
 	require.NoError(err, "creat cursor")
 
 	for _, test := range example_graph_test_cases {
-		q, err := L.parseQuery(test.query, version)
+		q, err := L.ParseQuery(test.query, version)
 		require.NoError(err)
 		require.NotNil(q)
 		resp, err := L.Select(context.Background(), q)
@@ -290,7 +290,7 @@ database:
 
 	for _, test := range berkeley_graph_test_cases {
 		fmt.Println(test.query)
-		q, err := L.parseQuery(test.query, version)
+		q, err := L.ParseQuery(test.query, version)
 		require.NoError(err)
 		require.NotNil(q)
 		resp, err := L.Select(context.Background(), q)
@@ -338,7 +338,7 @@ database:
 		b.Run(test.query, func(b *testing.B) {
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				q, err := L.parseQuery(test.query, version)
+				q, err := L.ParseQuery(test.query, version)
 				require.NoError(err)
 				require.NotNil(q)
 				_, err = L.Select(context.Background(), q)
@@ -382,7 +382,7 @@ database:
 		b.Run(test.query, func(b *testing.B) {
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				q, err := L.parseQuery(test.query, version)
+				q, err := L.ParseQuery(test.query, version)
 				require.NoError(err)
 				require.NotNil(q)
 				_, err = L.Select(context.Background(), q)

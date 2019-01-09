@@ -4,41 +4,22 @@ import (
 	"context"
 	"time"
 	//"fmt"
-	//logpb "git.sr.ht/~gabe/hod/proto"
+	"git.sr.ht/~gabe/hod/hod"
 	"github.com/pkg/errors"
 	"log"
 )
 
 var debug = false
 
-var (
-	RDF_TYPE       = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-	BRICK_ROOM     = "https://brickschema.org/schema/1.0.3/Brick#Room"
-	BRICK_VAV      = "https://brickschema.org/schema/1.0.3/Brick#VAV"
-	BRICK_HVACZONE = "https://brickschema.org/schema/1.0.3/Brick#HVAC_Zone"
-	BRICK_ZNT      = "https://brickschema.org/schema/1.0.3/Brick#Zone_Temperature_Sensor"
-	BF_ISPARTOF    = "https://brickschema.org/schema/1.0.3/BrickFrame#isPartOf"
-	BF_HASPART     = "https://brickschema.org/schema/1.0.3/BrickFrame#hasPart"
-	BF_ISPOINTOF   = "https://brickschema.org/schema/1.0.3/BrickFrame#isPointOf"
-	BF_FEEDS       = "https://brickschema.org/schema/1.0.3/BrickFrame#feeds"
-	BF_ISFEDBY     = "https://brickschema.org/schema/1.0.3/BrickFrame#isFedBy"
-
-	ROOM_1     = "http://buildsys.org/ontologies/building_example#room_1"
-	VAV_1      = "http://buildsys.org/ontologies/building_example#vav_1"
-	AHU_1      = "http://buildsys.org/ontologies/building_example#ahu_1"
-	FLOOR_1    = "http://buildsys.org/ontologies/building_example#floor_1"
-	HVACZONE_1 = "http://buildsys.org/ontologies/building_example#hvaczone_1"
-)
-
 func main() {
 
-	cfg, err := ReadConfig("hodconfig.yml")
+	cfg, err := hod.ReadConfig("hodconfig.yml")
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "Could not load config file"))
 	}
 	_ = cfg
 
-	L, err := NewLog(cfg)
+	L, err := hod.NewLog(cfg)
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "open log"))
 	}
@@ -109,7 +90,7 @@ func main() {
 	//}
 	//L.Dump(entity)
 
-	selectquery, err := L.parseQuery(q, time.Now().UnixNano())
+	selectquery, err := L.ParseQuery(q, time.Now().UnixNano())
 	log.Println(selectquery)
 
 	_, err = L.Select(context.Background(), selectquery)

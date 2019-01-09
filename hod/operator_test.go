@@ -1,4 +1,4 @@
-package main
+package hod
 
 import (
 	"fmt"
@@ -8,22 +8,24 @@ import (
 	"testing"
 )
 
-//var (
-//	RDF_TYPE       = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-//	BRICK_ROOM     = "https://brickschema.org/schema/1.0.3/Brick#Room"
-//	BRICK_VAV      = "https://brickschema.org/schema/1.0.3/Brick#VAV"
-//	BRICK_HVACZONE = "https://brickschema.org/schema/1.0.3/Brick#HVAC_Zone"
-//	BF_ISPARTOF    = "https://brickschema.org/schema/1.0.3/BrickFrame#isPartOf"
-//	BF_HASPART     = "https://brickschema.org/schema/1.0.3/BrickFrame#hasPart"
-//	BF_ISPOINTOF   = "https://brickschema.org/schema/1.0.3/BrickFrame#isPointOf"
-//	BF_FEEDS       = "https://brickschema.org/schema/1.0.3/BrickFrame#feeds"
-//
-//	ROOM_1     = "http://buildsys.org/ontologies/building_example#room_1"
-//	VAV_1      = "http://buildsys.org/ontologies/building_example#vav_1"
-//	AHU_1      = "http://buildsys.org/ontologies/building_example#ahu_1"
-//	FLOOR_1    = "http://buildsys.org/ontologies/building_example#floor_1"
-//	HVACZONE_1 = "http://buildsys.org/ontologies/building_example#hvaczone_1"
-//)
+var (
+	RDF_TYPE       = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+	BRICK_ROOM     = "https://brickschema.org/schema/1.0.3/Brick#Room"
+	BRICK_VAV      = "https://brickschema.org/schema/1.0.3/Brick#VAV"
+	BRICK_HVACZONE = "https://brickschema.org/schema/1.0.3/Brick#HVAC_Zone"
+	BRICK_ZNT      = "https://brickschema.org/schema/1.0.3/Brick#Zone_Temperature_Sensor"
+	BF_ISPARTOF    = "https://brickschema.org/schema/1.0.3/BrickFrame#isPartOf"
+	BF_HASPART     = "https://brickschema.org/schema/1.0.3/BrickFrame#hasPart"
+	BF_ISPOINTOF   = "https://brickschema.org/schema/1.0.3/BrickFrame#isPointOf"
+	BF_FEEDS       = "https://brickschema.org/schema/1.0.3/BrickFrame#feeds"
+	BF_ISFEDBY     = "https://brickschema.org/schema/1.0.3/BrickFrame#isFedBy"
+
+	ROOM_1     = "http://buildsys.org/ontologies/building_example#room_1"
+	VAV_1      = "http://buildsys.org/ontologies/building_example#vav_1"
+	AHU_1      = "http://buildsys.org/ontologies/building_example#ahu_1"
+	FLOOR_1    = "http://buildsys.org/ontologies/building_example#floor_1"
+	HVACZONE_1 = "http://buildsys.org/ontologies/building_example#hvaczone_1"
+)
 
 func TestOperators(t *testing.T) {
 	require := require.New(t)

@@ -1,12 +1,12 @@
-package main
+package hod
 
 import (
 	"fmt"
-	"github.com/dgraph-io/badger"
-	"github.com/golang/protobuf/proto"
 	query "git.sr.ht/~gabe/hod/lang"
 	sparql "git.sr.ht/~gabe/hod/lang/ast"
 	logpb "git.sr.ht/~gabe/hod/proto"
+	"github.com/dgraph-io/badger"
+	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/pkg/profile"
 	logrus "github.com/sirupsen/logrus"
@@ -402,7 +402,7 @@ func (L *Log) expand(uri *logpb.URI) *logpb.URI {
 	return uri
 }
 
-func (L *Log) parseQuery(qstr string, version int64) (*logpb.SelectQuery, error) {
+func (L *Log) ParseQuery(qstr string, version int64) (*logpb.SelectQuery, error) {
 	q, err := query.Parse(qstr)
 	if err != nil {
 		return nil, err
