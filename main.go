@@ -95,12 +95,16 @@ func main() {
 
 	_, err = L.Select(context.Background(), selectquery)
 	if err != nil {
-		log.Fatal(errors.Wrap(err, "select q1"))
+		log.Println(errors.Wrap(err, "select q1"))
+	} else {
+		log.Println("successful q1")
 	}
 	//cur.dumpResponse(resp)
 
 	_, err = L.Select(context.Background(), selectquery)
 	if err != nil {
-		log.Fatal(errors.Wrap(err, "select q2"))
+		log.Println(errors.Wrap(err, "select q2"))
+	} else {
+		log.Println("successful q2")
 	}
 }
