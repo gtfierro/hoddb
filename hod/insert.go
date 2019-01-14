@@ -33,7 +33,7 @@ func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not get latest version of graph %s", graph)
 	}
-	logrus.Debug(latest)
+	logrus.Debug("latest version", latest, "asked for", to)
 
 	L.RLock()
 	if _, found = L.cursorCache[[2]int64{from, to}]; found {
@@ -45,14 +45,16 @@ func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
 	// process the entities with the latest versions of the tags for the log between the two times
 	entries := L.readRangeGraph(graph, from, to)
 	var entities = make(map[EntityKey]*logpb.Entity)
+	var dirty = make(map[EntityKey]bool)
 
 	//var edges = make(map[EntityKey]edgecache)
 
 	// get latest version of graph; we copy all keys from previous version
 	// into this version
 	cursor = L.Cursor(graph, latest, nil)
+	logrus.Warning("num entries beginning ", len(entries))
 
-	if err := L.processLogEntries(cursor, entities, entries); err != nil {
+	if err := L.processLogEntries(cursor, entities, dirty, entries); err != nil {
 		return nil, err
 	}
 	fromT := time.Unix(0, from)
@@ -72,7 +74,7 @@ func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
 			return nil, errors.Wrap(err, "could not run trigger")
 		}
 
-		if err := L.processLogEntries(cursor, entities, generated); err != nil {
+		if err := L.processLogEntries(cursor, entities, dirty, generated); err != nil {
 			return nil, err
 		}
 		logrus.Infof("Loop1: Processed %d entities for graph %s from %s - %s from trigger %s", len(entities), graph, fromT, toT, trigger.Name)
@@ -84,8 +86,8 @@ func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
 			return nil, errors.Wrap(err, "could not run trigger")
 		}
 
-		if err := L.processLogEntries(cursor, entities, generated); err != nil {
-			return nil, err
+		if err := L.processLogEntries(cursor, entities, dirty, generated); err != nil {
+			return nil, errors.Wrap(err, "could not process generated triples")
 		}
 		logrus.Infof("Loop2: Processed %d entities for graph %s from %s - %s from trigger %s", len(entities), graph, fromT, toT, trigger.Name)
 	}
@@ -114,12 +116,13 @@ func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
 // - pull from the database -- by exact version/timestamp
 // - pull from the transaction cache -- by highest available timestamp <= the given timestamp
 // - pull from the database -- by highest available timstamp <= the given timestamp
-func (L *Log) loadEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, key EntityKey) (ent *logpb.Entity) {
+func (L *Log) loadEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, key EntityKey) (ent *logpb.Entity, created bool) {
 	var found bool
 
 	// case 1: exists in the cache
 	ent, found = cache[key]
 	if found && ent != nil {
+		created = false
 		return
 	}
 
@@ -131,6 +134,7 @@ func (L *Log) loadEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, key 
 	if _ent != nil && err == nil {
 		ent = _ent.e
 		cache[key] = ent
+		created = false
 		return
 	}
 
@@ -141,6 +145,7 @@ func (L *Log) loadEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, key 
 			// part of this version
 			ent.EntityKey = key.Bytes()
 			cache[key] = ent
+			created = true
 			return
 		}
 	}
@@ -154,6 +159,7 @@ func (L *Log) loadEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, key 
 		ent.EntityKey = key.Bytes()
 		_ent.e.EntityKey = key.Bytes()
 		cache[key] = _ent.e
+		created = true
 		return
 	}
 
@@ -162,10 +168,16 @@ func (L *Log) loadEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, key 
 	ent.EntityKey = make([]byte, 16)
 	copy(ent.EntityKey[:], key.Bytes())
 	cache[key] = ent
+	created = true
 	return
 }
 
-func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, e *logpb.LogEntry) {
+func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, dirty map[EntityKey]bool, e *logpb.LogEntry) {
+	var (
+		subChanged  bool = false
+		predChanged bool = false
+		objChanged  bool = false
+	)
 	if e.Op == logpb.Op_ADD {
 		//var subject, predicate, reversePredicate, object EntityKey
 		//var subjectEntity, predicateEntity, reversePredicateEntity, objectEntity *logpb.Entity
@@ -181,25 +193,37 @@ func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, e
 		copy(subject.Hash[:], hashURI(e.Triple.Subject))
 		copy(subject.Graph[:], hashString(e.Graph))
 		binary.LittleEndian.PutUint64(subject.Version[:], uint64(e.Timestamp))
-		subjectEntity = L.loadEntry(txn, cache, subject)
+		subjectEntity, subChanged = L.loadEntry(txn, cache, subject)
+		if subChanged {
+			dirty[subject] = true
+		}
 
 		// predicate
 		copy(predicate.Hash[:], hashURI(e.Triple.Predicate[0]))
 		copy(predicate.Graph[:], hashString(e.Graph))
 		binary.LittleEndian.PutUint64(predicate.Version[:], uint64(e.Timestamp))
-		predicateEntity = L.loadEntry(txn, cache, predicate)
+		predicateEntity, predChanged = L.loadEntry(txn, cache, predicate)
+		if predChanged {
+			dirty[predicate] = true
+		}
 
 		// object
 		copy(object.Hash[:], hashURI(e.Triple.Object))
 		copy(object.Graph[:], hashString(e.Graph))
 		binary.LittleEndian.PutUint64(object.Version[:], uint64(e.Timestamp))
-		objectEntity = L.loadEntry(txn, cache, object)
+		objectEntity, objChanged = L.loadEntry(txn, cache, object)
+		if objChanged {
+			dirty[object] = true
+		}
 
 		// add edge to subject
 		var toEdge = new(logpb.Entity_Edge)
 		toEdge.Predicate = predicate.Bytes()
 		toEdge.Value = object.Bytes()
-		subjectEntity.Out = addEdgeIfNotExist(subjectEntity.Out, toEdge)
+		subjectEntity.Out, subChanged = addEdgeIfNotExist(subjectEntity.Out, toEdge)
+		if subChanged {
+			dirty[subject] = true
+		}
 		//if strings.Contains(S(subject), "vav_1") {
 		//	logrus.Warning("  ADD OUT EDGE ", S(predicate))
 		//	for _, e := range subjectEntity.Out {
@@ -214,13 +238,17 @@ func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, e
 		//if strings.Contains(S(object), "vav_1") {
 		//	logrus.Warning("  ADD IN EDGE ", S(predicate))
 		//}
-		objectEntity.In = addEdgeIfNotExist(objectEntity.In, fromEdge)
+		objectEntity.In, objChanged = addEdgeIfNotExist(objectEntity.In, fromEdge)
+		if objChanged {
+			dirty[object] = true
+		}
 
 		// add endpoints to predicate
 		var endpoints = new(logpb.Entity_Endpoints)
 		endpoints.Src = subject.Bytes()
 		endpoints.Dst = object.Bytes()
 		predicateEntity.Endpoints = append(predicateEntity.Endpoints, endpoints)
+		dirty[predicate] = true
 
 		//if reversePred, found := L.reverseEdges[uriToS(*e.Triple.Predicate[0])]; found {
 		//	copy(reversePredicate.Hash[:], hashURI(&reversePred))
@@ -260,22 +288,26 @@ func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, e
 	}
 }
 
-func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.Entity, entries chan *logpb.LogEntry) error {
+func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.Entity, dirty map[EntityKey]bool, entries chan *logpb.LogEntry) error {
 	txn := L.db.NewTransaction(true)
 
 	// populates the entities objects
 	for entry := range entries {
-		L.processEntry(txn, entities, entry)
+		L.processEntry(txn, entities, dirty, entry)
 	}
 	// inserts these into the database under the current version
 	for k, v := range entities {
-		serializedEntry, err := proto.Marshal(v)
-		if err != nil {
-			txn.Discard()
-			return errors.Wrap(err, "Error serializing entry")
-		}
-		if err := L.setWithCommit(txn, k.Bytes(), serializedEntry); err != nil {
-			return errors.Wrap(err, "Error txn commit")
+		if changed, found := dirty[k]; found && changed {
+			delete(dirty, k)
+			serializedEntry, err := proto.Marshal(v)
+			if err != nil {
+				txn.Discard()
+				return errors.Wrap(err, "Error serializing entry")
+			}
+			logrus.Warning(k.Bytes(), len(serializedEntry))
+			if err := L.setWithCommit(txn, k.Bytes(), serializedEntry); err != nil {
+				return errors.Wrap(err, "Error txn commit")
+			}
 		}
 	}
 	if err := txn.Commit(nil); err != nil {
@@ -286,6 +318,7 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 	cursor.dropCache()
 
 	//  insert extended edges
+	var changed bool
 	for k, v := range entities {
 		ent, err := cursor.getEntity(k)
 		if err != nil {
@@ -313,7 +346,10 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 				//	logrus.Warning("  OUT+ ", S(pred), " ", S(newkey))
 				//}
 				found := false
-				v.Out = addEdgeIfNotExist(v.Out, toEdge)
+				v.Out, changed = addEdgeIfNotExist(v.Out, toEdge)
+				if changed {
+					dirty[k] = true
+				}
 				entities[k] = v
 				obj, found := entities[newkey]
 				if found {
@@ -325,7 +361,10 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 					//	logrus.Warning("  IN+ (", S(newkey), ") ", S(pred), " ", S(k))
 					//}
 					found = false
-					obj.In = addEdgeIfNotExist(obj.In, invToEdge)
+					obj.In, changed = addEdgeIfNotExist(obj.In, invToEdge)
+					if changed {
+						dirty[newkey] = true
+					}
 					entities[newkey] = obj
 				}
 
@@ -336,13 +375,16 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 	// re-insert these with extended edges
 	txn = L.db.NewTransaction(true)
 	for k, v := range entities {
-		serializedEntry, err := proto.Marshal(v)
-		if err != nil {
-			txn.Discard()
-			return errors.Wrap(err, "Error serializing entry")
-		}
-		if err := L.setWithCommit(txn, k.Bytes(), serializedEntry); err != nil {
-			return errors.Wrap(err, "Error txn commit")
+		if changed, found := dirty[k]; found && changed {
+			delete(dirty, k)
+			serializedEntry, err := proto.Marshal(v)
+			if err != nil {
+				txn.Discard()
+				return errors.Wrap(err, "Error serializing entry")
+			}
+			if err := L.setWithCommit(txn, k.Bytes(), serializedEntry); err != nil {
+				return errors.Wrap(err, "Error txn commit")
+			}
 		}
 	}
 	if err := txn.Commit(nil); err != nil {

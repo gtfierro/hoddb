@@ -1,7 +1,6 @@
 package hod
 
 import (
-	"fmt"
 	query "git.sr.ht/~gabe/hod/lang"
 	sparql "git.sr.ht/~gabe/hod/lang/ast"
 	logpb "git.sr.ht/~gabe/hod/proto"
@@ -274,6 +273,8 @@ func (l *Log) readRangeGraph(graph string, timestamp_start, timestamp_end int64)
 					entry.Timestamp <= timestamp_end {
 
 					entries <- entry
+				} else {
+					logrus.Infof("graph %v, entry ts %v, latest added %v", entry.Graph, entry.Timestamp, latest[entry.Tag])
 				}
 
 			}
@@ -365,7 +366,6 @@ func (l *Log) GetRecentEntity(key EntityKey) (entity *Entity, err error) {
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
 			key := EntityKeyFromBytes(item.Key())
-			fmt.Println(">", key.Timestamp())
 
 			entity = &Entity{
 				e:   new(logpb.Entity),

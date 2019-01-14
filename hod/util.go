@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
 	logpb "git.sr.ht/~gabe/hod/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/spaolacci/murmur3"
 	"github.com/zhangxinngang/murmur"
 )
@@ -191,7 +191,7 @@ func S(u EntityKey) string {
 	return uriToS(LOOKUPURI[u.Hash])
 }
 
-func addEdgeIfNotExist(edges []*logpb.Entity_Edge, newedge *logpb.Entity_Edge) []*logpb.Entity_Edge {
+func addEdgeIfNotExist(edges []*logpb.Entity_Edge, newedge *logpb.Entity_Edge) ([]*logpb.Entity_Edge, bool) {
 	found := false
 	for _, e := range edges {
 		if edgeEqual(e, newedge) {
@@ -200,9 +200,9 @@ func addEdgeIfNotExist(edges []*logpb.Entity_Edge, newedge *logpb.Entity_Edge) [
 		}
 	}
 	if !found {
-		return append(edges, newedge)
+		return append(edges, newedge), true
 	}
-	return edges
+	return edges, false
 }
 
 func hashRow(row *logpb.Row) uint32 {
