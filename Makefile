@@ -1,7 +1,7 @@
 .PHONY: proto
 
 run: build
-	rm -rf _hod_
+	#rm -rf _hod_
 	./log
 
 proto: proto/log.proto
