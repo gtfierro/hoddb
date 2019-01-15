@@ -55,7 +55,7 @@ func main() {
 
 	//q := "SELECT ?vav ?room FROM test WHERE { ?vav rdf:type brick:VAV . ?room rdf:type brick:Room . ?zone rdf:type brick:HVAC_Zone . ?vav bf:feeds+ ?zone . ?room bf:isPartOf ?zone };"
 
-	q := "SELECT ?x ?y FROM soda WHERE { ?r rdf:type brick:Room . ?x ?y ?r };"
+	q := "SELECT ?x ?y FROM * WHERE { ?r rdf:type brick:Room . ?x ?y ?r };"
 	//version, err := L.LoadFile("soda", "BrickFrame.ttl", "brickframe")
 	//if err != nil {
 	//	log.Fatal(errors.Wrap(err, "load brickframe"))

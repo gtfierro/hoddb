@@ -52,7 +52,7 @@ func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
 	// get latest version of graph; we copy all keys from previous version
 	// into this version
 	cursor = L.Cursor(graph, latest, nil)
-	logrus.Warning("num entries beginning ", len(entries))
+	//logrus.Warning("num entries beginning ", len(entries))
 
 	if err := L.processLogEntries(cursor, entities, dirty, entries); err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func (L *Log) loadEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, key 
 	_ent, err = L.GetRecentEntity(key)
 	if _ent != nil && _ent.e != nil && err == nil {
 		ent = _ent.e
-		logrus.Warning("Got entity @ ", _ent.key.Timestamp(), " for graph @ ", key.Timestamp())
+		//logrus.Warning("Got entity @ ", _ent.key.Timestamp(), " for graph @ ", key.Timestamp())
 		ent.EntityKey = key.Bytes()
 		_ent.e.EntityKey = key.Bytes()
 		cache[key] = _ent.e
@@ -304,7 +304,7 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 				txn.Discard()
 				return errors.Wrap(err, "Error serializing entry")
 			}
-			logrus.Warning(k.Bytes(), len(serializedEntry))
+			//logrus.Warning(k.Bytes(), len(serializedEntry))
 			if err := L.setWithCommit(txn, k.Bytes(), serializedEntry); err != nil {
 				return errors.Wrap(err, "Error txn commit")
 			}

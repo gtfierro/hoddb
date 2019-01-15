@@ -235,9 +235,9 @@ func (l *Log) readUntilTimestamp(timestamp int64) chan *logpb.LogEntry {
 func (l *Log) readRangeGraph(graph string, timestamp_start, timestamp_end int64) chan *logpb.LogEntry {
 	var entries = make(chan *logpb.LogEntry)
 	latest, err := l.versionDB.tagsForGraphAt(graph, timestamp_end)
-	for k, v := range latest {
-		logrus.Warning(k, ": ", v)
-	}
+	//for k, v := range latest {
+	//	logrus.Warning(k, ": ", v)
+	//}
 	if err != nil {
 		logrus.Error(err)
 		return entries
@@ -273,8 +273,8 @@ func (l *Log) readRangeGraph(graph string, timestamp_start, timestamp_end int64)
 					entry.Timestamp <= timestamp_end {
 
 					entries <- entry
-				} else {
-					logrus.Infof("graph %v, entry ts %v, latest added %v", entry.Graph, entry.Timestamp, latest[entry.Tag])
+					//} else {
+					//	logrus.Infof("graph %v, entry ts %v, latest added %v", entry.Graph, entry.Timestamp, latest[entry.Tag])
 				}
 
 			}
