@@ -521,7 +521,6 @@ func (op *resolveVarTripleAll) run(cursor *Cursor) error {
 	//relation.add3Values(subjectVar, predicateVar, objectVar, content)
 	//if len(ctx.rel.rows) > 0 {
 	//	//panic("This should not happen! Tell Gabe")
-	//	logrus.Warning(subjectVar, predicateVar, objectVar)
 	//	ctx.rel.join(relation, []string{subjectVar}, ctx)
 	//	//ctx.markJoined(subjectVar)
 	//} else {

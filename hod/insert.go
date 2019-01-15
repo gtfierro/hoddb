@@ -52,14 +52,13 @@ func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
 	// get latest version of graph; we copy all keys from previous version
 	// into this version
 	cursor = L.Cursor(graph, latest, nil)
-	//logrus.Warning("num entries beginning ", len(entries))
 
 	if err := L.processLogEntries(cursor, entities, dirty, entries); err != nil {
 		return nil, err
 	}
 	fromT := time.Unix(0, from)
 	toT := time.Unix(0, to)
-	logrus.Infof("Processed %d entities for graph %s from %s - %s", len(entities), graph, fromT, toT)
+	logrus.Debugf("Processed %d entities for graph %s from %s - %s", len(entities), graph, fromT, toT)
 
 	cursor.dropCache()
 
@@ -77,7 +76,7 @@ func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
 		if err := L.processLogEntries(cursor, entities, dirty, generated); err != nil {
 			return nil, err
 		}
-		logrus.Infof("Loop1: Processed %d entities for graph %s from %s - %s from trigger %s", len(entities), graph, fromT, toT, trigger.Name)
+		logrus.Debugf("Loop1: Processed %d entities for graph %s from %s - %s from trigger %s", len(entities), graph, fromT, toT, trigger.Name)
 	}
 
 	for _, trigger := range triggers {
@@ -89,7 +88,7 @@ func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
 		if err := L.processLogEntries(cursor, entities, dirty, generated); err != nil {
 			return nil, errors.Wrap(err, "could not process generated triples")
 		}
-		logrus.Infof("Loop2: Processed %d entities for graph %s from %s - %s from trigger %s", len(entities), graph, fromT, toT, trigger.Name)
+		logrus.Debugf("Loop2: Processed %d entities for graph %s from %s - %s from trigger %s", len(entities), graph, fromT, toT, trigger.Name)
 	}
 
 	cursor.dropCache()
@@ -155,7 +154,6 @@ func (L *Log) loadEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, key 
 	_ent, err = L.GetRecentEntity(key)
 	if _ent != nil && _ent.e != nil && err == nil {
 		ent = _ent.e
-		//logrus.Warning("Got entity @ ", _ent.key.Timestamp(), " for graph @ ", key.Timestamp())
 		ent.EntityKey = key.Bytes()
 		_ent.e.EntityKey = key.Bytes()
 		cache[key] = _ent.e
@@ -224,20 +222,11 @@ func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, d
 		if subChanged {
 			dirty[subject] = true
 		}
-		//if strings.Contains(S(subject), "vav_1") {
-		//	logrus.Warning("  ADD OUT EDGE ", S(predicate))
-		//	for _, e := range subjectEntity.Out {
-		//		logrus.Warning("     ", S(EntityKeyFromBytes(e.Predicate)))
-		//	}
-		//}
 
 		// add edge to object
 		var fromEdge = new(logpb.Entity_Edge)
 		fromEdge.Predicate = predicate.Bytes()
 		fromEdge.Value = subject.Bytes()
-		//if strings.Contains(S(object), "vav_1") {
-		//	logrus.Warning("  ADD IN EDGE ", S(predicate))
-		//}
 		objectEntity.In, objChanged = addEdgeIfNotExist(objectEntity.In, fromEdge)
 		if objChanged {
 			dirty[object] = true
@@ -282,9 +271,6 @@ func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, d
 		cache[subject] = subjectEntity
 		cache[predicate] = predicateEntity
 		cache[object] = objectEntity
-		//if S(subject) == "https://brickschema.org/schema/1.0.3/Brick#Zone_Temperature_Sensor" {
-		//	logrus.Warning("inserting: ", subject)
-		//}
 	}
 }
 
@@ -304,7 +290,6 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 				txn.Discard()
 				return errors.Wrap(err, "Error serializing entry")
 			}
-			//logrus.Warning(k.Bytes(), len(serializedEntry))
 			if err := L.setWithCommit(txn, k.Bytes(), serializedEntry); err != nil {
 				return errors.Wrap(err, "Error txn commit")
 			}
@@ -325,15 +310,9 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 			return errors.Wrap(err, "Could not get entity in ext")
 		}
 
-		//if S(k) == "https://brickschema.org/schema/1.0.3/Brick#Zone_Temperature_Sensor" {
-		//	logrus.Warning("extended for ", S(k), " ", k)
-		//}
 		for _, pred := range ent.GetAllPredicates() {
 			e := edge{predicate: pred, pattern: logpb.Pattern_OnePlus}
 			newseen, _, err := cursor.followPathFromSubject(ent, e)
-			//if strings.Contains(S(k), "vav_1") {
-			//	logrus.Warning("  for pred ", S(pred), " ", len(newseen))
-			//}
 			if err != nil {
 				return err
 			}
@@ -342,9 +321,6 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 				toEdge.Predicate = pred.Bytes()
 				toEdge.Value = newkey.Bytes()
 				toEdge.Pattern = logpb.Pattern_OnePlus
-				//if strings.Contains(S(k), "vav_1") {
-				//	logrus.Warning("  OUT+ ", S(pred), " ", S(newkey))
-				//}
 				found := false
 				v.Out, changed = addEdgeIfNotExist(v.Out, toEdge)
 				if changed {
@@ -357,9 +333,6 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 					invToEdge.Predicate = pred.Bytes()
 					invToEdge.Value = k.Bytes()
 					invToEdge.Pattern = logpb.Pattern_OnePlus
-					//if strings.Contains(S(k), "vav_1") {
-					//	logrus.Warning("  IN+ (", S(newkey), ") ", S(pred), " ", S(k))
-					//}
 					found = false
 					obj.In, changed = addEdgeIfNotExist(obj.In, invToEdge)
 					if changed {

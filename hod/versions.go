@@ -6,7 +6,6 @@ import (
 	logpb "git.sr.ht/~gabe/hod/proto"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
-	logrus "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"time"
@@ -145,7 +144,6 @@ func (vm *versionmanager) tagsForGraphAt(graph string, timestamp int64) (map[str
 		if err != nil {
 			return nil, err
 		}
-		logrus.Infof("For graph %s, have tag %v @ %v", graph, _tag, _version)
 	}
 	return ret, nil
 }

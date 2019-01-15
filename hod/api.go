@@ -185,7 +185,6 @@ func (L *Log) Select(ctx context.Context, query *logpb.SelectQuery) (resp *logpb
 		cursor.selectVars = query.Vars
 
 		for _, op := range qp.operations {
-			//logrus.Info("op | ", op)
 			err := op.run(cursor)
 			if err != nil {
 				err = errors.Wrapf(err, "Could not run op %s", op)
@@ -225,7 +224,7 @@ func (l *Log) Versions(context.Context, *logpb.VersionQuery) (resp *logpb.Respon
 
 func (L *Log) setWithCommit(txn *badger.Txn, key, value []byte) error {
 	if setErr := txn.Set(key, value); setErr == badger.ErrTxnTooBig {
-		logrus.Println("commit too big")
+		logrus.Warning("commit too big")
 		if txerr := txn.Commit(nil); txerr != nil {
 			txn.Discard()
 			return errors.Wrap(txerr, "commit log entry")

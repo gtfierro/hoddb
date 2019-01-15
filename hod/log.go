@@ -102,10 +102,13 @@ func NewLog(cfg *Config) (*Log, error) {
 		return nil, err
 	}
 
+	start := time.Now()
+	logrus.Info("Recovering versions from log...")
 	err = L.buildVersionManager(cfg)
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	logrus.Infof("Finished recovering (took %s)", time.Since(start))
 
 	// start GC on the database
 	go func() {
@@ -131,8 +134,8 @@ func NewLog(cfg *Config) (*Log, error) {
 		}
 	}()
 
-	numWorkers := 5
-	graphs := make(chan string, numWorkers)
+	numWorkers := 10
+	graphs := make(chan string)
 	buildCursorWorker := func() {
 		for graph := range graphs {
 			s := time.Now()
@@ -152,6 +155,7 @@ func NewLog(cfg *Config) (*Log, error) {
 	//go func() {
 	numBuildings := len(cfg.Database.Buildings)
 	processed := 0
+	logrus.Infof("Loading %d buildings...", len(cfg.Database.Buildings))
 	for graphname, graphfile := range cfg.Database.Buildings {
 		s := time.Now()
 		for _, ontologyfile := range cfg.Database.Ontologies {
@@ -235,9 +239,6 @@ func (l *Log) readUntilTimestamp(timestamp int64) chan *logpb.LogEntry {
 func (l *Log) readRangeGraph(graph string, timestamp_start, timestamp_end int64) chan *logpb.LogEntry {
 	var entries = make(chan *logpb.LogEntry)
 	latest, err := l.versionDB.tagsForGraphAt(graph, timestamp_end)
-	//for k, v := range latest {
-	//	logrus.Warning(k, ": ", v)
-	//}
 	if err != nil {
 		logrus.Error(err)
 		return entries
@@ -273,8 +274,6 @@ func (l *Log) readRangeGraph(graph string, timestamp_start, timestamp_end int64)
 					entry.Timestamp <= timestamp_end {
 
 					entries <- entry
-					//} else {
-					//	logrus.Infof("graph %v, entry ts %v, latest added %v", entry.Graph, entry.Timestamp, latest[entry.Tag])
 				}
 
 			}
