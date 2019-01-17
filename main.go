@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
-	"time"
-	//"fmt"
+	"fmt"
 	"git.sr.ht/~gabe/hod/hod"
+	"github.com/chzyer/readline"
 	"github.com/pkg/errors"
+	"io"
 	"log"
+	"strings"
+	"time"
 )
 
 var debug = false
@@ -90,7 +93,60 @@ func main() {
 	//}
 	//L.Dump(entity)
 
-	selectquery, err := L.ParseQuery(q, time.Now().UnixNano())
+	prompt, err := readline.NewEx(&readline.Config{
+		Prompt:            "\033[32m»\033[0m ",
+		HistoryFile:       "/tmp/readline.tmp",
+		EOFPrompt:         "exit",
+		HistorySearchFold: true,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer prompt.Close()
+	//	prompt.HistoryDisable()
+
+	var buildup = ""
+	ts := time.Now().UnixNano()
+	for {
+		line, err := prompt.Readline()
+		if err == readline.ErrInterrupt {
+			if len(line) == 0 {
+				break
+			} else {
+				continue
+			}
+		} else if err == io.EOF {
+			break
+		}
+
+		buildup += strings.TrimSpace(line)
+		if strings.HasSuffix(buildup, ";") {
+			prompt.SetPrompt("\033[32m»\033[0m ")
+			query := buildup
+			buildup = ""
+			if err = prompt.SaveHistory(query); err != nil {
+				log.Fatal(err)
+			}
+
+			selectquery, err := L.ParseQuery(query, ts)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			res, err := L.Select(context.Background(), selectquery)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			fmt.Fprintf(prompt, "rows %d\n", len(res.Rows))
+
+			prompt.SetPrompt("\033[32m»\033[0m ")
+		} else if len(buildup) > 0 {
+			prompt.SetPrompt("...  ")
+		}
+	}
+
+	selectquery, err := L.ParseQuery(q, ts)
 	log.Println(selectquery)
 
 	_, err = L.Select(context.Background(), selectquery)
