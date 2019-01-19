@@ -96,38 +96,26 @@ func (cursor *Cursor) followPathFromSubject(subject *Entity, e edge) (entityset,
 func (cursor *Cursor) getSubjectFromPredObject(object *Entity, sequence []edge) (entityset, error) {
 	stack := newEntityStack()
 	stack.push(object)
-	seen := newEntitySet()
+	//seen := newEntitySet()
 	next := newEntityStack()
 	results := newEntitySet()
 	//sequence = reversePath(sequence)
 	for idx := len(sequence) - 1; idx >= 0; idx-- {
 		//for idx, segment := range sequence {
 		segment := sequence[idx]
-		//fmt.Println(idx, len(sequence), segment)
 		//logrus.Println(segment)
 		for next.len() > 0 {
 			object := next.pop()
-			//fmt.Println("pushing object ", LOOKUPURI[object.key.Hash])
 			stack.push(object)
 		}
 		for stack.len() > 0 {
 			object := stack.pop()
-			if seen.addIfNotHas(object.key) {
-				//continue
-				//fmt.Println(" trav ", LOOKUPURI[object.key.Hash])
-			} else {
-				//fmt.Println(" not ", LOOKUPURI[object.key.Hash])
-			}
-			nexthop, traversed, err := cursor.followPathFromObject(object, segment)
+			nexthop, _, err := cursor.followPathFromObject(object, segment)
 			if err != nil {
 				return nil, err
 			}
-			if len(nexthop) > 1 {
-				fmt.Println(len(nexthop))
-			}
-			//fmt.Println("SEGMENT ", idx, LOOKUPURI[segment.predicate.Hash], LOOKUPURI[object.key.Hash])
 
-			seen.addFrom(traversed)
+			//seen.addFrom(traversed)
 
 			for key := range nexthop {
 				//if idx == len(sequence)-1 {
