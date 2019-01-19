@@ -1,8 +1,8 @@
 package sparql
 
 import (
-	"fmt"
-	"github.com/kr/pretty"
+	//"fmt"
+	//"github.com/kr/pretty"
 	"testing"
 )
 
@@ -51,7 +51,8 @@ func TestQueryParse(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		fmt.Printf("%# v", pretty.Formatter(q))
+		//fmt.Printf("%# v", pretty.Formatter(q))
+		_ = q
 	}
 }
 
@@ -76,6 +77,7 @@ func TestInsertQueryParse(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		fmt.Printf("%# v", pretty.Formatter(q))
+		//fmt.Printf("%# v", pretty.Formatter(q))
+		_ = q
 	}
 }
