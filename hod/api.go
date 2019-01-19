@@ -156,7 +156,7 @@ func (L *Log) Select(ctx context.Context, query *logpb.SelectQuery) (resp *logpb
 	for _, graph := range query.Graphs {
 		// TODO: check query.Filter
 		//cursor = L.Cursor(graph, query.Timestamp, nil)
-		cursor, err = L.createCursor(graph, 0, query.Timestamp)
+		cursor, err = L.CreateCursor(graph, 0, query.Timestamp)
 		if err != nil {
 			return
 		}

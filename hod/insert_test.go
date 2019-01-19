@@ -33,7 +33,7 @@ func TestInsertExample(t *testing.T) {
 	version, err = L.LoadFile("test", "example.ttl", "bldg")
 	require.NoError(err, "load file")
 
-	cursor, err := L.createCursor("test", 0, version)
+	cursor, err := L.CreateCursor("test", 0, version)
 	//cursor := L.Cursor("test", version, nil)
 	require.NoError(err, "create cursor")
 	require.NotNil(cursor)

@@ -139,7 +139,7 @@ func NewLog(cfg *Config) (*Log, error) {
 	buildCursorWorker := func() {
 		for graph := range graphs {
 			s := time.Now()
-			c, err := L.createCursor(graph, 0, time.Now().UnixNano())
+			c, err := L.CreateCursor(graph, 0, time.Now().UnixNano())
 			if err != nil {
 				logrus.Fatal(errors.Wrapf(err, "Could not create cursor for graph %s", graph))
 			}

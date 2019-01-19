@@ -24,7 +24,7 @@ func newEdgeCache() edgecache {
 
 //func addEdge(
 
-func (L *Log) createCursor(graph string, from, to int64) (*Cursor, error) {
+func (L *Log) CreateCursor(graph string, from, to int64) (*Cursor, error) {
 	var cursor *Cursor
 	var found bool
 	var err error

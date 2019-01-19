@@ -53,7 +53,7 @@ database:
 		selectVars: []string{"?v1"},
 		variables:  []string{"?v1"},
 	}
-	cursor, err := L.createCursor("example", 0, version)
+	cursor, err := L.CreateCursor("example", 0, version)
 	require.NoError(err, "create cursor")
 	require.NotNil(cursor)
 	cursor.addQueryPlan(plan)

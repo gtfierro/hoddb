@@ -115,6 +115,10 @@ var example_graph_test_cases = []struct {
 		[][]*logpb.URI{{stringtoURI("http://buildsys.org/ontologies/building_example#ztemp_1")}},
 	},
 	{
+		"SELECT ?sensor FROM test WHERE { ?sensor rdf:type/rdfs:subClassOf* brick:Temperature_Sensor };",
+		[][]*logpb.URI{{stringtoURI("http://buildsys.org/ontologies/building_example#ztemp_1")}},
+	},
+	{
 		"SELECT ?s ?p FROM test WHERE { ?s ?p brick:Zone_Temperature_Sensor . ?s rdfs:subClassOf brick:Zone_Temperature_Sensor };",
 		[][]*logpb.URI{
 			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Average_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
@@ -240,7 +244,7 @@ database:
 	version, err = L.LoadFile("test", "example.ttl", "ex")
 	require.NoError(err, "load file")
 
-	c, err := L.createCursor("test", 0, version)
+	c, err := L.CreateCursor("test", 0, version)
 	require.NoError(err, "creat cursor")
 
 	for _, test := range example_graph_test_cases {
@@ -285,7 +289,7 @@ database:
 	version, err = L.LoadFile("soda", "berkeley.ttl", "berk")
 	require.NoError(err, "load file")
 
-	c, err := L.createCursor("soda", 0, version)
+	c, err := L.CreateCursor("soda", 0, version)
 	require.NoError(err, "cursor")
 
 	for _, test := range berkeley_graph_test_cases {
@@ -329,7 +333,7 @@ database:
 	require.NoError(err, "load brick")
 	version, err = L.LoadFile("test", "example.ttl", "ex")
 	require.NoError(err, "load file")
-	_, err = L.createCursor("test", 0, version)
+	_, err = L.CreateCursor("test", 0, version)
 	require.NoError(err, "cursor")
 
 	b.ResetTimer()
@@ -373,7 +377,7 @@ database:
 	version, err = L.LoadFile("soda", "berkeley.ttl", "berk")
 	require.NoError(err, "load file")
 
-	_, err = L.createCursor("soda", 0, version)
+	_, err = L.CreateCursor("soda", 0, version)
 	require.NoError(err, "cursor")
 
 	b.ResetTimer()
