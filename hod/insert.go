@@ -170,7 +170,7 @@ func (L *Log) loadEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, key 
 	return
 }
 
-func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, dirty map[EntityKey]bool, e *logpb.LogEntry) {
+func (L *Log) processEntry(cursor *Cursor, txn *badger.Txn, cache map[EntityKey]*logpb.Entity, dirty map[EntityKey]bool, e *logpb.LogEntry) {
 	var (
 		subChanged  bool = false
 		predChanged bool = false
@@ -190,7 +190,8 @@ func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, d
 		// subject
 		copy(subject.Hash[:], hashURI(e.Triple.Subject))
 		copy(subject.Graph[:], hashString(e.Graph))
-		binary.LittleEndian.PutUint64(subject.Version[:], uint64(e.Timestamp))
+		binary.LittleEndian.PutUint64(subject.Version[:], uint64(cursor.timestamp))
+		//copy(subjectEntity.EntityKey, subject.Bytes())
 		subjectEntity, subChanged = L.loadEntry(txn, cache, subject)
 		if subChanged {
 			dirty[subject] = true
@@ -199,7 +200,8 @@ func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, d
 		// predicate
 		copy(predicate.Hash[:], hashURI(e.Triple.Predicate[0]))
 		copy(predicate.Graph[:], hashString(e.Graph))
-		binary.LittleEndian.PutUint64(predicate.Version[:], uint64(e.Timestamp))
+		binary.LittleEndian.PutUint64(predicate.Version[:], uint64(cursor.timestamp))
+		//copy(predicateEntity.EntityKey, predicate.Bytes())
 		predicateEntity, predChanged = L.loadEntry(txn, cache, predicate)
 		if predChanged {
 			dirty[predicate] = true
@@ -208,7 +210,8 @@ func (L *Log) processEntry(txn *badger.Txn, cache map[EntityKey]*logpb.Entity, d
 		// object
 		copy(object.Hash[:], hashURI(e.Triple.Object))
 		copy(object.Graph[:], hashString(e.Graph))
-		binary.LittleEndian.PutUint64(object.Version[:], uint64(e.Timestamp))
+		binary.LittleEndian.PutUint64(object.Version[:], uint64(cursor.timestamp))
+		//copy(objectEntity.EntityKey, object.Bytes())
 		objectEntity, objChanged = L.loadEntry(txn, cache, object)
 		if objChanged {
 			dirty[object] = true
@@ -279,7 +282,7 @@ func (L *Log) processLogEntries(cursor *Cursor, entities map[EntityKey]*logpb.En
 
 	// populates the entities objects
 	for entry := range entries {
-		L.processEntry(txn, entities, dirty, entry)
+		L.processEntry(cursor, txn, entities, dirty, entry)
 	}
 	// inserts these into the database under the current version
 	for k, v := range entities {
