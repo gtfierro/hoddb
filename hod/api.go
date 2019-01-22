@@ -211,15 +211,32 @@ func (L *Log) Count(ctx context.Context, query *logpb.SelectQuery) (resp *logpb.
 	if resp != nil {
 		resp.Rows = resp.Rows[:0]
 	}
-
 	return
 }
 
-func (l *Log) Versions(context.Context, *logpb.VersionQuery) (resp *logpb.Response, err error) {
+func (l *Log) Versions(ctx context.Context, query *logpb.VersionQuery) (resp *logpb.Response, err error) {
 	// timefilter query.Filter:
 	// []graphname query.Graphs:
 	// int Limit :
-	return
+	graphnames, versions, err := l.versionDB.listGraphs(query.Graphs, query.Timestamp)
+	fmt.Println("graphnames", graphnames)
+	fmt.Println("versionnames", versions)
+	resp = new(logpb.Response)
+	if err != nil {
+		resp.Error = err.Error()
+		return resp, err
+	}
+	resp.Variables = []string{"graph", "version"}
+	for idx, graphname := range graphnames {
+		row := &logpb.Row{
+			Values: []*logpb.URI{
+				&logpb.URI{Value: graphname},
+				&logpb.URI{Value: fmt.Sprintf("%d", versions[idx])},
+			},
+		}
+		resp.Rows = append(resp.Rows, row)
+	}
+	return resp, err
 }
 
 func (L *Log) setWithCommit(txn *badger.Txn, key, value []byte) error {

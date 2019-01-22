@@ -186,7 +186,51 @@ func (vm *versionmanager) addFileHashToTag(filename, tag, graph string, version 
 	return nil
 }
 
-//
+// returns list of graphs, list of versions
+func (vm *versionmanager) listGraphs(graphs []string, version int64) ([]string, []int64, error) {
+	if len(graphs) == 0 {
+		return nil, nil, nil
+	}
+
+	var rows *sql.Rows
+	var prepared *sql.Stmt
+	var err error
+
+	if graphs[0] == "*" {
+		prepared, err = vm.db.Prepare("SELECT MAX(version), graph FROM versions WHERE version <= ? GROUP BY graph;")
+		if err != nil {
+			return nil, nil, err
+		}
+		rows, err = prepared.Query(version)
+	} else {
+		// TODO:...
+		prepared, err = vm.db.Prepare("SELECT MAX(version), graph FROM versions WHERE version <= ? and graph IN (?) GROUP BY graph;")
+		if err != nil {
+			return nil, nil, err
+		}
+		rows, err = prepared.Query(version, graphs)
+	}
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer rows.Close()
+	var retgraphs []string
+	var retversions []int64
+	for rows.Next() {
+		var _version int64
+		var _graph string
+		err = rows.Scan(&_version, &_graph)
+		if err != nil {
+			return retgraphs, retversions, err
+		}
+		retgraphs = append(retgraphs, _graph)
+		retversions = append(retversions, _version)
+	}
+	return retgraphs, retversions, err
+
+}
 
 func (vm *versionmanager) filehashExists(filename string, tag string, graph string) (bool, error) {
 	f, err := os.Open(filename)
