@@ -219,8 +219,6 @@ func (l *Log) Versions(ctx context.Context, query *logpb.VersionQuery) (resp *lo
 	// []graphname query.Graphs:
 	// int Limit :
 	graphnames, versions, err := l.versionDB.listGraphs(query.Graphs, query.Timestamp)
-	fmt.Println("graphnames", graphnames)
-	fmt.Println("versionnames", versions)
 	resp = new(logpb.Response)
 	if err != nil {
 		resp.Error = err.Error()
