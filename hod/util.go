@@ -19,14 +19,21 @@ func hashURI(u *logpb.URI) []byte {
 	var dest = make([]byte, 4)
 	//bytes, _ := proto.Marshal(&logpb.URI{Namespace: u.Namespace, Value: u.Value})
 	//binary.BigEndian.PutUint32(dest, murmur.Murmur3(bytes))
-	binary.BigEndian.PutUint32(dest, murmur.Murmur3([]byte(u.Namespace+u.Value)))
+	hashresult := murmur.Murmur3([]byte(u.Namespace + u.Value))
+	binary.BigEndian.PutUint32(dest, hashresult)
 
 	// DEBUG ONLY
 	var _k [4]byte
 	copy(_k[:], dest)
 	s.Lock()
-	if _u, found := LOOKUPURI[_k]; found && ((_u.Namespace != u.Namespace) || (_u.Value != u.Value)) {
-		panic("HASH EXISTS")
+	for {
+		if _u, found := LOOKUPURI[_k]; found && ((_u.Namespace != u.Namespace) || (_u.Value != u.Value)) {
+			hashresult += 1
+			binary.BigEndian.PutUint32(dest, hashresult)
+			copy(_k[:], dest)
+			continue
+		}
+		break
 	}
 	LOOKUPURI[_k] = *u
 	s.Unlock()
