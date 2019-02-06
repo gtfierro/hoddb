@@ -214,6 +214,14 @@ var berkeley_graph_test_cases = []struct {
 		"COUNT ?vav ?x ?y ?z FROM soda WHERE { ?vav rdf:type brick:VAV . ?vav bf:feeds+ ?x . ?vav bf:isFedBy+ ?y . ?vav bf:hasPoint+ ?z };",
 		823,
 	},
+	{
+		"COUNT ?name FROM soda WHERE { soda_hall:building_1 rdfs:label ?name };",
+		1,
+	},
+	{
+		"COUNT ?building FROM soda WHERE { ?building rdfs:label \"Soda Hall\" };",
+		1,
+	},
 }
 
 func TestQueryExample(t *testing.T) {

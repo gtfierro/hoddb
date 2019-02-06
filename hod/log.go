@@ -386,8 +386,10 @@ func (l *Log) GetRecentEntity(key EntityKey) (entity *Entity, err error) {
 
 func (L *Log) expand(uri *logpb.URI) *logpb.URI {
 	if !strings.HasPrefix(uri.Value, "?") {
-		if full, found := L.namespaces[uri.Namespace]; found {
-			uri.Namespace = full
+		if uri.Namespace != "" && (uri.Value[0] != '"' && uri.Value[len(uri.Value)-1] != '"') {
+			if full, found := L.namespaces[uri.Namespace]; found {
+				uri.Namespace = full
+			}
 		}
 	}
 	return uri

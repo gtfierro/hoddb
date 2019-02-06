@@ -10,7 +10,6 @@ import "C"
 import (
 	"io"
 	"io/ioutil"
-	//"log"
 	"os"
 	"strings"
 	"sync"
@@ -58,8 +57,8 @@ func ParseURI(uri string) URI {
 	parts[0] = strings.TrimRight(parts[0], "#")
 	if len(parts) != 2 {
 		if strings.HasPrefix(uri, "\"") {
-			uri = strings.Trim(uri, "\"")
 			uri = strings.TrimSuffix(uri, "@en")
+			//uri = strings.Trim(uri, "\"")
 			return URI{Value: uri}
 		}
 		// try to parse ":"
@@ -67,8 +66,8 @@ func ParseURI(uri string) URI {
 		if len(parts) > 1 {
 			return URI{Namespace: parts[0], Value: parts[1]}
 		}
-		uri = strings.Trim(uri, "\"")
 		uri = strings.TrimSuffix(uri, "@en")
+		//uri = strings.Trim(uri, "\"")
 		return URI{Value: uri}
 	}
 	return URI{Namespace: parts[0], Value: parts[1]}
