@@ -266,6 +266,10 @@ func (L *Log) LoadFile(graphname, ttlfile, tag string) (int64, error) {
 	}
 	for abbr, full := range dataset.Namespaces {
 		L.namespaces[abbr] = full
+		err := L.versionDB.addNamespace(full, abbr)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	for _, _triple := range dataset.Triples {

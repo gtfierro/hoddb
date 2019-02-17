@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -37,6 +38,11 @@ func (L *Log) buildVersionManager(cfg *Config) error {
     create table if not exists versions (version integer not null primary key, graph text, tag text, sourcehash bytes);
     `
 	_, err = vm.db.Exec(sqlStmt)
+	if err != nil {
+		return err
+	}
+
+	_, err = vm.db.Exec("CREATE TABLE IF NOT EXISTS namespaces (namespace text not null unique, abbr text);")
 	if err != nil {
 		return err
 	}
@@ -254,3 +260,30 @@ func (vm *versionmanager) filehashExists(filename string, tag string, graph stri
 
 //
 ////func (vm *versionmanager) versionsAt(graph,
+
+func (vm *versionmanager) addNamespace(ns, abbr string) error {
+	_, err := vm.db.Exec("INSERT INTO namespaces(namespace, abbr) VALUES (?, ?);", ns, abbr)
+	if err != nil && strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		return nil
+	}
+	return err
+}
+
+func (vm *versionmanager) listNamespaces() ([][]string, error) {
+	rows, err := vm.db.Query("SELECT namespace, abbr FROM namespaces;")
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	var results [][]string
+	for rows.Next() {
+		var ns string
+		var abbr string
+		err = rows.Scan(&ns, &abbr)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, []string{ns, abbr})
+	}
+	return results, nil
+}

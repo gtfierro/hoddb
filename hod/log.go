@@ -111,6 +111,16 @@ func NewLog(cfg *Config) (*Log, error) {
 	}
 	logrus.Infof("Finished recovering (took %s)", time.Since(start))
 
+	// load in namespaces
+	pairs, err := L.versionDB.listNamespaces()
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	for _, pair := range pairs {
+		// abbr -> full
+		L.namespaces[pair[1]] = pair[0]
+	}
+
 	// start GC on the database
 	go func() {
 		ticker := time.NewTicker(1 * time.Minute)
