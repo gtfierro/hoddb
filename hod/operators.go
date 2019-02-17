@@ -254,6 +254,7 @@ func (rov *resolveObjectFromVarSubject) run(cursor *Cursor) error {
 	}
 
 	rsopRelation.add2Values(subjectVar, objectVar, relationContents)
+
 	cursor.rel.join(rsopRelation, []string{subjectVar}, cursor)
 
 	return nil

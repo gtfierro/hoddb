@@ -1,7 +1,6 @@
 package hod
 
 import (
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"

@@ -170,7 +170,6 @@ func (rel *relation) add3Values(key1, key2, key3 string, values [][]EntityKey) {
 func (rel *relation) join(other *relation, on []string, cursor *Cursor) {
 	// get the variable positions for the join variables for
 	// each of the relations (these may be different)
-
 	var joinedRows = make([]*relationRow, 0, len(rel.rows))
 innerRows:
 	for _, innerRow := range rel.rows {
@@ -204,6 +203,17 @@ innerRows:
 		innerRow.release() // now done with this row
 	}
 	rel.rows = joinedRows
+
+	// rebuild the multiindex?
+	for idx, row := range joinedRows {
+		for varname, pos := range rel.vars {
+			bitmap := rel.multiindex[varname][row.valueAt(pos)]
+			if bitmap == nil {
+				rel.multiindex[varname][row.valueAt(pos)] = roaring.New()
+			}
+			rel.multiindex[varname][row.valueAt(pos)].AddInt(idx)
+		}
+	}
 }
 
 func (rel *relation) dumpRows(prefix string, cursor *Cursor) {

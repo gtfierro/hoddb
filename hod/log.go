@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/pkg/profile"
 	logrus "github.com/sirupsen/logrus"
-	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -19,10 +18,12 @@ import (
 	"time"
 )
 
+var log = logrus.New()
+
 func init() {
-	logrus.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, ForceColors: true})
-	logrus.SetOutput(os.Stdout)
-	logrus.SetLevel(logrus.DebugLevel)
+	log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, ForceColors: true})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(logrus.DebugLevel)
 }
 
 type Log struct {
