@@ -147,6 +147,7 @@ func NewLog(cfg *Config) (*Log, error) {
 
 	numWorkers := 10
 	graphs := make(chan string)
+	var wg sync.WaitGroup
 	buildCursorWorker := func() {
 		for graph := range graphs {
 			s := time.Now()
@@ -157,6 +158,7 @@ func NewLog(cfg *Config) (*Log, error) {
 			c.dropCache()
 			processtime := time.Since(s)
 			logrus.Infof("Processed cursor for graph %s in %s", graph, processtime)
+			wg.Done()
 		}
 	}
 	for i := 0; i < numWorkers; i++ {
@@ -165,6 +167,7 @@ func NewLog(cfg *Config) (*Log, error) {
 
 	//go func() {
 	numBuildings := len(cfg.Database.Buildings)
+	wg.Add(len(cfg.Database.Buildings))
 	processed := 0
 	logrus.Infof("Loading %d buildings...", len(cfg.Database.Buildings))
 	for graphname, graphfile := range cfg.Database.Buildings {
@@ -198,6 +201,7 @@ func NewLog(cfg *Config) (*Log, error) {
 	//}()
 	//for graphname := range cfg.Database.Buildings {
 	//}
+	wg.Wait()
 
 	return L, err
 
