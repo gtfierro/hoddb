@@ -50,17 +50,19 @@ type Log struct {
 
 func NewLog(cfg *Config) (*Log, error) {
 
-	// debug performance
-	if cfg.Profile.EnableHttp {
-		go func() {
-			logrus.Info(http.ListenAndServe("localhost:"+cfg.Profile.HttpPort, nil))
-		}()
-	} else if cfg.Profile.EnableCpu {
+	if cfg.Profile.EnableCpu {
 		defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
 	} else if cfg.Profile.EnableMem {
 		defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
 	} else if cfg.Profile.EnableBlock {
 		defer profile.Start(profile.BlockProfile, profile.ProfilePath(".")).Stop()
+	}
+	// debug performance
+	if cfg.Profile.EnableHttp {
+		go func() {
+			logrus.Info("Profile at localhost:", cfg.Profile.HttpPort)
+			logrus.Info(http.ListenAndServe("localhost:"+cfg.Profile.HttpPort, nil))
+		}()
 	}
 
 	/* open log database */
