@@ -21,4 +21,7 @@ profile:
     enableMem: false
     enableBlock: false
     enableHttp: false
-    httpPort: 8080
+    httpPort: 6061
+
+output:
+    loglevel: info

@@ -191,7 +191,9 @@ func reversePath(path []edge) []edge {
 }
 
 func edgeEqual(a, b *logpb.Entity_Edge) bool {
-	return bytes.Equal(a.Predicate, b.Predicate) && bytes.Equal(a.Value, b.Value) && a.Pattern == b.Pattern
+	//return bytes.Equal(a.Predicate, b.Predicate) && bytes.Equal(a.Value, b.Value) && a.Pattern == b.Pattern
+	//return bytes.Equal(a.Value, b.Value) && bytes.Equal(a.Predicate, b.Predicate) && a.Pattern == b.Pattern
+	return bytes.Equal(a.Value, b.Value) && a.Pattern == b.Pattern && bytes.Equal(a.Predicate, b.Predicate)
 }
 
 func S(u EntityKey) string {
