@@ -2,6 +2,22 @@
     height: 800px;
 }
 
+.ui.container {
+  width: 2000px;
+}
+
+.ui.grid.container {
+    width: calc( 2000px  +  2rem ) !important;
+}
+
+.ui.relaxed.grid.container {
+    width: calc( 2000px  +  3rem ) !important;
+}
+
+.ui.very.relaxed.grid.container {
+    width: calc( 2000px  +  5rem ) !important;
+}
+
 #viewport {
     border: 2px solid black;
     border-radius: 5px;

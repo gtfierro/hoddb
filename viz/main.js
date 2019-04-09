@@ -64,7 +64,7 @@
               client.then( (res) => {
                   return res.apis.HodDB.Select({body: JSON.stringify({
                       vars: ['?tstat', '?tstatclass','?pred','?object','?objectclass'],
-                      graphs: ['movie'],
+                      graphs: ['*'],
                       filter: "Before",
                       timestamp: luxon.DateTime.local().toMillis()*1000000,
                       where: [
@@ -249,29 +249,30 @@
         return that
     }
 
-	var nodes = new vis.DataSet();
-	var edges = new vis.DataSet();
+    var nodes = new vis.DataSet();
+    var edges = new vis.DataSet();
 
-	// create a network
-	var container = document.getElementById('viewport');
-	var data = {
-		nodes: nodes,
-		edges: edges
-	};
-	var options = {};
-	network = new vis.Network(container, data, options);
+    // create a network
+    var container = document.getElementById('viewport');
+    var data = {
+        nodes: nodes,
+        edges: edges
+    };
+    var options = {};
+    network = new vis.Network(container, data, options);
 
 
-    var yasqe = YASQE(document.getElementById("query")); 
+    var yasqe = YASQE(document.getElementById("query"));
     yasqe.options.syntaxErrorCheck = false;
     yasqe.options.showQueryButton = false;
     yasqe.options.readOnly = true;
+    //yasqe.options.lineNumbers = false;
     yasqe.setSize("100%")
     yasqe.setValue("");
 
     var Query = QueryBuilder(nodes, edges, network);
 
-	var client = new Client(nodes, edges);
+    var client = new Client(nodes, edges);
 
     network.on("click", function (params) {
         console.log('click event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
@@ -289,7 +290,7 @@
 
 
     $(document).ready(function(){
-		nodes.add({id:"Room", label:"Room"});
+        nodes.add({id:"Room", label:"Room"});
     })
 
 })(this.jQuery)
