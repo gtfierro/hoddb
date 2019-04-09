@@ -301,5 +301,6 @@ func (L *Log) LoadFile(graphname, ttlfile, tag string) (int64, error) {
 	if err != nil {
 		return 0, errors.Wrapf(err, "could not tag hash of file %s for graph %s", ttlfile, graphname)
 	}
+	delete(L.cursorCache, graphname)
 	return resp.Timestamp, nil
 }

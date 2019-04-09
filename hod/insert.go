@@ -36,7 +36,7 @@ func (L *Log) CreateCursor(graph string, from, to int64) (*Cursor, error) {
 	logrus.Debug("latest version", latest, "asked for", to)
 
 	L.RLock()
-	if _, found = L.cursorCache[[2]int64{from, to}]; found {
+	if _, found = L.cursorCache[graph]; found {
 		L.RUnlock()
 		return L.Cursor(graph, latest, nil), nil
 	}
@@ -95,7 +95,7 @@ func (L *Log) CreateCursor(graph string, from, to int64) (*Cursor, error) {
 
 	cursor = L.Cursor(graph, latest, nil)
 	L.Lock()
-	L.cursorCache[[2]int64{from, to}] = cursor
+	L.cursorCache[graph] = cursor
 	L.Unlock()
 
 	// clear out objects

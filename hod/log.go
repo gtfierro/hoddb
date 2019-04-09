@@ -44,7 +44,7 @@ type Log struct {
 	versions     chan int64
 	// stores the most recent versions for all tags
 	tagVersions map[string]int64
-	cursorCache map[[2]int64]*Cursor
+	cursorCache map[string]*Cursor
 	sync.RWMutex
 }
 
@@ -99,7 +99,7 @@ func NewLog(cfg *Config) (*Log, error) {
 		pending:      make(chan *logpb.LogEntry),
 		tagVersions:  make(map[string]int64),
 		versions:     make(chan int64, 10),
-		cursorCache:  make(map[[2]int64]*Cursor),
+		cursorCache:  make(map[string]*Cursor),
 	}
 	if err := L.openTriggerDatabase(cfg); err != nil {
 		return nil, err
@@ -403,6 +403,9 @@ func (l *Log) GetRecentEntity(key EntityKey) (entity *Entity, err error) {
 
 func (L *Log) expand(uri *logpb.URI) *logpb.URI {
 	if !strings.HasPrefix(uri.Value, "?") {
+		if len(uri.Value) == 0 {
+			return uri
+		}
 		if uri.Namespace != "" && (uri.Value[0] != '"' && uri.Value[len(uri.Value)-1] != '"') {
 			if full, found := L.namespaces[uri.Namespace]; found {
 				uri.Namespace = full
