@@ -122,24 +122,25 @@
             return false;
         }
 
-        var getEdgeFromNodeToNode = function(src, others) {
-            connected = network.getConnectedNodes(src);
-            for (j=0;j<connected.length;j++) {
-                neighbor = connected[j];
-                for (o=0;o<others.length;o++) {
-                    dest = others[o];
-                    if (o != src && neighbor == dest) {
-                        // edge exists
-                        console.log("found neighbor to use")
-                        nedges = network.getConnectedEdges(src);
-                        for (e=0;e<nedges.length;e++) {
-                            edge = edges.get(nedges[e]);
-                            if (edge.to == dest) {
-                                return {dest: dest, edge: edge, idx: o}
+        var getEdgeFromNodeToNode = function(srcs, others) {
+            for (i=0;i<srcs.length;i++) {
+                src = srcs[i];
+                connected = network.getConnectedNodes(src);
+                for (j=0;j<connected.length;j++) {
+                    neighbor = connected[j];
+                    for (o=0;o<others.length;o++) {
+                        dest = others[o];
+                        if (o != src && neighbor == dest) {
+                            // edge exists
+                            console.log("found neighbor to use")
+                            nedges = network.getConnectedEdges(src);
+                            for (e=0;e<nedges.length;e++) {
+                                edge = edges.get(nedges[e]);
+                                if (edge.to == dest) {
+                                    return {src: src, dest: dest, edge: edge, idx: o}
+                                }
                             }
                         }
-
-                        return;
                     }
                 }
             }
@@ -170,7 +171,9 @@
             },
             build: function() {
                 terms = [];
+                nodesinquery = [];
                 variables = [];
+                console.log(query.nodes.length);
                 mynodelist = query.nodes.slice();
                 if (mynodelist.length == 0) {
                     return;
@@ -183,14 +186,14 @@
                     object: {namespace: "brick", value: root}
                 });
                 variables.push(varname);
+                nodesinquery.push(root);
                 console.log("nodes", mynodelist.length);
                 mynodelist.splice(0, 1);
                 while (mynodelist.length > 0) {
-                    e = getEdgeFromNodeToNode(root, mynodelist);
-                    console.log(">>>", e, mynodelist.length);
+                    e = getEdgeFromNodeToNode(nodesinquery, mynodelist);
                     if (e==null) { break }
                     mynodelist.splice(e.idx, 1);
-                    rootname = "?"+root;
+                    rootname = "?"+e.src;
                     destname = "?"+e.dest;
                     variables.push(destname);
                     terms.push({
@@ -203,7 +206,7 @@
                         predicate: [{namespace: "bf", value:e.edge.label}],
                         object: {value: destname}
                     });
-                    root = e.dest;
+                    nodesinquery.push(e.dest);
                 }
 
                 //query.nodes.forEach(function(classname) {
