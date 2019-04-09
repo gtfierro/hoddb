@@ -158,19 +158,26 @@ func (L *Log) Select(ctx context.Context, query *logpb.SelectQuery) (resp *logpb
 		//cursor = L.Cursor(graph, query.Timestamp, nil)
 		cursor, err = L.CreateCursor(graph, 0, query.Timestamp)
 		if err != nil {
+			logrus.Error(err)
 			return
 		}
 
 		var vars []string
-		for _, triple := range query.Where {
+		for idx, triple := range query.Where {
 			if isVariable(triple.Subject) {
 				vars = append(vars, triple.Subject.Value)
+			} else {
+				query.Where[idx].Subject = L.expand(triple.Subject)
 			}
 			if isVariable(triple.Predicate[0]) {
 				vars = append(vars, triple.Predicate[0].Value)
+			} else {
+				query.Where[idx].Predicate[0] = L.expand(triple.Predicate[0])
 			}
 			if isVariable(triple.Object) {
 				vars = append(vars, triple.Object.Value)
+			} else {
+				query.Where[idx].Object = L.expand(triple.Object)
 			}
 		}
 		dg := makeDependencyGraph(cursor, vars, query.Where)
@@ -178,6 +185,7 @@ func (L *Log) Select(ctx context.Context, query *logpb.SelectQuery) (resp *logpb
 		if err != nil {
 			resp.Error = err.Error()
 			err = errors.Wrap(err, "Could not form query plan")
+			logrus.Error(err)
 			return resp, err
 		}
 		qp.variables = query.Vars
@@ -189,6 +197,7 @@ func (L *Log) Select(ctx context.Context, query *logpb.SelectQuery) (resp *logpb
 			if err != nil {
 				err = errors.Wrapf(err, "Could not run op %s", op)
 				resp.Error = err.Error()
+				logrus.Error(err)
 				return resp, err
 			}
 		}
