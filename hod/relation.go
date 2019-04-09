@@ -54,7 +54,7 @@ func (rel *relation) add1Value(key1 string, values entityset) {
 
 		// if this is non-nil, then the value exists already
 		if bitmap != nil {
-			return
+			continue
 		}
 
 		row := newRelationRow()
@@ -207,13 +207,19 @@ innerRows:
 	// rebuild the multiindex?
 	for idx, row := range joinedRows {
 		for varname, pos := range rel.vars {
-			bitmap := rel.multiindex[varname][row.valueAt(pos)]
-			if bitmap == nil {
-				rel.multiindex[varname][row.valueAt(pos)] = roaring.New()
-			}
-			rel.multiindex[varname][row.valueAt(pos)].AddInt(idx)
+			rel.addValueToRow(varname, row.valueAt(pos), idx)
 		}
 	}
+}
+
+func (rel *relation) addValueToRow(varname string, key EntityKey, value int) {
+	if key.Empty() {
+		return
+	}
+	if rel.multiindex[varname][key] == nil {
+		rel.multiindex[varname][key] = roaring.New()
+	}
+	rel.multiindex[varname][key].AddInt(value)
 }
 
 func (rel *relation) dumpRows(prefix string, cursor *Cursor) {

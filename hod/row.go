@@ -37,6 +37,9 @@ func (row *relationRow) copy() *relationRow {
 }
 
 func (row *relationRow) addValue(pos int, value EntityKey) {
+	if value.Empty() {
+		return
+	}
 	if len(row.content) < pos*16+16 {
 		nrow := make([]byte, pos*16+16)
 		copy(nrow, row.content)
