@@ -1,8 +1,15 @@
 syntax = "proto3";
 package proto;
 
+import "google/api/annotations.proto";
+
 service HodDB {
-    rpc Select(SelectQuery) returns (Response);
+    rpc Select(SelectQuery) returns (Response) {
+        option (google.api.http) = {
+          post: "/v1/hoddb/select"
+          body: "*"
+        };
+    };
     rpc Count(SelectQuery) returns (Response);
     rpc Versions(VersionQuery) returns (Response);
 
