@@ -23,6 +23,7 @@
         });
         qstr += "};";
         console.log(qstr)
+        return qstr;
     }
 
     var Client = function(nodes, edges) {
@@ -260,6 +261,14 @@
 	var options = {};
 	network = new vis.Network(container, data, options);
 
+
+    var yasqe = YASQE(document.getElementById("query")); 
+    yasqe.options.syntaxErrorCheck = false;
+    yasqe.options.showQueryButton = false;
+    yasqe.options.readOnly = true;
+    yasqe.setSize("100%")
+    yasqe.setValue("");
+
     var Query = QueryBuilder(nodes, edges, network);
 
 	var client = new Client(nodes, edges);
@@ -274,7 +283,7 @@
             network.unselectAll();
         }
         q = Query.build();
-        queryToText(q);
+        yasqe.setValue(queryToText(q));
         client.query(q);
     });
 
