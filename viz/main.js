@@ -1,5 +1,30 @@
 (function($){
 
+    var uriToString = function(u) {
+        if (u.namespace != null) {
+            return u.namespace + ":" + u.value;
+        }
+        return u.value;
+    }
+    var queryToText = function(q) {
+        var qstr = "SELECT ";
+        q.vars.forEach(function(varname) {
+            qstr += varname + " ";
+        });
+        qstr += " WHERE {\n";
+        q.where.forEach(function(term) {
+            qstr += "\t";
+            qstr += uriToString(term.subject);
+            qstr += " ";
+            qstr += uriToString(term.predicate[0]);
+            qstr += " ";
+            qstr += uriToString(term.object);
+            qstr += " .\n";
+        });
+        qstr += "};";
+        console.log(qstr)
+    }
+
     var Client = function(nodes, edges) {
       var nodes = nodes;
       var edges = edges;
@@ -24,9 +49,10 @@
               client.then( (res) => {
                   return res.apis.HodDB.Select({body: JSON.stringify(q)})
               }).then( (res) => {
-                  res.body.rows.forEach(function(row) {
-                      console.log(JSON.stringify(row.values));
-                  });
+                  console.log("# results:", res.body.rows.length);
+                  //res.body.rows.forEach(function(row) {
+                  //    console.log(JSON.stringify(row.values));
+                  //});
               }, (reason) => {
                   console.error(reason);
               });
@@ -209,14 +235,6 @@
                     nodesinquery.push(e.dest);
                 }
 
-                //query.nodes.forEach(function(classname) {
-                //    terms.push({
-                //        varname = "?"+classname
-                //        subject: {value: varname},
-                //        predicate: [{namespace: "rdf", value: "type"}],
-                //        object: {namespace: "brick", value: classname}
-                //    });
-                //});
                 console.log(terms);
                 return {
                     vars: variables,
@@ -256,6 +274,7 @@
             network.unselectAll();
         }
         q = Query.build();
+        queryToText(q);
         client.query(q);
     });
 
