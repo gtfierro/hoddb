@@ -8,8 +8,8 @@ sources:
 - https://git.sr.ht/~gabe/hod
 tasks:
   - setup-go: |
-      curl -O https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
-      sudo tar -C /usr/local -xzf go1.11.2.linux-amd64.tar.gz
+      curl -O https://dl.google.com/go/go1.12.3.linux-amd64.tar.gz
+      sudo tar -C /usr/local -xzf go1.12.3.linux-amd64.tar.gz
   - build-hod: |
       export PATH=$PATH:/usr/local/go/bin
       export GO111MODULE=on
