@@ -1,0 +1,243 @@
+{
+  "swagger": "2.0",
+  "host": "localhost:47809",
+  "info": {
+    "title": "log.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/hoddb/select": {
+      "post": {
+        "operationId": "Select",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protoResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protoSelectQuery"
+            }
+          }
+        ],
+        "tags": [
+          "HodDB"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protoOp": {
+      "type": "string",
+      "enum": [
+        "ADD",
+        "DEL",
+        "FLUSH",
+        "REGISTER_TRIGGER"
+      ],
+      "default": "ADD",
+      "title": "- ADD: Adds the target triple to the target graph\n - DEL: Deletes the target triple from the target graph\n - FLUSH: Commits the outstanding log entries to a new version\n - REGISTER_TRIGGER: opens the given file and loads it into the target graph"
+    },
+    "protoPattern": {
+      "type": "string",
+      "enum": [
+        "Single",
+        "ZeroOne",
+        "ZeroPlus",
+        "OnePlus"
+      ],
+      "default": "Single"
+    },
+    "protoResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "format": "int64"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoRow"
+          }
+        }
+      }
+    },
+    "protoRow": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoURI"
+          }
+        }
+      }
+    },
+    "protoSelectQuery": {
+      "type": "object",
+      "properties": {
+        "vars": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of vars to select, including '*'"
+        },
+        "graphs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of graphs to select, including '*'"
+        },
+        "filter": {
+          "$ref": "#/definitions/protoTimeFilter",
+          "title": "time filter"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        },
+        "where": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoTriple"
+          },
+          "title": "where clause"
+        }
+      }
+    },
+    "protoTagInsertResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "title": "error that ocurred, if any"
+        },
+        "processed": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "if true, the inserts were processed; else, the tag was the ignored"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64",
+          "title": "the version these inserts were added to"
+        }
+      }
+    },
+    "protoTimeFilter": {
+      "type": "string",
+      "enum": [
+        "At",
+        "Before",
+        "After"
+      ],
+      "default": "At"
+    },
+    "protoTrigger": {
+      "type": "object",
+      "properties": {
+        "graph": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "where": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoTriple"
+          }
+        },
+        "insert": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoTriple"
+          }
+        }
+      }
+    },
+    "protoTriggerResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoTrigger"
+          }
+        }
+      }
+    },
+    "protoTriple": {
+      "type": "object",
+      "properties": {
+        "subject": {
+          "$ref": "#/definitions/protoURI"
+        },
+        "predicate": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoURI"
+          }
+        },
+        "object": {
+          "$ref": "#/definitions/protoURI"
+        }
+      }
+    },
+    "protoURI": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "title": "full URI"
+        },
+        "value": {
+          "type": "string"
+        },
+        "variable": {
+          "type": "string",
+          "title": "variable"
+        },
+        "pattern": {
+          "$ref": "#/definitions/protoPattern"
+        }
+      }
+    }
+  }
+}
