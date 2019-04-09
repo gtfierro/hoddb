@@ -63,6 +63,24 @@ func (L *Log) buildVersionManager(cfg *Config) error {
 	return nil
 }
 
+func (vm *versionmanager) listAllGraphs() (graphs []string, err error) {
+	rows, rerr := vm.db.Query("SELECT distinct graph from versions;")
+	if rerr != nil {
+		err = rerr
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var graph string
+		err = rows.Scan(&graph)
+		if err != nil {
+			return
+		}
+		graphs = append(graphs, graph)
+	}
+	return
+}
+
 // add the version/graph combo to the graph if it doesn't already exist
 // return true if we're adding a new version
 func (vm *versionmanager) addEntry(entry *logpb.LogEntry) (newversion bool, newgraph bool, retErr error) {

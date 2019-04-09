@@ -153,6 +153,14 @@ func (L *Log) Select(ctx context.Context, query *logpb.SelectQuery) (resp *logpb
 
 	var cursor *Cursor
 	resp = new(logpb.Response)
+	if len(query.Graphs) == 1 && query.Graphs[0] == "*" {
+		query.Graphs, err = L.versionDB.listAllGraphs()
+		if err != nil {
+			logrus.Error(err)
+			return
+		}
+	}
+
 	for _, graph := range query.Graphs {
 		// TODO: check query.Filter
 		//cursor = L.Cursor(graph, query.Timestamp, nil)
