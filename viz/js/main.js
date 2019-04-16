@@ -69,7 +69,7 @@
           },
           getNodes: function(n) {
               if (n == null) { return }
-              console.log(n);
+              console.log("N",n);
               client.then( (res) => {
                   return res.apis.HodDB.Select({body: JSON.stringify({
                       vars: ['?tstat', '?tstatclass','?pred','?object','?objectclass'],
@@ -109,8 +109,8 @@
                       addNodeIfNotExist(row.values[4].value);
                       addEdgeIfNotExist(row.values[1].value, row.values[4].value, row.values[2].value);
                   });
-              }, (reason) => {
-                  console.error(reason);
+              }, (reason, x) => {
+                  console.error(reason, x);
               });
 
           }
@@ -245,7 +245,6 @@
                     nodesinquery.push(e.dest);
                 }
 
-                console.log(terms);
                 generated_query = {
                     vars: variables,
                     graphs: ['*'],
@@ -277,6 +276,7 @@
     yasqe.options.syntaxErrorCheck = false;
     yasqe.options.showQueryButton = false;
     yasqe.options.readOnly = true;
+    yasqe.options.createShareLink = null;
     //yasqe.options.lineNumbers = false;
     yasqe.setSize("100%")
     yasqe.setValue("");
@@ -284,6 +284,17 @@
     var Query = QueryBuilder(nodes, edges, network);
 
     var client = new Client(nodes, edges);
+    
+    $(".button").click(function(e) {
+        startclass = e.currentTarget.dataset.brickclass;
+        console.log(nodes);
+        nodes.clear();
+        edges.clear()
+        client = new Client(nodes, edges);
+        Query = QueryBuilder(nodes, edges, network);
+        network.unselectAll();
+        nodes.add({id: startclass, label:startclass});
+    });
 
     network.on("click", function (params) {
         console.log('click event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
