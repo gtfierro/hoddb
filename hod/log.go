@@ -147,7 +147,7 @@ func NewLog(cfg *Config) (*Log, error) {
 		}
 	}()
 
-	numWorkers := 10
+	numWorkers := 4
 	graphs := make(chan string)
 	var wg sync.WaitGroup
 	buildCursorWorker := func() {

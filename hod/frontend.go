@@ -29,7 +29,10 @@ func (L *Log) ServeGRPC() error {
 		Debug:            false,
 	})
 	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithInsecure()}
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(20 * 1024 * 1024)),
+	}
 	if err := logpb.RegisterHodDBHandlerFromEndpoint(context.Background(), mux, ":47808", opts); err != nil {
 		log.Error(err)
 		panic(err)
