@@ -50,7 +50,16 @@
               client.then( (res) => {
                   return res.apis.HodDB.Select({body: JSON.stringify(q)})
               }).then( (res) => {
+                  sites = new Set();
+                  res.body.rows.forEach(function(row) {
+                      row.values.forEach(function(v) {
+                        sites.add(v.namespace);
+                      })
+                  });
+                  document.getElementById("numsites").textContent = sites.size
+                  document.getElementById("numresults").textContent = res.body.rows.length
                   console.log("# results:", res.body.rows.length);
+                  console.log("# sites:", sites.size);
                   //res.body.rows.forEach(function(row) {
                   //    console.log(JSON.stringify(row.values));
                   //});
@@ -237,13 +246,15 @@
                 }
 
                 console.log(terms);
-                return {
+                generated_query = {
                     vars: variables,
-                    graphs: ['movie'],
+                    graphs: ['*'],
                     filter: "Before",
                     timestamp: luxon.DateTime.local().toMillis()*1000000,
                     where: terms,
-                }
+                };
+
+                return generated_query;
             },
         }
         return that
