@@ -8,20 +8,27 @@
 </head>
 <body>
     <div class="ui grid container">
-        <div class="ten wide column fullpage">
-            <div id="viewport" width="100%" height="800px"></div>
-        </div>
-        <div class="six wide column fullpage">
-            <div class="ui grid container">
-                <div class="row">
-                    <div class="column">
-                        <div id="query" width="100%"></div>
+        <h1 class="ui dividing header">Brick Query Builder</h1>
+        <div class="row">
+            <div class="ten wide column fullpage">
+                <div id="viewport" width="100%" height="800px"></div>
+            </div>
+            <div class="six wide column fullpage">
+                <h3 class="ui dividing header">Generated Query</h3>
+                <div class="ui grid container">
+                    <div class="row">
+                        <div class="column">
+                            <div id="query" width="100%"></div>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="columns">
-                        <p># Sites: <span id="numsites"></span></p>
-                        <p># Results: <span id="numresults"></span></p>
+                    <div class="row">
+                        <div class="columns">
+                            <h4 class="ui top attached block header">Query Results</h4>
+                            <div class="ui bottom attached segment">
+                                <p><b># Sites:</b> <span id="numsites">0</span></p>
+                                <p><b># Results:</b> <span id="numresults">0</span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

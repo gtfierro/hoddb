@@ -2,20 +2,21 @@
     height: 800px;
 }
 
-.ui.container {
-  width: 2000px;
+body > .ui.container {
+  margin-top: 3em;
+  width: 1600px;
 }
 
 .ui.grid.container {
-    width: calc( 2000px  +  2rem ) !important;
+    width: calc( 1600px  +  2rem ) !important;
 }
 
 .ui.relaxed.grid.container {
-    width: calc( 2000px  +  3rem ) !important;
+    width: calc( 1600px  +  3rem ) !important;
 }
 
 .ui.very.relaxed.grid.container {
-    width: calc( 2000px  +  5rem ) !important;
+    width: calc( 1600px  +  5rem ) !important;
 }
 
 #viewport {
