@@ -206,7 +206,8 @@ func (L *Log) Select(ctx context.Context, query *logpb.SelectQuery) (resp *logpb
 				err = errors.Wrapf(err, "Could not run op %s", op)
 				resp.Error = err.Error()
 				logrus.Error(err)
-				return resp, err
+				continue
+				//return resp, err
 			}
 		}
 		resp.Variables = query.Vars
