@@ -5,13 +5,24 @@
     <link rel="stylesheet" href="css/semantic.min.css">
     <link href='css/yasqe.min.css' rel='stylesheet' type='text/css'/>
     <link href="css/site.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.18/datatables.min.css"/>
 </head>
 <body>
     <div class="ui grid container">
         <h1 class="ui dividing header">Brick Query Builder</h1>
+
         <div class="row">
             <div class="ten wide column fullpage">
-                <div id="viewport" width="100%" height="800px"></div>
+                <div class="ui top attached tabular menu">
+                    <a class="active item" data-tab="builder">Builder</a>
+                    <a class="item" data-tab="results">Results</a>
+                </div>
+                <div class="ui bottom attached tab segment" data-tab="builder" height="800px">
+                    <div id="viewport" width="100%" height="800px"></div>
+                </div>
+                <div class="ui bottom attached tab segment" data-tab="results">
+                    <p>hey</p>
+                </div>
             </div>
             <div class="six wide column fullpage">
                 <h3 class="ui dividing header">Generated Query</h3>
@@ -52,6 +63,7 @@
     <script src="js/swagger-client.js"></script>
     <script src="js/luxon.js"></script>  
     <script src="js/vis.js"></script>  
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.18/datatables.min.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

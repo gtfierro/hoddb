@@ -1,5 +1,8 @@
 (function($){
 
+    // init tabs
+    //$('.tabular.menu .item').tab();
+
     var uriToString = function(u) {
         if (u.namespace != null) {
             return u.namespace + ":" + u.value;
@@ -269,8 +272,16 @@
         edges: edges
     };
     var options = {};
+    var network = null;
+    $('.tabular.menu .item').tab({'onVisible':function(e){ 
+        console.log('net visible', e);
+        if (network != null) {
+            network.fit();
+        }
+    }});
     network = new vis.Network(container, data, options);
 
+    //$('.tabular.menu .item').tab({'onVisible':function(){console.log('net visible'); network.redraw()}});
 
     var yasqe = YASQE(document.getElementById("query"));
     yasqe.options.syntaxErrorCheck = false;
@@ -313,6 +324,7 @@
 
     $(document).ready(function(){
         nodes.add({id:"Room", label:"Room"});
+        network.redraw();
     })
 
 })(this.jQuery)
