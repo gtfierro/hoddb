@@ -2,6 +2,9 @@
 
     // init tabs
     //$('.tabular.menu .item').tab();
+    var _queryres = [];
+    var _querycols = [];
+    var _MAXCOLS = 16;
 
     var uriToString = function(u) {
         if (u.namespace != null) {
@@ -63,9 +66,21 @@
                   document.getElementById("numresults").textContent = res.body.rows.length
                   console.log("# results:", res.body.rows.length);
                   console.log("# sites:", sites.size);
-                  //res.body.rows.forEach(function(row) {
-                  //    console.log(JSON.stringify(row.values));
-                  //});
+                  _queryres.length = 0;
+                  _querycols.length = 0;
+                  console.log(q);
+                  q.vars.forEach( (v) => { _querycols.push({title: v, name: v, visible: true})});
+                  for (i=_querycols.length;i<_MAXCOLS;i++) {
+                      _querycols.push({title: '', name: '', visible: false});
+                  }
+                  console.log(_querycols);
+                  res.body.rows.forEach(function(row) {
+                      var toadd = row.values.map( (r) => r.value )
+                      for (i=toadd.length;i<_MAXCOLS;i++) {
+                          toadd.push(null);
+                      }
+                      _queryres.push( toadd );
+                  });
               }, (reason) => {
                   console.error(reason);
               });
@@ -273,13 +288,6 @@
     };
     var options = {};
     var network = null;
-    $('.tabular.menu .item').tab({'onVisible':function(e){ 
-        console.log('net visible', e);
-        if (network != null) {
-            network.fit();
-        }
-    }});
-    network = new vis.Network(container, data, options);
 
     //$('.tabular.menu .item').tab({'onVisible':function(){console.log('net visible'); network.redraw()}});
 
@@ -292,39 +300,86 @@
     yasqe.setSize("100%")
     yasqe.setValue("");
 
-    var Query = QueryBuilder(nodes, edges, network);
-
-    var client = new Client(nodes, edges);
-    
-    $(".button").click(function(e) {
-        startclass = e.currentTarget.dataset.brickclass;
-        console.log(nodes);
-        nodes.clear();
-        edges.clear()
-        client = new Client(nodes, edges);
-        Query = QueryBuilder(nodes, edges, network);
-        network.unselectAll();
-        nodes.add({id: startclass, label:startclass});
-    });
-
-    network.on("click", function (params) {
-        console.log('click event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
-        // TODO: track nodes already expanded
-        var clickednode = this.getNodeAt(params.pointer.DOM);
-        if (clickednode != null) {
-            client.getNodes(clickednode);
-            Query.processClickedNode(clickednode);
-            network.unselectAll();
-        }
-        q = Query.build();
-        yasqe.setValue(queryToText(q));
-        client.query(q);
-    });
-
 
     $(document).ready(function(){
+        network = new vis.Network(container, data, options);
+
+        var dt = null;
+
+        $('.tabular.menu .item').tab(
+            {
+                'onVisible':function(e){
+                    console.log('net visible', e);
+                    if (e == 'builder' && network != null) {
+                        network.fit();
+                    } else if (e == 'results') {
+                        ////$("#resultstable").DataTable().destroy();
+                        //console.log(_querycols);
+                        //console.log(_queryres);
+                    }
+                },
+                'onLoad': function(e) {
+                    if (e == 'results') {
+                        if (dt != null && $.fn.DataTable.isDataTable("#resultstable")) {
+                            dt.clear();
+                            dt.destroy();
+                            dt = $("#resultstable").DataTable({
+                                data: _queryres,
+                                columns: _querycols,
+                                autoWidth: false,
+                            }).draw();
+                            console.log(dt);
+                            //dt.columns.adjust().draw();
+                        }
+                    }
+                },
+                'onFirstLoad': function(e) {
+                    if (e == 'results') {
+                        dt = $("#resultstable").DataTable({
+                            destroy: true,
+                            autoWidth: false,
+                            data: _queryres,
+                            columns: _querycols,
+                        }).draw();
+                    }
+                },
+            }
+        );
+
+        $.tab('change tab','builder');
+
+        var Query = QueryBuilder(nodes, edges, network);
+
+        var client = new Client(nodes, edges);
+
+        $(".button").click(function(e) {
+            startclass = e.currentTarget.dataset.brickclass;
+            console.log(nodes);
+            nodes.clear();
+            edges.clear()
+            client = new Client(nodes, edges);
+            Query = QueryBuilder(nodes, edges, network);
+            network.unselectAll();
+            nodes.add({id: startclass, label:startclass});
+        });
+
+        network.on("click", function (params) {
+            console.log('click event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
+            // TODO: track nodes already expanded
+            var clickednode = this.getNodeAt(params.pointer.DOM);
+            if (clickednode != null) {
+                client.getNodes(clickednode);
+                Query.processClickedNode(clickednode);
+                network.unselectAll();
+            }
+            q = Query.build();
+            yasqe.setValue(queryToText(q));
+            client.query(q);
+        });
+
         nodes.add({id:"Room", label:"Room"});
         network.redraw();
+        network.fit();
     })
 
 })(this.jQuery)
