@@ -2,7 +2,9 @@ package loader
 
 import (
 	"bytes"
+
 	logpb "git.sr.ht/~gabe/hod/proto"
+	"git.sr.ht/~gabe/hod/turtle"
 )
 
 var _e4 = [4]byte{0, 0, 0, 0}
@@ -54,9 +56,14 @@ func newEntity(key EntityKey) *Entity {
 	}
 }
 
+// TODO: probably need to index edges by the pattern as well as the predicate,
+// otherwise we throw away old edges?
 func (ent *Entity) addInEdge(pred, subject EntityKey, pattern logpb.Pattern) {
 	if _, predfound := ent.inedge[pred]; !predfound {
 		ent.inedge[pred] = make(map[EntityKey]logpb.Pattern)
+	}
+	if foundpat, foundsub := ent.inedge[pred][subject]; foundsub && foundpat == logpb.Pattern_Single {
+		return
 	}
 	ent.inedge[pred][subject] = pattern
 }
@@ -64,6 +71,9 @@ func (ent *Entity) addInEdge(pred, subject EntityKey, pattern logpb.Pattern) {
 func (ent *Entity) addOutEdge(pred, object EntityKey, pattern logpb.Pattern) {
 	if _, predfound := ent.outedge[pred]; !predfound {
 		ent.outedge[pred] = make(map[EntityKey]logpb.Pattern)
+	}
+	if foundpat, foundob := ent.outedge[pred][object]; foundob && foundpat == logpb.Pattern_Single {
+		return
 	}
 	ent.outedge[pred][object] = pattern
 }
@@ -144,18 +154,18 @@ func (ent *Entity) GetAllOutEdges() (edges [][]EntityKey) {
 
 func (ent *Entity) GetAllInPlusEdges() (edges [][]EntityKey) {
 	for _, edge := range ent.compiled.In {
-		if edge.Pattern != logpb.Pattern_Single {
-			edges = append(edges, []EntityKey{EntityKeyFromBytes(edge.Predicate), EntityKeyFromBytes(edge.Value)})
-		}
+		//if edge.Pattern != logpb.Pattern_Single {
+		edges = append(edges, []EntityKey{EntityKeyFromBytes(edge.Predicate), EntityKeyFromBytes(edge.Value)})
+		//}
 	}
 	return
 }
 
 func (ent *Entity) GetAllOutPlusEdges() (edges [][]EntityKey) {
 	for _, edge := range ent.compiled.Out {
-		if edge.Pattern != logpb.Pattern_Single {
-			edges = append(edges, []EntityKey{EntityKeyFromBytes(edge.Predicate), EntityKeyFromBytes(edge.Value)})
-		}
+		//if edge.Pattern != logpb.Pattern_Single {
+		edges = append(edges, []EntityKey{EntityKeyFromBytes(edge.Predicate), EntityKeyFromBytes(edge.Value)})
+		//}
 	}
 	return
 }
@@ -178,7 +188,8 @@ func (ent *Entity) OutEdges(predicate EntityKey) (entities []EntityKey) {
 }
 func (ent *Entity) InPlusEdges(predicate EntityKey) (entities []EntityKey) {
 	for _, edge := range append(ent.compiled.In) {
-		if edge.Pattern != logpb.Pattern_Single && bytes.Equal(predicate.Hash[:], edge.Predicate[4:8]) {
+		//if edge.Pattern != logpb.Pattern_Single && bytes.Equal(predicate.Hash[:], edge.Predicate[4:8]) {
+		if bytes.Equal(predicate.Hash[:], edge.Predicate[4:8]) {
 			entities = append(entities, EntityKeyFromBytes(edge.Value))
 		}
 	}
@@ -186,7 +197,9 @@ func (ent *Entity) InPlusEdges(predicate EntityKey) (entities []EntityKey) {
 }
 func (ent *Entity) OutPlusEdges(predicate EntityKey) (entities []EntityKey) {
 	for _, edge := range append(ent.compiled.Out) {
-		if edge.Pattern != logpb.Pattern_Single && bytes.Equal(predicate.Hash[:], edge.Predicate[4:8]) {
+		//log.Warning(edge.Value, edge.Pattern)
+		//if edge.Pattern != logpb.Pattern_Single && bytes.Equal(predicate.Hash[:], edge.Predicate[4:8]) {
+		if bytes.Equal(predicate.Hash[:], edge.Predicate[4:8]) {
 			entities = append(entities, EntityKeyFromBytes(edge.Value))
 		}
 	}
@@ -243,4 +256,11 @@ endpointloop:
 		endpoints = append(endpoints, []EntityKey{EntityKeyFromBytes(endpoint.Src), EntityKeyFromBytes(endpoint.Dst)})
 	}
 	return
+}
+
+func convertURI(t turtle.URI) *logpb.URI {
+	return &logpb.URI{
+		Namespace: t.Namespace,
+		Value:     t.Value,
+	}
 }

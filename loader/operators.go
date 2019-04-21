@@ -32,7 +32,7 @@ func (rs *resolveSubject) run(cursor *Cursor) error {
 
 	object, err := cursor.getEntity(rs.term.object)
 	if err != nil && err != ErrNotFound {
-		return errors.Wrap(err, fmt.Sprintf("%+v", rs.term.triple))
+		return errors.Wrap(err, fmt.Sprintf("Could not run %+v", rs.term.triple))
 	} else if err == ErrNotFound {
 		return nil
 	}

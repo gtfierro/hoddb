@@ -1,9 +1,13 @@
 package loader
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
+	"strings"
 
+	query "git.sr.ht/~gabe/hod/lang"
+	sparql "git.sr.ht/~gabe/hod/lang/ast"
 	logpb "git.sr.ht/~gabe/hod/proto"
 	"git.sr.ht/~gabe/hod/turtle"
 	"github.com/dgraph-io/badger"
@@ -50,9 +54,16 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 		return ent
 	}
 
+	hod.namespaces.Store(graph.Name, graph.Data.Namespaces)
+	hod.graphs[graph.Name] = struct{}{}
+
 	// insert extended edges
-	cursor := hod.Cursor(graph.Name, nil)
-	for _, ent := range entities {
+	cursor, err := hod.Cursor(graph.Name)
+	if err != nil {
+		return errors.Wrap(err, "get cursor")
+	}
+	for key, ent := range entities {
+
 		for _, pred := range ent.GetAllPredicates() {
 			e := edge{predicate: pred, pattern: logpb.Pattern_OnePlus}
 			newseen, _, err := cursor.followPathFromSubject(ent, e)
@@ -60,16 +71,21 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 				return err
 			}
 			for newkey := range newseen {
+				//log.Warning("add edge to", hod.s(key), logpb.Pattern_OnePlus)
 				ent.addOutEdge(pred, newkey, logpb.Pattern_OnePlus)
 				other := getEntity(newkey)
 				other.addInEdge(pred, ent.key, logpb.Pattern_OnePlus)
+				entities[newkey] = other
 			}
 		}
+		entities[key] = ent
+
 	}
 
 	txn = hod.db.NewTransaction(true)
 
 	for _, ent := range entities {
+		ent.Compile()
 		serializedEntry, err := proto.Marshal(ent.compiled)
 		if err != nil {
 			txn.Discard()
@@ -107,6 +123,7 @@ func (hod *HodDB) setWithCommit(txn *badger.Txn, key, value []byte) error {
 }
 
 func (hod *HodDB) GetEntity(key EntityKey) (*Entity, error) {
+	key.Graph = _e4
 	var entity = &Entity{
 		compiled: new(logpb.Entity),
 		key:      key,
@@ -145,4 +162,194 @@ func (hod *HodDB) hashURI(u turtle.URI) EntityKey {
 	hod.hashes[u] = key
 	hod.uris[key] = u
 	return key
+}
+
+func (hod *HodDB) ParseQuery(qstr string, version int64) (*logpb.SelectQuery, error) {
+	q, err := query.Parse(qstr)
+	if err != nil {
+		return nil, err
+	}
+
+	sq := &logpb.SelectQuery{
+		Vars:      q.Variables,
+		Graphs:    q.From.Databases,
+		Timestamp: version,
+		Filter:    logpb.TimeFilter_Before,
+		//Where:
+	}
+
+	// TODO: expand
+
+	for _, triple := range q.Where.Terms {
+		term := &logpb.Triple{
+			Subject: hod.expandURI(convertURI(triple.Subject), ""),
+			Object:  hod.expandURI(convertURI(triple.Object), ""),
+		}
+		for _, pred := range triple.Predicates {
+			// TODO: use pattern
+			uri := hod.expandURI(convertURI(pred.Predicate), "")
+			switch pred.Pattern {
+			case sparql.PATTERN_SINGLE:
+				uri.Pattern = logpb.Pattern_Single
+			case sparql.PATTERN_ZERO_ONE:
+				uri.Pattern = logpb.Pattern_ZeroOne
+			case sparql.PATTERN_ONE_PLUS:
+				uri.Pattern = logpb.Pattern_OnePlus
+			case sparql.PATTERN_ZERO_PLUS:
+				uri.Pattern = logpb.Pattern_ZeroPlus
+			}
+			term.Predicate = append(term.Predicate, uri)
+		}
+		sq.Where = append(sq.Where, term)
+	}
+
+	return sq, nil
+}
+
+func (hod *HodDB) expandURI(uri *logpb.URI, graphname string) *logpb.URI {
+	if !strings.HasPrefix(uri.Value, "?") {
+		if len(uri.Value) == 0 {
+			return uri
+		}
+
+		// get random graph if one is not provided
+		if graphname == "" {
+			for key := range hod.graphs {
+				graphname = key
+				break
+			}
+		}
+
+		_namespaces, ok := hod.namespaces.Load(graphname)
+		if !ok {
+			return nil
+		}
+		namespaces := _namespaces.(map[string]string)
+		if uri.Namespace != "" && (uri.Value[0] != '"' && uri.Value[len(uri.Value)-1] != '"') {
+			if full, found := namespaces[uri.Namespace]; found {
+				uri.Namespace = full
+			}
+		}
+	}
+	return uri
+}
+
+func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *logpb.Response, err error) {
+
+	var cursor *Cursor
+	resp = new(logpb.Response)
+	if len(query.Graphs) == 1 && query.Graphs[0] == "*" {
+		var graphs []string
+		for graph := range hod.graphs {
+			graphs = append(graphs, graph)
+		}
+		//query.Graphs, err = hod.versionDB.listAllGraphs()
+		//if err != nil {
+		//	log.Error(err)
+		//	return
+		//}
+	}
+
+	for _, graph := range query.Graphs {
+		// TODO: check query.Filter
+		//cursor = L.Cursor(graph, query.Timestamp, nil)
+		cursor, err = hod.Cursor(graph)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		var vars []string
+		for idx, triple := range query.Where {
+			if isVariable(triple.Subject) {
+				vars = append(vars, triple.Subject.Value)
+			} else {
+				query.Where[idx].Subject = hod.expandURI(triple.Subject, graph)
+			}
+			if isVariable(triple.Predicate[0]) {
+				vars = append(vars, triple.Predicate[0].Value)
+			} else {
+				query.Where[idx].Predicate[0] = hod.expandURI(triple.Predicate[0], graph)
+			}
+			if isVariable(triple.Object) {
+				vars = append(vars, triple.Object.Value)
+			} else {
+				query.Where[idx].Object = hod.expandURI(triple.Object, graph)
+			}
+		}
+		dg := makeDependencyGraph(cursor, vars, query.Where)
+		qp, err := formQueryPlan(dg, nil)
+		if err != nil {
+			resp.Error = err.Error()
+			err = errors.Wrap(err, "Could not form query plan")
+			log.Error(err)
+			return resp, err
+		}
+		qp.variables = query.Vars
+		cursor.addQueryPlan(qp)
+		cursor.selectVars = query.Vars
+		log.Info(qp)
+
+		for _, op := range qp.operations {
+			log.Info(op)
+			err := op.run(cursor)
+			if err != nil {
+				err = errors.Wrapf(err, "Could not run op %s", op)
+				resp.Error = err.Error()
+				log.Error(err)
+				continue
+				//return resp, err
+			}
+		}
+		resp.Variables = query.Vars
+		resp.Rows = append(resp.Rows, cursor.GetRowsWithVar(query.Vars)...)
+		resp.Version = query.Timestamp
+		resp.Count = int64(len(resp.Rows))
+		//cursor.dumpTil(len(vars))
+	}
+	return
+
+}
+
+func (hod *HodDB) Dump(e *Entity) {
+	fmt.Println("ent>", hod.s(e.key))
+	for _, pred := range e.GetAllPredicates() {
+		fmt.Println("  pred>", hod.s(pred))
+		for _, ent := range e.InEdges(pred) {
+			fmt.Println("    subject>", hod.s(ent))
+		}
+		for _, ent := range e.OutEdges(pred) {
+			fmt.Println("    object>", hod.s(ent))
+		}
+		for _, ent := range e.InPlusEdges(pred) {
+			fmt.Println("    subject+>", hod.s(ent))
+		}
+		for _, ent := range e.OutPlusEdges(pred) {
+			fmt.Println("    object+>", hod.s(ent))
+		}
+		//predEnt, err := L.GetEntity(pred)
+		//if err != nil {
+		//	log.Fatal(err)
+		//}
+		//for _, object := range predEnt.GetAllObjects() {
+		//	fmt.Println("    allobjectlist>", LOOKUPURI[object.Hash])
+		//	for _, sub := range predEnt.GetSubjects(object) {
+		//		fmt.Println("    allobjectlist>sub>", LOOKUPURI[sub.Hash])
+		//	}
+		//}
+		//for _, subject := range predEnt.GetAllSubjects() {
+		//	fmt.Println("    allsubjectlist>", LOOKUPURI[subject.Hash])
+		//	for _, ob := range predEnt.GetObjects(subject) {
+		//		fmt.Println("    allsubjectlist>obj>", LOOKUPURI[ob.Hash])
+		//	}
+		//}
+	}
+}
+
+func (hod *HodDB) s(u EntityKey) string {
+	uri := hod.uris[u]
+	if uri.Namespace != "" {
+		return uri.Namespace + "#" + uri.Value
+	}
+	return uri.Value
 }

@@ -15,7 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	//"strings"
-	//"sync"
+	"sync"
 	"time"
 )
 
@@ -36,6 +36,11 @@ type HodDB struct {
 
 	hashes map[turtle.URI]EntityKey
 	uris   map[EntityKey]turtle.URI
+
+	// TODO: serialize/deserialize
+	// map graph name to namespaces (map[string]map[string]string)
+	namespaces sync.Map
+	graphs     map[string]struct{}
 }
 
 func MakeHodDB(cfg *Config) (*HodDB, error) {
@@ -73,6 +78,7 @@ func MakeHodDB(cfg *Config) (*HodDB, error) {
 		cfg:    cfg,
 		hashes: make(map[turtle.URI]EntityKey),
 		uris:   make(map[EntityKey]turtle.URI),
+		graphs: make(map[string]struct{}),
 	}
 
 	//err = hod.buildVersionManager(cfg)

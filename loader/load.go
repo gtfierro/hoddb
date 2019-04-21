@@ -101,7 +101,7 @@ func (g *Graph) ExpandTriples() {
 	// Triples we generate go into "pending"
 
 	// run this until no more pending triples
-	for len(pending_triples) > 0 {
+	for len(pending_triples) > 0 || len(added_triples) > 0 {
 		// move pending triples to added triples
 		for t := range added_triples {
 			solid_triples[t] = 0
@@ -128,6 +128,13 @@ func (g *Graph) ExpandTriples() {
 
 		fmt.Println("solid: ", len(solid_triples), "added: ", len(added_triples), "pending: ", len(pending_triples))
 	}
+
+	log.Warning("before", len(g.Data.Triples), len(solid_triples))
+	g.Data.Triples = g.Data.Triples[:0]
+	for triple := range solid_triples {
+		g.Data.Triples = append(g.Data.Triples, triple)
+	}
+	log.Warning("after", len(g.Data.Triples))
 }
 
 func (g *Graph) CompileEntities() map[EntityKey]*Entity {

@@ -2,12 +2,15 @@ package loader
 
 import (
 	"encoding/binary"
+	"fmt"
+	"strings"
 	"sync"
 
 	logpb "git.sr.ht/~gabe/hod/proto"
 	"git.sr.ht/~gabe/hod/turtle"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
+	"github.com/spaolacci/murmur3"
 	"github.com/zhangxinngang/murmur"
 )
 
@@ -20,6 +23,7 @@ type Cursor struct {
 	selectVars       []string
 	rel              *relation
 	plan             *queryPlan
+	namespaces       map[string]string
 	sync.RWMutex
 }
 
@@ -29,17 +33,21 @@ func hashString(s string) []byte {
 	return dest
 }
 
-func (hod *HodDB) Cursor(graph string, plan *queryPlan) *Cursor {
+func (hod *HodDB) Cursor(graphname string) (*Cursor, error) {
 	c := &Cursor{
-		graphname:        graph,
+		graphname:        graphname,
 		hod:              hod,
 		variablePosition: make(map[string]int),
 		cache:            make(map[EntityKey]*Entity),
-		plan:             plan,
 	}
-	copy(c.key.Graph[:], hashString(graph))
-	c.addQueryPlan(plan)
-	return c
+	_namespaces, ok := hod.namespaces.Load(graphname)
+	if !ok {
+		return nil, fmt.Errorf("Graph '%s' not found", graphname)
+	}
+	c.namespaces = _namespaces.(map[string]string)
+	copy(c.key.Graph[:], hashString(graphname))
+	//c.addQueryPlan(plan)
+	return c, nil
 }
 
 func (c *Cursor) addQueryPlan(plan *queryPlan) {
@@ -141,4 +149,55 @@ func (c *Cursor) Iterate(f func(EntityKey, *Entity) bool) error {
 		return nil
 	})
 	return err
+}
+
+func (c *Cursor) expandURI(uri *logpb.URI) *logpb.URI {
+	if !strings.HasPrefix(uri.Value, "?") {
+		if len(uri.Value) == 0 {
+			return uri
+		}
+		if uri.Namespace != "" && (uri.Value[0] != '"' && uri.Value[len(uri.Value)-1] != '"') {
+			if full, found := c.namespaces[uri.Namespace]; found {
+				uri.Namespace = full
+			}
+		}
+	}
+	return uri
+}
+
+func (c *Cursor) GetRowsWithVar(mandatory []string) (returnRows []*logpb.Row) {
+	var seen = make(map[uint32]struct{})
+	//fmt.Println("dumping rows with vars ", mandatory)
+rows:
+	//for idx, row := range c.rel.rows {
+	for _, row := range c.rel.rows {
+		var addRow = new(logpb.Row)
+		//for idx2, varname := range mandatory {
+		for _, varname := range mandatory {
+			key := row.valueAt(c.variablePosition[varname])
+			if key.Empty() {
+				continue rows
+			}
+			c.RLock()
+			val := convertURI(c.hod.uris[key])
+			c.RUnlock()
+			//fmt.Println("> ", idx, "| ", val.String(), " (", idx2, ") @ ", key.Timestamp())
+			addRow.Values = append(addRow.Values, val)
+		}
+		h := hashRow2(addRow)
+		if _, found := seen[h]; !found {
+			returnRows = append(returnRows, addRow)
+			seen[h] = struct{}{}
+		}
+	}
+	return
+}
+
+func hashRow2(row *logpb.Row) uint32 {
+	h := murmur3.New32()
+	for _, val := range row.Values {
+		h.Write([]byte(val.Namespace))
+		h.Write([]byte(val.Value))
+	}
+	return h.Sum32()
 }
