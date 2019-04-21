@@ -123,7 +123,7 @@ func (hod *HodDB) setWithCommit(txn *badger.Txn, key, value []byte) error {
 }
 
 func (hod *HodDB) GetEntity(key EntityKey) (*Entity, error) {
-	key.Graph = _e4
+	//key.Graph = _e4
 	var entity = &Entity{
 		compiled: new(logpb.Entity),
 		key:      key,
@@ -144,7 +144,7 @@ func (hod *HodDB) GetEntity(key EntityKey) (*Entity, error) {
 	return entity, err
 }
 
-func (hod *HodDB) hashURI(u turtle.URI) EntityKey {
+func (hod *HodDB) hashURI(graph string, u turtle.URI) EntityKey {
 
 	if key, found := hod.hashes[u]; found {
 		return key
@@ -152,8 +152,9 @@ func (hod *HodDB) hashURI(u turtle.URI) EntityKey {
 
 	var key EntityKey
 
-	hashresult := murmur.Murmur3([]byte(u.Namespace + u.Value))
-	binary.BigEndian.PutUint32(key.Hash[:], hashresult)
+	//hashresult := murmur.Murmur3([]byte(u.Namespace + u.Value))
+	binary.BigEndian.PutUint32(key.Hash[:], murmur.Murmur3([]byte(u.Namespace+u.Value)))
+	binary.BigEndian.PutUint32(key.Graph[:], murmur.Murmur3([]byte(graph)))
 
 	if other_uri, found := hod.uris[key]; found {
 		panic(fmt.Sprintf("URI for %s conflicts with %s", u, other_uri))

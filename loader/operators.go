@@ -102,7 +102,6 @@ func (op *resolvePredicate) run(cursor *Cursor) error {
 	if err != nil {
 		return err
 	}
-
 	cursor.addOrJoin(predicateVar, predicates)
 	return nil
 }

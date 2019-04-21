@@ -151,9 +151,9 @@ func (g *Graph) CompileEntities() map[EntityKey]*Entity {
 
 	// add triples
 	for _, triple := range g.Data.Triples {
-		subjectHash := g.hod.hashURI(triple.Subject)
-		predicateHash := g.hod.hashURI(triple.Predicate)
-		objectHash := g.hod.hashURI(triple.Object)
+		subjectHash := g.hod.hashURI(g.Name, triple.Subject)
+		predicateHash := g.hod.hashURI(g.Name, triple.Predicate)
+		objectHash := g.hod.hashURI(g.Name, triple.Object)
 
 		subject := getEntity(subjectHash)
 		subject.addOutEdge(predicateHash, objectHash, logpb.Pattern_Single)

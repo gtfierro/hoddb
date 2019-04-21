@@ -114,7 +114,7 @@ func (c *Cursor) join(other *relation, on []string) {
 
 func (c *Cursor) ContextualizeURI(u *logpb.URI) EntityKey {
 	//var key EntityKey
-	key := c.hod.hashURI(turtle.URI{u.Namespace, u.Value})
+	key := c.hod.hashURI(c.graphname, turtle.URI{u.Namespace, u.Value})
 	//copy(key.Hash[:], c.hod.hashURI(u))
 	copy(key.Graph[:], c.key.Graph[:])
 	copy(key.Version[:], c.key.Version[:])
