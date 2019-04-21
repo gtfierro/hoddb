@@ -2,6 +2,7 @@ package loader
 
 import (
 	"bytes"
+	"encoding/binary"
 	"strings"
 
 	logpb "git.sr.ht/~gabe/hod/proto"
@@ -294,4 +295,12 @@ func stringtoURI(s string) *logpb.URI {
 	}
 
 	return &logpb.URI{Namespace: ns, Value: val, Pattern: pattern}
+}
+
+func EntityKeyFromInts(hash uint32, graph uint32, timestamp uint32) EntityKey {
+	var ek = new(EntityKey)
+	binary.LittleEndian.PutUint32(ek.Graph[:], graph)
+	binary.LittleEndian.PutUint32(ek.Hash[:], hash)
+	binary.LittleEndian.PutUint32(ek.Version[:], timestamp)
+	return *ek
 }
