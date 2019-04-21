@@ -2,6 +2,7 @@ package loader
 
 import (
 	"bytes"
+	"strings"
 
 	logpb "git.sr.ht/~gabe/hod/proto"
 	"git.sr.ht/~gabe/hod/turtle"
@@ -263,4 +264,34 @@ func convertURI(t turtle.URI) *logpb.URI {
 		Namespace: t.Namespace,
 		Value:     t.Value,
 	}
+}
+
+func makeTriple(subject, predicate, object string) *logpb.Triple {
+	return &logpb.Triple{
+		Subject:   stringtoURI(subject),
+		Predicate: []*logpb.URI{stringtoURI(predicate)},
+		Object:    stringtoURI(object),
+	}
+}
+
+func stringtoURI(s string) *logpb.URI {
+	var ns, val string
+	parts := strings.Split(s, "#")
+	if len(parts) == 2 {
+		ns = parts[0]
+		val = parts[1]
+	} else {
+		val = parts[0]
+	}
+
+	var pattern logpb.Pattern = logpb.Pattern_Single
+	if strings.HasSuffix(val, "*") {
+		pattern = logpb.Pattern_ZeroPlus
+	} else if strings.HasSuffix(val, "+") {
+		pattern = logpb.Pattern_OnePlus
+	} else if strings.HasSuffix(val, "?") {
+		pattern = logpb.Pattern_ZeroOne
+	}
+
+	return &logpb.URI{Namespace: ns, Value: val, Pattern: pattern}
 }
