@@ -289,10 +289,8 @@ func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *l
 		qp.variables = query.Vars
 		cursor.addQueryPlan(qp)
 		cursor.selectVars = query.Vars
-		log.Info(qp)
 
 		for _, op := range qp.operations {
-			log.Info(op)
 			err := op.run(cursor)
 			if err != nil {
 				err = errors.Wrapf(err, "Could not run op %s", op)
