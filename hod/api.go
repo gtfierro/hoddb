@@ -163,8 +163,10 @@ func (hod *HodDB) hashURI(graph string, u turtle.URI) EntityKey {
 		panic(fmt.Sprintf("URI for %s conflicts with %s", u, other_uri))
 	}
 
+	hod.Lock()
 	hod.hashes[hk] = key
 	hod.uris[key] = u
+	hod.Unlock()
 	return key
 }
 
@@ -361,4 +363,11 @@ func (hod *HodDB) s(u EntityKey) string {
 		return uri.Namespace + "#" + uri.Value
 	}
 	return uri.Value
+}
+
+func (hod *HodDB) getURI(key EntityKey) (turtle.URI, bool) {
+	hod.RLock()
+	uri, found := hod.uris[key]
+	hod.RUnlock()
+	return uri, found
 }

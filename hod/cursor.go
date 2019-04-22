@@ -167,22 +167,19 @@ func (c *Cursor) expandURI(uri *logpb.URI) *logpb.URI {
 
 func (c *Cursor) GetRowsWithVar(mandatory []string) (returnRows []*logpb.Row) {
 	var seen = make(map[uint32]struct{})
-	//fmt.Println("dumping rows with vars ", mandatory)
 rows:
-	//for idx, row := range c.rel.rows {
 	for _, row := range c.rel.rows {
 		var addRow = new(logpb.Row)
-		//for idx2, varname := range mandatory {
 		for _, varname := range mandatory {
 			key := row.valueAt(c.variablePosition[varname])
 			if key.Empty() {
 				continue rows
 			}
-			c.RLock()
-			val := convertURI(c.hod.uris[key])
-			c.RUnlock()
-			//fmt.Println("> ", idx, "| ", val.String(), " (", idx2, ") @ ", key.Timestamp())
-			addRow.Values = append(addRow.Values, val)
+			val, found := c.hod.getURI(key)
+			if !found {
+				continue rows
+			}
+			addRow.Values = append(addRow.Values, convertURI(val))
 		}
 		h := hashRow2(addRow)
 		if _, found := seen[h]; !found {

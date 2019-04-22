@@ -36,6 +36,7 @@ type HodDB struct {
 
 	hashes map[hashkeyentry]EntityKey
 	uris   map[EntityKey]turtle.URI
+	sync.RWMutex
 
 	// TODO: serialize/deserialize
 	// map graph name to namespaces (map[string]map[string]string)
