@@ -235,6 +235,13 @@ func (hod *HodDB) expandURI(uri *logpb.URI, graphname string) *logpb.URI {
 	return uri
 }
 
+func (hod *HodDB) Count(ctx context.Context, query *logpb.SelectQuery) (resp *logpb.Response, err error) {
+	resp, err = hod.Select(ctx, query)
+	if resp != nil {
+		resp.Rows = resp.Rows[:0]
+	}
+	return
+}
 func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *logpb.Response, err error) {
 
 	var cursor *Cursor
@@ -244,6 +251,7 @@ func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *l
 		for graph := range hod.graphs {
 			graphs = append(graphs, graph)
 		}
+		query.Graphs = graphs
 		//query.Graphs, err = hod.versionDB.listAllGraphs()
 		//if err != nil {
 		//	log.Error(err)

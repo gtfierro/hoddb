@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	hod "git.sr.ht/~gabe/hod/loader"
 	"github.com/pkg/errors"
 	"log"
-	"time"
 )
 
 func main() {
@@ -21,18 +19,5 @@ func main() {
 		log.Fatal(errors.Wrap(err, "open log"))
 	}
 
-	_ = hod
-
-	qstr := `SELECT ?x FROM soda WHERE { ?x rdf:type brick:Room };`
-	query, err := hod.ParseQuery(qstr, time.Now().UnixNano())
-	if err != nil {
-		log.Fatal(errors.Wrap(err, "parse query"))
-	}
-	log.Println(query)
-
-	resp, err := hod.Select(context.Background(), query)
-	if err != nil {
-		log.Fatal(errors.Wrap(err, "parse query"))
-	}
-	log.Println(resp)
+	log.Fatal(hod.ServeGRPC())
 }

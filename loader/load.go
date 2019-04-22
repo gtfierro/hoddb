@@ -129,12 +129,10 @@ func (g *Graph) ExpandTriples() {
 		fmt.Println("solid: ", len(solid_triples), "added: ", len(added_triples), "pending: ", len(pending_triples))
 	}
 
-	log.Warning("before", len(g.Data.Triples), len(solid_triples))
 	g.Data.Triples = g.Data.Triples[:0]
 	for triple := range solid_triples {
 		g.Data.Triples = append(g.Data.Triples, triple)
 	}
-	log.Warning("after", len(g.Data.Triples))
 }
 
 func (g *Graph) CompileEntities() map[EntityKey]*Entity {

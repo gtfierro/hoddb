@@ -1,12 +1,8 @@
 package loader
 
 import (
-	//query "git.sr.ht/~gabe/hod/lang"
-	//sparql "git.sr.ht/~gabe/hod/lang/ast"
-	//logpb "git.sr.ht/~gabe/hod/proto"
 	"git.sr.ht/~gabe/hod/turtle"
 	"github.com/dgraph-io/badger"
-	//"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/pkg/profile"
 	logrus "github.com/sirupsen/logrus"
@@ -14,7 +10,6 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
-	//"strings"
 	"sync"
 	"time"
 )
@@ -101,14 +96,15 @@ func MakeHodDB(cfg *Config) (*HodDB, error) {
 	}()
 
 	numBuildings := len(cfg.Database.Buildings)
+
 	processed := 0
 	for graphname, graphfile := range cfg.Database.Buildings {
-		s := time.Now()
 		bundle := FileBundle{
 			GraphName:     graphname,
 			TTLFile:       graphfile,
 			OntologyFiles: cfg.Database.Ontologies,
 		}
+		s := time.Now()
 		if err := hod.Load(bundle); err != nil {
 			log.Error(errors.Wrapf(err, "Could not load file %s", graphname))
 		}
