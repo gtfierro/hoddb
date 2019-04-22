@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (L *Log) ServeGRPC() error {
+func (hod *HodDB) ServeGRPC() error {
 	port := 47808
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -20,7 +20,7 @@ func (L *Log) ServeGRPC() error {
 		return err
 	}
 	grpcServer := grpc.NewServer()
-	logpb.RegisterHodDBServer(grpcServer, L)
+	logpb.RegisterHodDBServer(grpcServer, hod)
 
 	corsc := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -40,6 +40,7 @@ func (L *Log) ServeGRPC() error {
 	httpmux := http.NewServeMux()
 	httpmux.Handle("/", mux)
 	go func() {
+		log.Info("Serve on :47809")
 		log.Fatal(http.ListenAndServe(":47809", corsc.Handler(mux)))
 	}()
 

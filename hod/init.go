@@ -1,4 +1,4 @@
-package loader
+package hod
 
 import (
 	"git.sr.ht/~gabe/hod/turtle"

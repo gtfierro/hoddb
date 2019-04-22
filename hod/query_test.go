@@ -240,26 +240,26 @@ database:
 	require.NoError(err, "read config")
 	require.NotNil(cfg, "config")
 
-	L, err := NewLog(cfg)
+	hod, err := MakeHodDB(cfg)
 	require.NoError(err, "open log")
-	require.NotNil(L, "log")
-	defer L.Close()
+	require.NotNil(hod, "log")
 
-	version, err := L.LoadFile("test", "BrickFrame.ttl", "bf")
-	require.NoError(err, "load brickframe")
-	version, err = L.LoadFile("test", "Brick.ttl", "brick")
-	require.NoError(err, "load brick")
-	version, err = L.LoadFile("test", "example.ttl", "ex")
-	require.NoError(err, "load file")
+	bundle := FileBundle{
+		GraphName:     "test",
+		TTLFile:       "example.ttl",
+		OntologyFiles: []string{"Brick.ttl", "BrickFrame.ttl"},
+	}
+	err = hod.Load(bundle)
+	require.NoError(err, "load files")
 
-	c, err := L.CreateCursor("test", 0, version)
+	c, err := hod.Cursor("test")
 	require.NoError(err, "creat cursor")
 
 	for _, test := range example_graph_test_cases {
-		q, err := L.ParseQuery(test.query, version)
+		q, err := hod.ParseQuery(test.query, 0)
 		require.NoError(err)
 		require.NotNil(q)
-		resp, err := L.Select(context.Background(), q)
+		resp, err := hod.Select(context.Background(), q)
 		require.NoError(err)
 		require.NotNil(resp)
 		if !assert.Equal(len(test.results), int(resp.Count), test.query) {
@@ -285,27 +285,27 @@ database:
 	require.NoError(err, "read config")
 	require.NotNil(cfg, "config")
 
-	L, err := NewLog(cfg)
+	hod, err := MakeHodDB(cfg)
 	require.NoError(err, "open log")
-	require.NotNil(L, "log")
-	defer L.Close()
+	require.NotNil(hod, "log")
 
-	version, err := L.LoadFile("soda", "BrickFrame.ttl", "bf")
-	require.NoError(err, "load brickframe")
-	version, err = L.LoadFile("soda", "Brick.ttl", "brick")
-	require.NoError(err, "load brick")
-	version, err = L.LoadFile("soda", "berkeley.ttl", "berk")
-	require.NoError(err, "load file")
+	bundle := FileBundle{
+		GraphName:     "soda",
+		TTLFile:       "berkeley.ttl",
+		OntologyFiles: []string{"Brick.ttl", "BrickFrame.ttl"},
+	}
+	err = hod.Load(bundle)
+	require.NoError(err, "load files")
 
-	c, err := L.CreateCursor("soda", 0, version)
+	c, err := hod.Cursor("soda")
 	require.NoError(err, "cursor")
 
 	for _, test := range berkeley_graph_test_cases {
 		fmt.Println(test.query)
-		q, err := L.ParseQuery(test.query, version)
+		q, err := hod.ParseQuery(test.query, 0)
 		require.NoError(err)
 		require.NotNil(q)
-		resp, err := L.Select(context.Background(), q)
+		resp, err := hod.Select(context.Background(), q)
 		require.NoError(err)
 		require.NotNil(resp)
 		if !assert.Equal(test.resultCount, int(resp.Count), test.query) {
@@ -330,19 +330,17 @@ database:
 	require.NoError(err, "read config")
 	require.NotNil(cfg, "config")
 
-	L, err := NewLog(cfg)
+	hod, err := MakeHodDB(cfg)
 	require.NoError(err, "open log")
-	require.NotNil(L, "log")
-	defer L.Close()
+	require.NotNil(hod, "log")
 
-	version, err := L.LoadFile("test", "BrickFrame.ttl", "bf")
-	require.NoError(err, "load brickframe")
-	version, err = L.LoadFile("test", "Brick.ttl", "brick")
-	require.NoError(err, "load brick")
-	version, err = L.LoadFile("test", "example.ttl", "ex")
-	require.NoError(err, "load file")
-	_, err = L.CreateCursor("test", 0, version)
-	require.NoError(err, "cursor")
+	bundle := FileBundle{
+		GraphName:     "test",
+		TTLFile:       "example.ttl",
+		OntologyFiles: []string{"Brick.ttl", "BrickFrame.ttl"},
+	}
+	err = hod.Load(bundle)
+	require.NoError(err, "load files")
 
 	b.ResetTimer()
 
@@ -350,10 +348,10 @@ database:
 		b.Run(test.query, func(b *testing.B) {
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				q, err := L.ParseQuery(test.query, version)
+				q, err := hod.ParseQuery(test.query, 0)
 				require.NoError(err)
 				require.NotNil(q)
-				_, err = L.Select(context.Background(), q)
+				_, err = hod.Select(context.Background(), q)
 				require.NoError(err)
 			}
 		})
@@ -373,19 +371,19 @@ database:
 	cfg, err := ReadConfigFromString(cfgStr)
 	require.NoError(err, "read config")
 	require.NotNil(cfg, "config")
-	L, err := NewLog(cfg)
+
+	hod, err := MakeHodDB(cfg)
 	require.NoError(err, "open log")
-	require.NotNil(L, "log")
-	defer L.Close()
+	require.NotNil(hod, "log")
 
-	version, err := L.LoadFile("soda", "Brick.ttl", "br")
-	require.NoError(err, "load brick")
-	version, err = L.LoadFile("soda", "BrickFrame.ttl", "bf")
-	require.NoError(err, "load brickframe")
-	version, err = L.LoadFile("soda", "berkeley.ttl", "berk")
-	require.NoError(err, "load file")
-
-	_, err = L.CreateCursor("soda", 0, version)
+	bundle := FileBundle{
+		GraphName:     "soda",
+		TTLFile:       "berkeley.ttl",
+		OntologyFiles: []string{"Brick.ttl", "BrickFrame.ttl"},
+	}
+	err = hod.Load(bundle)
+	require.NoError(err, "load files")
+	_, err = hod.Cursor("soda")
 	require.NoError(err, "cursor")
 
 	b.ResetTimer()
@@ -394,10 +392,10 @@ database:
 		b.Run(test.query, func(b *testing.B) {
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				q, err := L.ParseQuery(test.query, version)
+				q, err := hod.ParseQuery(test.query, 0)
 				require.NoError(err)
 				require.NotNil(q)
-				_, err = L.Select(context.Background(), q)
+				_, err = hod.Select(context.Background(), q)
 				require.NoError(err)
 			}
 		})

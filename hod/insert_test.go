@@ -21,20 +21,21 @@ func TestInsertExample(t *testing.T) {
 	require.NoError(err, "read config")
 	require.NotNil(cfg, "config")
 
-	L, err := NewLog(cfg)
+	hod, err := MakeHodDB(cfg)
 	require.NoError(err, "open log")
-	require.NotNil(L, "log")
-	defer L.Close()
+	require.NotNil(hod, "log")
+	//defer hod.Close()
 
-	//version, err := L.LoadFile("test", "Brick.ttl", "brick")
-	//require.NoError(err, "load brick")
-	version, err := L.LoadFile("test", "BrickFrame.ttl", "bf")
-	require.NoError(err, "load brickframe")
-	version, err = L.LoadFile("test", "example.ttl", "bldg")
-	require.NoError(err, "load file")
+	bundle := FileBundle{
+		GraphName: "test",
+		TTLFile:   "example.ttl",
+		//OntologyFiles: []string{"Brick.ttl", "BrickFrame.ttl"},
+		OntologyFiles: []string{"BrickFrame.ttl"},
+	}
+	err = hod.Load(bundle)
+	require.NoError(err, "load files")
 
-	cursor, err := L.CreateCursor("test", 0, version)
-	//cursor := L.Cursor("test", version, nil)
+	cursor, err := hod.Cursor("test")
 	require.NoError(err, "create cursor")
 	require.NotNil(cursor)
 	key := cursor.ContextualizeURI(&logpb.URI{
@@ -44,6 +45,7 @@ func TestInsertExample(t *testing.T) {
 	require.NotNil(key)
 
 	entity, err := cursor.getEntity(key)
+	hod.Dump(entity)
 	require.NoError(err)
 	require.NotNil(entity)
 
@@ -66,7 +68,7 @@ func TestInsertExample(t *testing.T) {
 	require.NotNil(key)
 
 	entity, err = cursor.getEntity(key)
-	L.Dump(entity)
+	//hod.Dump(entity)
 
 	require.NoError(err)
 	require.NotNil(entity)

@@ -115,3 +115,24 @@ func BenchmarkRelationAdd3Value(b *testing.B) {
 		rel3.add3Values("var1", "var2", "var3", rel3vals)
 	}
 }
+
+func generateEntitySet(numEntities int, graph int, timestamp int) entityset {
+	e := newEntitySet()
+	for i := 0; i < numEntities; i++ {
+		e.add(EntityKeyFromInts(uint32(i), uint32(graph), uint32(timestamp)))
+	}
+	return e
+}
+
+func generateEntityRows(numVars int, numRows int, graph int, timestamp int) (ret [][]EntityKey) {
+	hash := 0
+	for r := 0; r < numRows; r++ {
+		var row []EntityKey
+		for i := 0; i < numVars; i++ {
+			row = append(row, EntityKeyFromInts(uint32(hash), uint32(graph), uint32(timestamp)))
+			hash += 1
+		}
+		ret = append(ret, row)
+	}
+	return
+}

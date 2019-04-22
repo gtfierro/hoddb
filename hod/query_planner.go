@@ -327,3 +327,7 @@ func (plan *queryPlan) addTopLevel(variable string) {
 func (plan *queryPlan) addLink(parent, child string) {
 	plan.vars[child] = parent
 }
+
+func isVariable(uri *logpb.URI) bool {
+	return uri == nil || strings.HasPrefix(uri.Value, "?")
+}

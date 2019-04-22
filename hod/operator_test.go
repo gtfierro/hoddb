@@ -33,27 +33,29 @@ func TestOperators(t *testing.T) {
 	require.NoError(err)
 	defer os.RemoveAll(dir) // clean up
 
-	cfgStr := fmt.Sprintf(`
-database:
-    path: %s
-    `, dir)
+	cfgStr := fmt.Sprintf(`database:
+    path: %s    `, dir)
 	cfg, err := ReadConfigFromString(cfgStr)
 	require.NoError(err, "read config")
 	require.NotNil(cfg, "config")
 
-	L, err := NewLog(cfg)
+	hod, err := MakeHodDB(cfg)
 	require.NoError(err, "open log")
-	require.NotNil(L, "log")
-	defer L.Close()
+	require.NotNil(hod, "log")
 
-	version, err := L.LoadFile("example", "example.ttl", "ex")
-	require.NoError(err, "load file")
+	bundle := FileBundle{
+		GraphName:     "example",
+		TTLFile:       "example.ttl",
+		OntologyFiles: []string{"BrickFrame.ttl"},
+	}
+	err = hod.Load(bundle)
+	require.NoError(err, "load files")
 
 	plan := &queryPlan{
 		selectVars: []string{"?v1"},
 		variables:  []string{"?v1"},
 	}
-	cursor, err := L.CreateCursor("example", 0, version)
+	cursor, err := hod.Cursor("example")
 	require.NoError(err, "create cursor")
 	require.NotNil(cursor)
 	cursor.addQueryPlan(plan)
@@ -75,7 +77,9 @@ database:
 	require.Equal(0, len(cursor.rel.rows), "num rows")
 
 	// test resolve object, no prior values
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple(HVACZONE_1, RDF_TYPE, "?v1"))
 	ro := &resolveObject{term: *qt}
 	require.NoError(ro.run(cursor), "run resolve object")
@@ -92,7 +96,9 @@ database:
 	require.Equal(0, len(cursor.rel.rows))
 
 	// try predicate
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple(AHU_1, "?v1", VAV_1))
 	rp := &resolvePredicate{term: *qt}
 	require.NoError(rp.run(cursor), "run resolve predicate")
@@ -114,20 +120,27 @@ database:
 	}
 
 	// case 1 (?s = 0, ?o = 0)
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple("?v1", RDF_TYPE, "?v2"))
 	rso := &restrictSubjectObjectByPredicate{term: *qt}
 	require.NoError(rso.run(cursor), "run restrictSubjectObjectByPredicate 1")
-	require.Equal(6, len(cursor.rel.rows))
+	// TODO: this is 62 rather than 6 because we are loading in BrickFrame.ttl
+	require.Equal(62, len(cursor.rel.rows))
 
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple("?v1", BF_ISPARTOF, "?v2"))
 	rso = &restrictSubjectObjectByPredicate{term: *qt}
 	require.NoError(rso.run(cursor), "run restrictSubjectObjectByPredicate 1")
 	require.Equal(4, len(cursor.rel.rows))
 
 	// case 2 (?s > 0, ?o = 0)
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	// puts ROOM_1 into "?v1
 	qt = makeQueryTerm(cursor, makeTriple("?v1", RDF_TYPE, BRICK_ROOM))
 	rs = &resolveSubject{term: *qt}
@@ -144,7 +157,9 @@ database:
 	require.Equal(2, len(cursor.rel.rows))
 
 	// case 3 (?s = 0, ?o > 0)
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple(ROOM_1, BF_ISPARTOF, "?v1"))
 	ro = &resolveObject{term: *qt}
 	require.NoError(ro.run(cursor), "define ?v1")
@@ -160,7 +175,9 @@ database:
 
 	// case 4 (?s > 0, ?o > 0)
 	// start with ispartof and filter for which pairs also have ispointof
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple("?v1", BF_ISPARTOF, "?v2"))
 	rso = &restrictSubjectObjectByPredicate{term: *qt}
 	require.NoError(rso.run(cursor), "run restrictSubjectObjectByPredicate 1")
@@ -173,7 +190,9 @@ database:
 
 	////// resolveSubjectFromVarObject
 	// ?sub pred ?obj, but we have already resolved the object
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple(VAV_1, BF_FEEDS, "?v2"))
 	ro = &resolveObject{term: *qt}
 	require.NoError(ro.run(cursor), "run resolve object")
@@ -187,7 +206,9 @@ database:
 
 	////// resolveObjectFromVarSubject
 	// ?sub pred ?obj, but we have already resolved the subject
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple("?v1", BF_FEEDS, HVACZONE_1))
 	rs = &resolveSubject{term: *qt}
 	require.NoError(rs.run(cursor), "run resolve subject")
@@ -203,18 +224,31 @@ database:
 	////// resolveSubjectPredFromObject
 	// case 1: ?s = 0, ?p = 0
 	// ?s ?p HVACZONE_1
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple("?v1", "?v2", HVACZONE_1))
 	rspo := &resolveSubjectPredFromObject{term: *qt}
 	require.NoError(rspo.run(cursor), "run resolve subject")
 	require.Equal(2, len(cursor.rel.rows))
-	require.Equal(cursor.ContextualizeURI(stringtoURI(ROOM_1)), cursor.rel.rows[0].valueAt(0))
-	require.Equal(cursor.ContextualizeURI(stringtoURI(BF_ISPARTOF)), cursor.rel.rows[0].valueAt(1))
+
+	found := false
+	var idx int
+	for idx = 0; idx < 2; idx++ {
+		found = cursor.ContextualizeURI(stringtoURI(ROOM_1)) == cursor.rel.rows[idx].valueAt(0) && cursor.ContextualizeURI(stringtoURI(BF_ISPARTOF)) == cursor.rel.rows[idx].valueAt(1)
+		if found {
+			break
+		}
+	}
+	require.Equal(cursor.ContextualizeURI(stringtoURI(ROOM_1)), cursor.rel.rows[idx].valueAt(0))
+	require.Equal(cursor.ContextualizeURI(stringtoURI(BF_ISPARTOF)), cursor.rel.rows[idx].valueAt(1))
 
 	// case 2: ?s = 0, ?p = 0
 	// ?s RDF_TYPE BRICK_ROOM
 	// ?s ?p HVACZONE_1
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple("?v1", RDF_TYPE, BRICK_ROOM))
 	rs = &resolveSubject{term: *qt}
 	require.NoError(rs.run(cursor), "run resolveSubject")
@@ -231,7 +265,9 @@ database:
 	// case 3: ?s = 0, ?p > 0
 	// ROOM_1 ?p HVACZONE_1
 	// ?s ?p FLOOR_1
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple(ROOM_1, "?v2", HVACZONE_1))
 	rp = &resolvePredicate{term: *qt}
 	require.NoError(rp.run(cursor), "run resolve predicate")
@@ -248,25 +284,44 @@ database:
 	// case 4: ?s >0, ?p > 0
 	// ?s ?p HVACZONE_1
 	// ?s ?p FLOOR_1
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple("?v1", "?v2", HVACZONE_1))
 	rspo = &resolveSubjectPredFromObject{term: *qt}
 	require.NoError(rspo.run(cursor), "run resolve subject")
 	require.Equal(2, len(cursor.rel.rows))
-	require.Equal(cursor.ContextualizeURI(stringtoURI(ROOM_1)), cursor.rel.rows[0].valueAt(0))
-	require.Equal(cursor.ContextualizeURI(stringtoURI(BF_ISPARTOF)), cursor.rel.rows[0].valueAt(1))
+
+	found = false
+	for idx = 0; idx < 2; idx++ {
+		found = cursor.ContextualizeURI(stringtoURI(ROOM_1)) == cursor.rel.rows[idx].valueAt(0) && cursor.ContextualizeURI(stringtoURI(BF_ISPARTOF)) == cursor.rel.rows[idx].valueAt(1)
+		if found {
+			break
+		}
+	}
+	require.Equal(cursor.ContextualizeURI(stringtoURI(ROOM_1)), cursor.rel.rows[idx].valueAt(0))
+	require.Equal(cursor.ContextualizeURI(stringtoURI(BF_ISPARTOF)), cursor.rel.rows[idx].valueAt(1))
 
 	qt = makeQueryTerm(cursor, makeTriple("?v1", "?v2", FLOOR_1))
 	rspo = &resolveSubjectPredFromObject{term: *qt}
 	require.NoError(rspo.run(cursor), "run resolve subject")
 	require.Equal(2, len(cursor.rel.rows))
-	require.Equal(cursor.ContextualizeURI(stringtoURI(ROOM_1)), cursor.rel.rows[0].valueAt(0))
-	require.Equal(cursor.ContextualizeURI(stringtoURI(BF_ISPARTOF)), cursor.rel.rows[0].valueAt(1))
+	found = false
+	for idx = 0; idx < 2; idx++ {
+		found = cursor.ContextualizeURI(stringtoURI(ROOM_1)) == cursor.rel.rows[idx].valueAt(0) && cursor.ContextualizeURI(stringtoURI(BF_ISPARTOF)) == cursor.rel.rows[idx].valueAt(1)
+		if found {
+			break
+		}
+	}
+	require.Equal(cursor.ContextualizeURI(stringtoURI(ROOM_1)), cursor.rel.rows[idx].valueAt(0))
+	require.Equal(cursor.ContextualizeURI(stringtoURI(BF_ISPARTOF)), cursor.rel.rows[idx].valueAt(1))
 
 	////// resolvePredObjectFromSubject
 	// case 1: ?p = 0, ?o = 0
 	// ROOM_1 ?p ?o
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple(ROOM_1, "?v1", "?v2"))
 	pos := &resolvePredObjectFromSubject{term: *qt}
 	require.NoError(pos.run(cursor), "run resolvePredObjectFromSubject")
@@ -275,7 +330,9 @@ database:
 	// case 2: ?p >0, ?o = 0
 	// ROOM_1 ?p BRICK_ROOM
 	// HVACZONE_1 ?p ?o
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple(ROOM_1, "?v1", BRICK_ROOM))
 	rp = &resolvePredicate{term: *qt}
 	require.NoError(rp.run(cursor), "run resolve predicate")
@@ -292,7 +349,9 @@ database:
 	// case 3: ?p = 0, ?o > 0
 	// AHU_1 BF_FEEDS ?o
 	// AHU_1 ?p ?o
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple(AHU_1, BF_FEEDS, "?v2"))
 	ro = &resolveObject{term: *qt}
 	require.NoError(ro.run(cursor), "run resolveObject")
@@ -313,7 +372,9 @@ database:
 		selectVars: []string{"?v1", "?v2", "?v3"},
 		variables:  []string{"?v1", "?v2", "?v3"},
 	}
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple("?v1", RDF_TYPE, BRICK_ROOM))
 	rs = &resolveSubject{term: *qt}
 	require.NoError(rs.run(cursor), "run resolve subject")
@@ -325,7 +386,9 @@ database:
 	require.Equal(4, len(cursor.rel.rows))
 
 	// resolveVarTripleFromObject
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple("?v3", RDF_TYPE, BRICK_VAV))
 	rs = &resolveSubject{term: *qt}
 	require.NoError(rs.run(cursor), "run resolve subject")
@@ -337,7 +400,9 @@ database:
 	require.Equal(4, len(cursor.rel.rows))
 
 	// resolveVarTripleFromPredicate
-	cursor = L.Cursor("example", version, plan)
+	cursor, err = hod.Cursor("example")
+	require.NoError(err, "create cursor")
+	cursor.addQueryPlan(plan)
 	qt = makeQueryTerm(cursor, makeTriple(AHU_1, "?v2", VAV_1))
 	rp = &resolvePredicate{term: *qt}
 	require.NoError(rp.run(cursor), "run resolve predicate")

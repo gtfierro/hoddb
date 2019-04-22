@@ -187,7 +187,7 @@ func (cursor *Cursor) getSubjectObjectFromPred(sequence edge) (sos [][]EntityKey
 		err = nil
 		return
 	}
-	for _, endpoint := range pred.e.Endpoints {
+	for _, endpoint := range pred.compiled.Endpoints {
 		pair := []EntityKey{EntityKeyFromBytes(endpoint.Src), EntityKeyFromBytes(endpoint.Dst)}
 		sos = append(sos, pair)
 	}
@@ -228,4 +228,58 @@ func (cursor *Cursor) getPredicatesFromSubject(subjectKey EntityKey) ([]EntityKe
 
 func (cursor *Cursor) iterAllEntities(F func(EntityKey, *Entity) bool) error {
 	return cursor.Iterate(F)
+}
+
+type entitystack struct {
+	entities []*Entity
+}
+
+func newEntityStack() *entitystack {
+	return &entitystack{}
+}
+
+func (stack *entitystack) push(e *Entity) {
+	stack.entities = append(stack.entities, e)
+}
+
+func (stack *entitystack) pop() *Entity {
+	if len(stack.entities) == 0 {
+		return nil
+	}
+	e := stack.entities[0]
+	stack.entities = stack.entities[1:]
+	return e
+}
+
+func (stack *entitystack) len() int {
+	return len(stack.entities)
+}
+
+type entityset map[EntityKey]struct{}
+
+func newEntitySet() entityset {
+	return entityset(make(map[EntityKey]struct{}))
+}
+
+func (set entityset) has(e EntityKey) bool {
+	_, found := set[e]
+	return found
+}
+
+func (set entityset) addIfNotHas(e EntityKey) bool {
+	if _, found := set[e]; found {
+		return true
+	}
+	set[e] = struct{}{}
+	return false
+}
+
+func (set entityset) addFrom(other entityset) {
+	for k := range other {
+		set.add(k)
+	}
+}
+
+func (set entityset) add(e EntityKey) {
+	set[e] = struct{}{}
 }
