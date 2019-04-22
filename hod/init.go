@@ -24,12 +24,17 @@ func init() {
 	log.SetLevel(logrus.DebugLevel)
 }
 
+type hashkeyentry struct {
+	graph string
+	uri   turtle.URI
+}
+
 type HodDB struct {
 	db *badger.DB
 	//versionDB *versionmanager
 	cfg *Config
 
-	hashes map[turtle.URI]EntityKey
+	hashes map[hashkeyentry]EntityKey
 	uris   map[EntityKey]turtle.URI
 
 	// TODO: serialize/deserialize
@@ -71,7 +76,7 @@ func MakeHodDB(cfg *Config) (*HodDB, error) {
 	hod := &HodDB{
 		db:     db,
 		cfg:    cfg,
-		hashes: make(map[turtle.URI]EntityKey),
+		hashes: make(map[hashkeyentry]EntityKey),
 		uris:   make(map[EntityKey]turtle.URI),
 		graphs: make(map[string]struct{}),
 	}

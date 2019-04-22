@@ -104,6 +104,7 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 }
 
 func (hod *HodDB) setWithCommit(txn *badger.Txn, key, value []byte) error {
+	//log.Debug("Set Entity ", key)
 	if setErr := txn.Set(key, value); setErr == badger.ErrTxnTooBig {
 		log.Warning("commit too big")
 		if txerr := txn.Commit(nil); txerr != nil {
@@ -123,11 +124,11 @@ func (hod *HodDB) setWithCommit(txn *badger.Txn, key, value []byte) error {
 }
 
 func (hod *HodDB) GetEntity(key EntityKey) (*Entity, error) {
-	//key.Graph = _e4
 	var entity = &Entity{
 		compiled: new(logpb.Entity),
 		key:      key,
 	}
+	//log.Debug("Get Entity ", key)
 	err := hod.db.View(func(t *badger.Txn) error {
 		it, err := t.Get(key.Bytes())
 		if err != nil {
@@ -146,7 +147,9 @@ func (hod *HodDB) GetEntity(key EntityKey) (*Entity, error) {
 
 func (hod *HodDB) hashURI(graph string, u turtle.URI) EntityKey {
 
-	if key, found := hod.hashes[u]; found {
+	hk := hashkeyentry{graph, u}
+
+	if key, found := hod.hashes[hk]; found {
 		return key
 	}
 
@@ -160,7 +163,7 @@ func (hod *HodDB) hashURI(graph string, u turtle.URI) EntityKey {
 		panic(fmt.Sprintf("URI for %s conflicts with %s", u, other_uri))
 	}
 
-	hod.hashes[u] = key
+	hod.hashes[hk] = key
 	hod.uris[key] = u
 	return key
 }
@@ -261,7 +264,6 @@ func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *l
 
 	for _, graph := range query.Graphs {
 		// TODO: check query.Filter
-		//cursor = L.Cursor(graph, query.Timestamp, nil)
 		cursor, err = hod.Cursor(graph)
 		if err != nil {
 			log.Error(err)
