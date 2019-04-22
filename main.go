@@ -1,14 +1,18 @@
 package main
 
 import (
+	"flag"
 	"git.sr.ht/~gabe/hod/hod"
 	"github.com/pkg/errors"
 	"log"
 )
 
-func main() {
+var config = flag.String("config", "hodconfig.yml", "Path to hodconfig.yml file")
 
-	cfg, err := hod.ReadConfig("hodconfig.yml")
+func main() {
+	flag.Parse()
+
+	cfg, err := hod.ReadConfig(*config)
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "Could not load config file"))
 	}
