@@ -10,20 +10,6 @@ import (
 	"time"
 )
 
-type edgecache struct {
-	in  map[EntityKey]struct{}
-	out map[EntityKey]struct{}
-}
-
-func newEdgeCache() edgecache {
-	return edgecache{
-		in:  make(map[EntityKey]struct{}),
-		out: make(map[EntityKey]struct{}),
-	}
-}
-
-//func addEdge(
-
 func (L *Log) CreateCursor(graph string, from, to int64) (*Cursor, error) {
 	var cursor *Cursor
 	var found bool
@@ -46,8 +32,6 @@ func (L *Log) CreateCursor(graph string, from, to int64) (*Cursor, error) {
 	entries := L.readRangeGraph(graph, from, to)
 	var entities = make(map[EntityKey]*logpb.Entity)
 	var dirty = make(map[EntityKey]bool)
-
-	//var edges = make(map[EntityKey]edgecache)
 
 	// get latest version of graph; we copy all keys from previous version
 	// into this version

@@ -3,7 +3,6 @@ package hod
 import (
 	"fmt"
 	"github.com/RoaringBitmap/roaring"
-	//"github.com/gtfierro/hod/storage"
 )
 
 type relation struct {

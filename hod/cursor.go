@@ -136,7 +136,6 @@ func (c *Cursor) addOrJoin(varname string, values entityset) {
 	} else {
 		c.rel.add1Value(varname, values)
 	}
-
 }
 
 func (c *Cursor) hasValuesFor(varname string) bool {
