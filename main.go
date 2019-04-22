@@ -1,15 +1,9 @@
 package main
 
 import (
-	//	"context"
-	//	"fmt"
-	hod "git.sr.ht/~gabe/hod/loader"
-	//	"github.com/chzyer/readline"
+	"git.sr.ht/~gabe/hod/hod"
 	"github.com/pkg/errors"
-	//	"io"
 	"log"
-	//	"strings"
-	//	"time"
 )
 
 func main() {
