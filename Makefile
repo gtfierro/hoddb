@@ -1,3 +1,4 @@
+RELEASE?=v0.6.1
 .PHONY: proto
 
 run: build
@@ -32,3 +33,12 @@ bench-util:
 
 clean:
 	rm -rf _hod_
+
+container: build
+	mv ./log containers/hoddb
+	docker build -t mortar/hoddb:$(RELEASE) containers/hoddb
+	docker build -t mortar/hoddb:latest containers/hoddb
+
+push-container: container
+	docker push mortar/hoddb:$(RELEASE)
+	docker push mortar/hoddb:latest

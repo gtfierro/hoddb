@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: hoddb
+    labels:
+        app: mortar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mortar
+  template:
+    metadata:
+      labels:
+        app: mortar
+    spec:
+      volumes:
+        - name: hodconfig
+          hostPath:
+            path: /home/gabe/src/mortar/mounttest
+      containers:
+        - name: mortar
+          image: mortar/hoddb:latest
+          ports:
+            - containerPort: 47808
+            - containerPort: 47809
+          volumeMounts:
+            - name: hodconfig
+              mountPath: /etc/hod
