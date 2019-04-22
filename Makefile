@@ -1,4 +1,4 @@
-RELEASE?=v0.6.1
+RELEASE?=v0.6.2
 .PHONY: proto
 
 run: build
@@ -39,6 +39,17 @@ container: build
 	docker build -t mortar/hoddb:$(RELEASE) containers/hoddb
 	docker build -t mortar/hoddb:latest containers/hoddb
 
+viz-container:
+	go build -o containers/viz/fileserver ./viz/fileserver
+	cp -r viz/ containers/viz/
+	docker build -t mortar/hodviz:$(RELEASE) containers/viz
+	docker build -t mortar/hodviz:latest containers/viz
+
+
 push-container: container
 	docker push mortar/hoddb:$(RELEASE)
 	docker push mortar/hoddb:latest
+
+push-viz-container: viz-container
+	docker push mortar/hodviz:$(RELEASE)
+	docker push mortar/hodviz:latest
