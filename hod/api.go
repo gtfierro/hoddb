@@ -180,7 +180,7 @@ func (hod *HodDB) Versions(ctx context.Context, request *logpb.VersionQuery) (*l
 			}},
 		})
 	}
-	hod.RLock()
+	hod.RUnlock()
 	return resp, nil
 }
 
