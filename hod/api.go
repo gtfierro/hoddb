@@ -175,9 +175,9 @@ func (hod *HodDB) Versions(ctx context.Context, request *logpb.VersionQuery) (*l
 	hod.RLock()
 	for graph := range hod.graphs {
 		resp.Rows = append(resp.Rows, &logpb.Row{
-			Values: []*logpb.URI{
+			Values: []*logpb.URI{{
 				Value: graph,
-			},
+			}},
 		})
 	}
 	hod.RLock()
