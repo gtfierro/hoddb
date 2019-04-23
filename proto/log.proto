@@ -11,7 +11,7 @@ service HodDB {
         };
     };
     rpc Count(SelectQuery) returns (Response);
-//    rpc Versions(VersionQuery) returns (Response);
+    rpc Versions(VersionQuery) returns (Response);
 }
 
 enum Op {

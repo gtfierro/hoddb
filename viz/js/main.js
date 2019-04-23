@@ -233,7 +233,7 @@
                     return;
                 }
                 var root = mynodelist[0];
-                varname = "?"+root;
+                varname = "?"+root.replace(/([A-Z])[a-z]*([a-z])(_|$)/gi,"$1$2");
                 terms.push({
                     subject: {value: varname},
                     predicate: [{namespace: "rdf", value: "type"}],
@@ -247,8 +247,9 @@
                     e = getEdgeFromNodeToNode(nodesinquery, mynodelist);
                     if (e==null) { break }
                     mynodelist.splice(e.idx, 1);
-                    rootname = "?"+e.src;
-                    destname = "?"+e.dest;
+					console.log(e);
+                    rootname = "?"+e.src.replace(/([A-Z])[a-z]*([a-z])(_|$)/gi,"$1$2")
+                    destname = "?"+e.dest.replace(/([A-Z])[a-z]*([a-z])(_|$)/gi,"$1$2")
                     variables.push(destname);
                     terms.push({
                         subject: {value: destname},

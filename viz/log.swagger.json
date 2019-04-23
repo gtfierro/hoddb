@@ -1,12 +1,12 @@
 {
   "swagger": "2.0",
-  "host": "localhost:47809",
   "info": {
     "title": "log.proto",
     "version": "version not set"
   },
   "schemes": [
-    "http"
+    "http",
+    "https"
   ],
   "consumes": [
     "application/json"
@@ -43,17 +43,6 @@
     }
   },
   "definitions": {
-    "protoOp": {
-      "type": "string",
-      "enum": [
-        "ADD",
-        "DEL",
-        "FLUSH",
-        "REGISTER_TRIGGER"
-      ],
-      "default": "ADD",
-      "title": "- ADD: Adds the target triple to the target graph\n - DEL: Deletes the target triple from the target graph\n - FLUSH: Commits the outstanding log entries to a new version\n - REGISTER_TRIGGER: opens the given file and loads it into the target graph"
-    },
     "protoPattern": {
       "type": "string",
       "enum": [
@@ -137,25 +126,6 @@
         }
       }
     },
-    "protoTagInsertResponse": {
-      "type": "object",
-      "properties": {
-        "error": {
-          "type": "string",
-          "title": "error that ocurred, if any"
-        },
-        "processed": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "if true, the inserts were processed; else, the tag was the ignored"
-        },
-        "timestamp": {
-          "type": "string",
-          "format": "int64",
-          "title": "the version these inserts were added to"
-        }
-      }
-    },
     "protoTimeFilter": {
       "type": "string",
       "enum": [
@@ -164,43 +134,6 @@
         "After"
       ],
       "default": "At"
-    },
-    "protoTrigger": {
-      "type": "object",
-      "properties": {
-        "graph": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "where": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protoTriple"
-          }
-        },
-        "insert": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protoTriple"
-          }
-        }
-      }
-    },
-    "protoTriggerResponse": {
-      "type": "object",
-      "properties": {
-        "error": {
-          "type": "string"
-        },
-        "triggers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protoTrigger"
-          }
-        }
-      }
     },
     "protoTriple": {
       "type": "object",

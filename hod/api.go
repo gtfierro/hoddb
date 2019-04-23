@@ -170,6 +170,20 @@ func (hod *HodDB) hashURI(graph string, u turtle.URI) EntityKey {
 	return key
 }
 
+func (hod *HodDB) Versions(ctx context.Context, request *logpb.VersionQuery) (*logpb.Response, error) {
+	var resp = new(logpb.Response)
+	hod.RLock()
+	for graph := range hod.graphs {
+		resp.Rows = append(resp.Rows, &logpb.Row{
+			Values: []*logpb.URI{
+				Value: graph,
+			},
+		})
+	}
+	hod.RLock()
+	return resp, nil
+}
+
 func (hod *HodDB) ParseQuery(qstr string, version int64) (*logpb.SelectQuery, error) {
 	q, err := query.Parse(qstr)
 	if err != nil {
