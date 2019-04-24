@@ -46,6 +46,16 @@
             <span class="thebe-status-field"></span>
         </div>
 
+        <div class="ui green raised segment">
+            <h3 class="ui header">Check In</h3>
+            <div class="ui form">
+                <div class="required field questionfield">
+                    <label>What do you want to learn about Brick and Mortar?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+
         <div class="ui raised segment" data-tab="tab-account">
 
             <h3 class="ui header">Make a Mortar Account</h3>
@@ -181,7 +191,7 @@ print("{0} sites qualified".format(len(resp.sites)))
         </div>
 
         <div class="ui raised segment">
-            <h3 class="ui header">Rogue Zone Application: Qualify</h3>
+            <h3 class="ui header">Rogue Zone "Airflow" Application: Qualify</h3>
 
             <p>
             "Rogue Zone Detection" is a common, simple fault-detection application that involves finding zones in a building whose temperature is consistently above or below the setpoint, or whose airflow is consistently below the setpoint (underventilated). This application also has the distinction of being the first application we will build together using Mortar!
@@ -207,7 +217,7 @@ print("{0} sites qualified for rogue zone".format(len(qualify_resp.sites)))
         </div>
 
         <div class="ui raised segment">
-            <h3 class="ui header">Rogue Zone Application: Fetch</h3>
+            <h3 class="ui header">Rogue Zone "Airflow" Application: Fetch</h3>
 
             <p>
             We will now use the generated Brick query to tell Mortar what timeseries data and metadata we want to download for the application.
@@ -297,7 +307,7 @@ print("Defined DataFrames")
             <p>
             Now, lets combine the View and DataFrame definitions into a complete Fetch request. The full Fetch request ties together the sites
 			we retrieved from our <code>Qualify</code> call, the View we defined, the DataFrames we defined, and the range of time we want to retrieve data for.
-			Execute the cell below to fetch data from the Mortar API.
+			Execute the cell below to fetch data from the Mortar API (<b>Note: this may take up to a minute</b>)
             </p>
 
             <pre data-executable="true" data-language="python">
@@ -319,7 +329,7 @@ print("Retrieved data:", resp)
             </pre>
 
 			<p>
-            If all went well, we should see that the response contains 1 View, 2 Dataframes and several hundred thousand timeseries values!
+            If all went well, we should see that the response contains 1 View, 2 Dataframes and almost 2 million timeseries values!
 			</p>
         </div>
 
@@ -370,7 +380,7 @@ list(resp.query("SELECT distinct site from airflow"))
         </div>
 
         <div class="ui raised segment">
-            <h3 class="ui header">Rogue Zone Application: Clean</h3>
+            <h3 class="ui header">Rogue Zone "Airflow" Application: Clean</h3>
 
             <p>
             Because the Mortar testbed consists of data from real buildings, we need to perform some data cleaning to make sure our analysis behaves
@@ -392,7 +402,7 @@ fig = sensor_df.plot(figsize=(15,7), legend=False)
         </div>
 
         <div class="ui raised segment">
-            <h3 class="ui header">Rogue Zone Application: Analyze</h3>
+            <h3 class="ui header">Rogue Zone "Airflow" Application: Analyze</h3>
 
             <p>
             Below is the Python code performing the Rogue Zone analysis. The analysis proceeds as follows:
@@ -457,6 +467,101 @@ for idx, equip in enumerate(equipment):
             </pre>
         </div>
 
+
+        <div class="ui raised segment">
+            <h3 class="ui header">Developing Rogue Zone "Temperature" Application: Qualify</h3>
+
+            <p>
+            You have now successfully built and executed a rogue zone application for airflow. You will now construct a similar application that analyzes temperature sensors and setpoints.
+            Using the <a href="https://hoddb.mortardata.org" target="_blank">Interactive Brick Query Builder</a>, construct a Brick query that retrieves HVAC zones, their related thermostat, and
+            the thermostat's temperature sensors and setpoints. Paste this query below
+            </p>
+
+
+            <pre data-executable="true" data-language="python">
+rogue_zone_temperature_query = """
+    PASTE QUERY HERE
+"""
+qualify_resp = client.qualify([rogue_zone_temperature_query])
+print("{0} sites qualified".format(len(qualify_resp.sites)))
+            </pre>
+        </div>
+
+        <div class="ui raised segment">
+            <h3 class="ui header">Developing Rogue Zone "Temperature" Application: Fetch</h3>
+
+            <p>
+            Using the Brick query you just generated, complete the following definitions for the View and DataFrames for our new application.
+            </p>
+
+            <pre data-executable="true" data-language="python">
+rogue_temp_view = pymortar.View(
+    name= # FILL IN,
+    definition= #  FILL IN
+)
+print("Defined View")
+
+sensor_df = pymortar.DataFrame(
+	name= "sensors",
+	aggregation= pymortar.MEAN,
+	window= "1h",
+	timeseries=[
+		pymortar.Timeseries(
+			view= # FILL IN
+			dataVars=[ " FILL IN " ],
+		)
+	]
+)
+
+setpoint_df = pymortar.DataFrame(
+	name= "setpoints",
+	aggregation= pymortar.MAX,
+	window= "1h",
+	timeseries=[
+		pymortar.Timeseries(
+			view= # FILL IN
+			dataVars=[ " FILL IN " ],
+		)
+	]
+)
+print("Defined DataFrames")
+            </pre>
+
+            <p>
+            <b>Try it out!</b> Try running the Fetch request using the View and DataFrames you just defined.
+            (<b>Note: this may take up to a minute</b>)
+            </p>
+
+            <pre data-executable="true" data-language="python">
+request = pymortar.FetchRequest(
+    sites=qualify_resp.sites,
+    views=[rogue_temp_view],
+    dataFrames=[
+		sensor_df,
+		setpoint_df,
+    ],
+    time=pymortar.TimeParams(
+        start="2018-05-01T00:00:00Z",
+        end="2018-09-01T00:00:00Z",
+    )
+)
+
+resp = client.fetch(request)
+print("Retrieved data:", resp)
+            </pre>
+
+            <p>
+            If all went well, then you should be able to run the next cell to get a nice plot
+            </p>
+
+            <pre data-executable="true" data-language="python">
+fig = resp['sensors'].plot(legend=False, figsize=(15,7))
+            </pre>
+
+        </div>
+
+            
+
         <div class="ui green raised segment">
             <h3 class="ui header">Check In</h3>
             <div class="ui form">
@@ -481,7 +586,9 @@ for idx, equip in enumerate(equipment):
                     <textarea rows="2"></textarea>
                 </div>
             </div>
-        </div>
+
+            <button id="submitanswers" class="positive ui button">Submit Answers</button>
+
         </div>
 
     </div>

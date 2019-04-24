@@ -4,6 +4,27 @@
         //$.tab('change tab','tab-account');
         //$.tab('change tab','tab-intro');
         //console.log("bootstrap");
+        $("#submitanswers").on('click', function() {
+            var submission = {
+                questions: {},
+                code: [],
+            }
+            $(".questionfield").toArray().forEach(function(e) {
+                var label = $(e).find("label")[0].innerText;
+                var answer = $(e).find("textarea")[0].value;
+                console.log(label,":", answer);
+                submission.questions[label] = answer;
+            });
+            var i = 0;
+            $(".CodeMirror-code").toArray().forEach(function(e) {
+                i++;
+                if (i == 1) { return }
+                submission.code.push(e.innerText);
+            });
+
+            console.log(submission);
+        });
+
         $("#startnotebook").on('click', function() {
             thebelab.on("status", function(evt, data) {
                 console.log("Status changed:", data.status, data.message);
