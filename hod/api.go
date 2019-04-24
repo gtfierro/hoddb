@@ -71,7 +71,6 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 				return err
 			}
 			for newkey := range newseen {
-				//log.Warning("add edge to", hod.s(key), logpb.Pattern_OnePlus)
 				ent.addOutEdge(pred, newkey, logpb.Pattern_OnePlus)
 				other := getEntity(newkey)
 				other.addInEdge(pred, ent.key, logpb.Pattern_OnePlus)

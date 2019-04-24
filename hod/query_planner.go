@@ -4,6 +4,7 @@ import (
 	"fmt"
 	sparql "git.sr.ht/~gabe/hod/lang/ast"
 	logpb "git.sr.ht/~gabe/hod/proto"
+	"sort"
 	//"reflect"
 	"strings"
 )
@@ -27,40 +28,87 @@ func makeDependencyGraph(cursor *Cursor, vars []string, terms []*logpb.Triple) *
 		variables:  make(map[string]bool),
 		terms:      make([]*queryTerm, len(terms)),
 	}
+
+	_tombstones := make([]bool, len(terms))
+	var _terms []*queryTerm
+
 	dg.selectVars = append(dg.selectVars, vars...)
 	for i, term := range terms {
 		dg.terms[i] = dg.makeQueryTerm(cursor, term)
 	}
 
-	// find term with fewest variables
-	var next *queryTerm
-rootLoop:
-	for numvars := 1; numvars <= 3; numvars++ {
-		for idx, term := range dg.terms {
-			if len(term.variables) == numvars {
-				next = term
-				dg.terms = append(dg.terms[:idx], dg.terms[idx+1:]...)
-				break rootLoop
-			}
-		}
-	}
-	if next != nil {
-		dg.plan = append(dg.plan, *next)
+	// trying new planner
+	{
+		// sort terms in order of increasing number of variables
+		sort.Slice(dg.terms, func(i, j int) bool { return len(dg.terms[i].variables) < len(dg.terms[j].variables) })
 
-		for len(dg.terms) > 0 {
-			var idx int
-			var term *queryTerm
-			for idx, term = range dg.terms {
-				if term.overlap(next) > 0 {
-					break
+		// find term with fewest vars
+	rootLoop1:
+		for numvars := 1; numvars <= 3; numvars++ {
+			for idx, term := range dg.terms {
+				if len(term.variables) == numvars {
+					_terms = append(_terms, term)
+					_tombstones[idx] = true
+					break rootLoop1
 				}
 			}
-			next = term
-			dg.plan = append(dg.plan, *next)
-			dg.terms = append(dg.terms[:idx], dg.terms[idx+1:]...)
-
 		}
+		for {
+			another_loop := false
+			for termidx, tombstoned := range _tombstones {
+				if tombstoned {
+					continue
+				}
+				another_loop = true
+				_tryterm := dg.terms[termidx]
+				for _, existingterm := range _terms {
+					if existingterm.overlap(_tryterm) > 0 {
+						_terms = append(_terms, _tryterm)
+						_tombstones[termidx] = true
+						break
+					}
+				}
+
+			}
+			if !another_loop {
+				break
+			}
+		}
+		for _, term := range _terms {
+			dg.plan = append(dg.plan, *term)
+		}
+
 	}
+
+	//	// find term with fewest variables
+	//	var next *queryTerm
+	//rootLoop:
+	//	for numvars := 1; numvars <= 3; numvars++ {
+	//		for idx, term := range dg.terms {
+	//			if len(term.variables) == numvars {
+	//				next = term
+	//				dg.terms = append(dg.terms[:idx], dg.terms[idx+1:]...)
+	//				break rootLoop
+	//			}
+	//		}
+	//	}
+	//	if next != nil {
+	//		dg.plan = append(dg.plan, *next)
+	//
+	//		for len(dg.terms) > 0 {
+	//			var idx int
+	//			var term *queryTerm
+	//			for idx, term = range dg.terms {
+	//				if term.overlap(next) > 0 {
+	//					break
+	//				}
+	//			}
+	//			next = term
+	//			dg.plan = append(dg.plan, *next)
+	//			dg.terms = append(dg.terms[:idx], dg.terms[idx+1:]...)
+	//
+	//		}
+	//	}
 	return dg
 }
 
