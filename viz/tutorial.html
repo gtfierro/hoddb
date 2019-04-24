@@ -1,0 +1,510 @@
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="css/semantic.min.css">
+    <link rel="stylesheet" href="css/tutorial.css">
+
+</head>
+<body>
+    <h1 class="ui center aligned header">Mortar tutorial</h1>
+    <div class="ui container">
+        <div class="ui raised segment" data-tab="tab-intro">
+
+            <h3 class="ui header">Tutorial Introduction</h3>
+            <p>
+            Reproducibility in the building science domain has long been
+            hampered by a lack of general access to large, descriptive
+            real-world datasets and open implementations of published analyses.
+            Published papers rarely include code or data. The code that is made
+            available mostly consists of brittle, hard-coded implementations
+            that are specific to the simulation or building being analyzed.
+            </p>
+
+            <p>
+            We are in the process of developing Mortar, a platform for
+            conducting reproducible building science research. Mortar consists
+            of a large live dataset of over 100 buildings spanning over 26,000
+            data streams and over 10 billion data points, a descriptive
+            ontology-based data model for each building (called "Brick"), and
+            an API for accessing and manipulating the available data using
+            queries against the data model. A goal of the project is to foster
+            a self-sustaining research community that uses and contributes to
+            the Mortar platform.
+            </p>
+
+            Terminology:
+            <ul>
+                <li>site</li>
+                <li>timeseries</li>
+                <li>Point</li>
+            </ul>
+            <!--<div class="ui blue icon large message">
+                <i class="pencil alternate icon"></i>
+                Boxes like these will give you directions to follow.
+            </div>-->
+            <button id="startnotebook" class="positive ui button">Start Notebook</button>
+            <span class="thebe-status-field"></span>
+        </div>
+
+        <div class="ui raised segment" data-tab="tab-account">
+
+            <h3 class="ui header">Make a Mortar Account</h3>
+            <p>
+            First, make a free account on <a href="https://mortardata.org" target="_blank">https://mortardata.org</a>. This will give you access to the Mortar API.
+            </p>
+
+            <img class="ui centered large image" src="img/login1.png" alt="Navigate to mortardata.org and click 'Sign Up'"></img>
+
+            <div class="ui divider"></div>
+
+            <p>
+            Fill out the form and click "Sign Up". Completing account creation requires entering a code that is sent to the email you submitted on the form.
+            After entering the code, you should see a message the the sign up was successful.
+            </p>
+
+            <p>
+            Please remember the username and password you choose! Enter them into the text box below
+            </p>
+            <pre data-executable="true" data-language="python">%matplotlib inline
+import pymortar
+import pandas as pd
+client = pymortar.Client({
+    'mortar_address': 'api.mortardata.org', # do not change
+    'username': "YOUR USERNAME HERE",
+    'password': "YOUR PASSWORD HERE",
+})
+            </pre>
+
+            <img class="ui centered medium image" src="img/login2.png" alt="Fill out the form"></img>
+        </div>
+
+        <div class="ui raised segment" data-tab="tab-query-explore-1">
+            <h3 class="ui header">Exploring Brick Models Interactively</h3>
+
+            <p>
+            Recall that a Brick model describes the <i>elements</i> and <i>structure</i> of a building and its subsystems and shows the <i>relationships</i> between them.
+            Here you will use the <a href="https://hoddb.mortardata.org" target="_blank">Interactive Brick Query Builder</a> to explore relationships between common building assets like thermostats and rooms.
+            </p>
+
+            <p>
+            Nodes represent Brick <i>classes</i>. Edges represent Brick <i>relationships</i>.
+            
+            Click on nodes to expand them to reveal their relationships to other nodes. Change the starting class by clicking an item in the "Start From..." box. The query builder automatically constructs a
+            SPARQL query from the nodes you have selected (indicated by a green highlight). Later, you will copy queries from the interface into a Jupyter notebook.
+            </p>
+
+            <p>
+            Navigate to the <a href="https://hoddb.mortardata.org" target="_blank">Interactive Brick Query Builder</a> page and take a few minutes to explore. 
+            </p>
+
+            <p>
+            After you are familiar with the interface, try to find the connections between the following pairs of Brick classes. Pick one class to start with (e.g. <code>Thermostat</code>) and expand nodes in the interface until you find a node with a label corresponding to the other class in the pair. Pay attention to the labels on the edges
+            </p>
+
+            <div class="ui bulleted list">
+                <div class="item"><code>Floor</code> and <code>Room</code></div>
+                <div class="item"><code>Thermostat</code> and <code>Heating Setpoint</code></div>
+                <div class="item"><code>VAV</code> and <code>Damper Position</code></div>
+                <div class="item"><code>VAV</code> and <code>Room</code></div>
+            </div>
+
+            <img class="ui centered image" src="img/querybuilder1.png" alt="HodDB Query Builder"></img>
+
+        </div>
+
+        <div class="ui green raised segment">
+            <h3 class="ui header">Check In</h3>
+            <div class="ui form">
+                <div class="required field questionfield">
+                    <label>Describe what a path in the Brick graph represents</label>
+                    <textarea rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui raised segment">
+            <h3 class="ui header">Retrieving Qualified Sites</h3>
+
+            <p>
+            Mortar provides a <code>Qualify</code> API method that returns the
+            list of sites matching a set of Brick queries. This is useful for
+            estimating how portable your application is -- i.e. how many sites
+            in the testbed can successfully execute.
+            </p>
+
+            <p>
+            Take a few of the queries you generated in the previous step, paste
+            them into the cell below, and execute the cell to see how many
+            sites qualify.
+            </p>
+
+            <pre data-executable="true" data-language="python">
+resp = client.qualify(["""
+    PASTE QUERY HERE
+"""])
+print("{0} sites qualified".format(len(resp.sites)))
+            </pre>
+
+        </div>
+
+        <div class="ui green raised segment">
+            <h3 class="ui header">Check In</h3>
+            <div class="ui form">
+                <div class="required field questionfield">
+                    <label>What kind of equipment has the most different kinds of points?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+                <div class="required field questionfield">
+                    <label>Are there more buildings with AHUs or more buildings with RTUs in the dataset?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui raised segment">
+            <h3 class="ui header">Anatomy of a Mortar Application</h3>
+
+            <p>
+            Mortar applications are usually organized into four phases:
+            </p>
+
+            <div class="ui ordered large list">
+                <div class="item"><b>Qualify</b>: the application retrieves the list of sites against which it will execute</div>
+                <div class="item"><b>Fetch</b>: the application retrieves the <i>timeseries data</i> and <i>metadata</i> it needs to execute</div>
+                <div class="item"><b>Clean</b>: the application performs any necessary data cleaning and filtering</div>
+                <div class="item"><b>Analyze</b>: the application executes its analysis against a clean dataset</div>
+            </div>
+
+            <b>TODO: replace this with a simpler image</b>
+            <img class="ui centered huge image" src="img/appanatomy.png" alt="Application anatomy"></img>
+
+        </div>
+
+        <div class="ui raised segment">
+            <h3 class="ui header">Rogue Zone Application: Qualify</h3>
+
+            <p>
+            "Rogue Zone Detection" is a common, simple fault-detection application that involves finding zones in a building whose temperature is consistently above or below the setpoint, or whose airflow is consistently below the setpoint (underventilated). This application also has the distinction of being the first application we will build together using Mortar!
+            </p>
+
+            <p>
+            We will construct the application according to the four phases above.
+            We will start with <i>qualifying</i> which sites are able to run our application. This requires us to author one or more Brick queries that capture the assets our application needs and the relationships between them. Using the <a href="https://hoddb.mortardata.org" target="_blank">Interactive Brick Query Builder</a>, create a Brick query that relates a <code>VAV</code> to a <code>Air Flow Sensor</code> and <code>Air Flow Setpoint</code>.
+            When you want to test if your query is correct, paste the query into the cell below and execute to see how many sites qualify.
+            </p>
+
+            <p>
+            When you are done, augment the query with relationships to the <code>HVAC Zone</code> and <code>Room</code> that will be affected by a rogue zone.
+            </p>
+
+            <pre data-executable="true" data-language="python">
+rogue_zone_query = """
+    PASTE QUERY HERE
+"""
+qualify_resp = client.qualify([rogue_zone_query])
+print("{0} sites qualified for rogue zone".format(len(qualify_resp.sites)))
+            </pre>
+        </div>
+
+        <div class="ui raised segment">
+            <h3 class="ui header">Rogue Zone Application: Fetch</h3>
+
+            <p>
+            We will now use the generated Brick query to tell Mortar what timeseries data and metadata we want to download for the application.
+            The Mortar API uses two structures for this purpose: Views and DataFrames.
+            </p>
+
+            <p>
+            <i>For more detailed documentation, see the <a href="https://mortardata.org/docs/pymortar/">PyMortar documentation</a></i>.
+            </p>
+
+            <h4 class="ui header">View</h4>
+
+            <p>
+                A <b>View</b> is a table of metadata defined by the execution of a Brick query against a set of sites. 
+                The columns of the table consist of the variables in the <code>SELECT</code> clause of the Brick query that defines
+                the table. Mortar adds the name of the site as an additional column to the table.
+            </p>
+
+            <p>
+            Below, complete the definition of the View for our application using the Brick query we defined in the <code>Qualify</code> step:
+            </p>
+
+            <pre data-executable="true" data-language="python">
+rogue_view = pymortar.View(
+    name="airflow",
+    definition=rogue_zone_query,
+)
+print("Defined View")
+            </pre>
+
+            <div class="ui divider"></div>
+
+            <h4 class="ui header">DataFrame</h4>
+            <p>
+                A <b>DataFrame</b> is a table of timeseries data. The temporal extent of a DataFrame is defined by a start and end time,
+                an aggregation function, and a bucket size for the aggregation (e.g. "15 minute mean"). A DataFrame contains 1 or more
+                streams of timeseries data identified by column; the name of the column is a unique identifier for the stream.
+            </p>
+
+            <p>
+				Below, we define two DataFrames for each of the collections of timeseries data the application needs. We define two different
+				DataFrames because we want to aggregate setpoints differently than sensors: for setpoints we use the maximum setpoint in the aggregation
+                window in order to avoid interpolating, but for sensors we use the average sensor reading in the aggregation window.
+            </p>
+
+            <p>
+                Each DataFrame has a <b>name</b>, an <b>aggregation function</b> (can be one of mean, min, max, count, sum or "raw" for no aggregation),
+                <b>window</b> size (argument to the aggregation function), and a list of <b>timeseries</b>.
+                The list of timeseries tells Mortar to pull data for each stream identified by the values of each <code>data var</code> in the specified View.
+                In this example, the <code>?Air_Flow_Sensor</code> variable from our Brick query corresponds to a list of names of air flow sensors.
+            </p>
+
+            <p>
+                The temporal parameters are specified in the next step.
+            </p>
+
+            <pre data-executable="true" data-language="python">
+sensor_df = pymortar.DataFrame(
+	name="sensors",
+	aggregation=pymortar.MEAN,
+	window="30m",
+	timeseries=[
+		pymortar.Timeseries(
+			view="airflow",
+			dataVars=["?SyArFwSr"],
+		)
+	]
+)
+
+setpoint_df = pymortar.DataFrame(
+	name="setpoints",
+	aggregation=pymortar.MAX,
+	window="30m",
+	timeseries=[
+		pymortar.Timeseries(
+			view="airflow",
+			dataVars=["?SyArFwSt"],
+		)
+	]
+)
+print("Defined DataFrames")
+            </pre>
+
+            <div class="ui divider"></div>
+            <h4 class="ui header">Fetch Request</h4>
+
+            <p>
+            Now, lets combine the View and DataFrame definitions into a complete Fetch request. The full Fetch request ties together the sites
+			we retrieved from our <code>Qualify</code> call, the View we defined, the DataFrames we defined, and the range of time we want to retrieve data for.
+			Execute the cell below to fetch data from the Mortar API.
+            </p>
+
+            <pre data-executable="true" data-language="python">
+request = pymortar.FetchRequest(
+    sites=qualify_resp.sites,
+    views=[rogue_view],
+    dataFrames=[
+		sensor_df,
+		setpoint_df,
+    ],
+    time=pymortar.TimeParams(
+        start="2018-05-01T00:00:00Z",
+        end="2018-09-01T00:00:00Z",
+    )
+)
+
+resp = client.fetch(request)
+print("Retrieved data:", resp)
+            </pre>
+
+			<p>
+            If all went well, we should see that the response contains 1 View, 2 Dataframes and several hundred thousand timeseries values!
+			</p>
+        </div>
+
+        <div class="ui secondary raised segment">
+            <h3 class="ui header">Aside: Exploring a Fetch Response</h3>
+
+            <p>
+            We can access the contents of the Views and DataFrames we defined in the request through Fetch response object (<code>resp</code>). 
+            </p>
+
+            <p>
+            To get the list of DataFrames, use <code>resp.dataFrames</code>
+            </p>
+            <pre data-executable="true" data-language="python">
+resp.dataFrames
+            </pre>
+
+            <p>
+            To access the contents of a DataFrame, use Python dict-style accesses e.g. <code>resp['data frame name']</code>. The returned object will be a Pandas DataFrame with a DateTime index.
+
+            </p>
+            <pre data-executable="true" data-language="python">
+resp['sensors'].describe()
+            </pre>
+
+            <p>
+            To get the list of Views, use <code>resp.views</code>
+            </p>
+            <pre data-executable="true" data-language="python">
+resp.views
+            </pre>
+
+            <p>
+            To access the contents of a View as a Pandas DataFrame, use <code>resp.view('view name')</code>
+            </p>
+            <pre data-executable="true" data-language="python">
+resp.view('airflow').head()
+            </pre>
+
+            <p>
+            You can also access the contents of a View as a SQL table. You can execute SQL queries against the tables using <code>resp.query("SELECT * FROM airflow")</code>; the columns of the tables are given by <code>resp.view_columns("view name")</code>
+            </p>
+            <pre data-executable="true" data-language="python">
+print("Columns: ", resp.view_columns("airflow"))
+list(resp.query("SELECT distinct site from airflow"))
+            </pre>
+
+        </div>
+
+        <div class="ui raised segment">
+            <h3 class="ui header">Rogue Zone Application: Clean</h3>
+
+            <p>
+            Because the Mortar testbed consists of data from real buildings, we need to perform some data cleaning to make sure our analysis behaves
+            how we would expect. For our simple application, we will just remove sensor and setpoint values from our DataFrame that are either missing or 0.
+            </p>
+
+            <p>
+            Execute the following cell to create two new DataFrames containing our cleaned data
+            </p>
+
+            <pre data-executable="true" data-language="python">
+# find airflow sensors that aren't just all zeros
+valid_sensor_cols = (resp['sensors'] > 0).any().where(lambda x: x).dropna().index
+sensor_df = resp['sensors'][valid_sensor_cols]
+setpoint_df = resp['setpoints']
+
+fig = sensor_df.plot(figsize=(15,7), legend=False)
+            </pre>
+        </div>
+
+        <div class="ui raised segment">
+            <h3 class="ui header">Rogue Zone Application: Analyze</h3>
+
+            <p>
+            Below is the Python code performing the Rogue Zone analysis. The analysis proceeds as follows:
+            </p>
+
+            <div class="ui ordered large list">
+                <div class="item">Get the list of unique equipment by running a SQL query on the View</div>
+                <div class="item">Run a SQL query to get the sensor and setpoint for each piece of equipment</div>
+                <div class="item">Find ranges of time where the sensor was at least 10 cfm below the setpoint that are at least 2 hours long</div>
+            </div>
+
+            <p>
+            Run the cell to see the result of running the application.
+            </p>
+
+            <pre data-executable="true" data-language="python">
+# get all the equipment we will run the analysis for. Equipment relates sensors and setpoints
+equipment = [r[0] for r in resp.query("select distinct VV from airflow")]
+
+for idx, equip in enumerate(equipment):
+    # for each equipment, pull the UUID for the sensor and setpoint
+    q = """
+    SELECT SyArFwSr_uuid as sensor_uuid, SyArFwSt_uuid as setpoint_uuid, VV as equip, site
+    FROM airflow
+    WHERE VV = "{0}";
+    """.format(equip)
+    res = resp.query(q)
+    if len(res) == 0: continue
+
+    sensor_col = res[0][0]
+    setpoint_col = res[0][1]
+    if sensor_col is None or setpoint_col is None: continue
+    if sensor_col not in sensor_df or setpoint_col not in setpoint_df: continue
+    print("Processing VAV ", res[0][2], " for site ", res[0][3])
+
+    # create the dataframe for this pair of sensor and setpoint
+    df = pd.DataFrame([sensor_df[sensor_col], setpoint_df[setpoint_col]]).T
+    df.columns = ['airflow','setpoint']
+    bad = (df.airflow + 10) < df.setpoint # by 10 cfm
+    if len(df[bad]) == 0: continue
+    df['same'] = bad.astype(int).diff(1).cumsum()
+    # this increments every time we get a new run of sensor being below the setpoint
+    # use this to group up those ranges
+    df['same2'] = bad.astype(int).diff().ne(0).cumsum()
+
+    lal = df[bad].groupby('same2')['same']
+    # grouped by ranges that meet the predicate (df.airflow + 10 < df.setpoint)
+    for g in lal.groups:
+        idx = list(lal.groups[g])
+        if len(idx) < 2: continue
+        data = df[idx[0]:idx[-1]]
+        if len(data) >= 4: # 2 hours
+            fmt = {
+                'site': res[0][3],
+                'equip': equip,
+                'hours': len(data) / 2,
+                'start': idx[0],
+                'end': idx[1],
+                'diff': (data['setpoint'] - data['airflow']).mean(),
+            }
+            print("Low Airflow for {hours} hours From {start} to {end}, avg diff {diff:.2f} CFM".format(**fmt))
+            </pre>
+        </div>
+
+        <div class="ui green raised segment">
+            <h3 class="ui header">Check In</h3>
+            <div class="ui form">
+                <div class="required field questionfield">
+                    <label>Did you get what you wanted from the tutorial? Why or why not?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+                <div class="required field questionfield">
+                    <label>What did you want to see that wasn’t in the tutorial?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+                <div class="required field questionfield">
+                    <label>Do you see yourself using the platform (to do research) in the future? Why or why not?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+                <div class="required field questionfield">
+                    <label>What is the platform missing?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+                <div class="required field questionfield">
+                    <label>Do you see yourself contributing to the public library of applications (Pull Request) in the future? Why or why not?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+        </div>
+
+    </div>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/semantic.min.js"></script>
+    <script src="js/tutorial.js"></script>
+    <!-- Configure and load Thebe !-->
+    <script type="text/x-thebe-config">
+        {
+          //bootstrap: true,
+          requestKernel: true,
+          binderOptions: {
+            repo: "gtfierro/mortar-tutorial-notebook",
+          },
+		  codeMirrorConfig: {
+			theme: "default"
+		  },
+          kernelOptions: {
+            name: "python3",
+          },
+        }
+    </script>
+    <!--<script src="https://unpkg.com/thebelab@0.4.0/lib/index.js"></script>-->
+    <script src="https://unpkg.com/thebelab@0.3.3/lib/index.js"></script>
+</body>
+</html>

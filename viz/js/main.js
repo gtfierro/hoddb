@@ -57,6 +57,11 @@
                   return res.apis.HodDB.Select({body: JSON.stringify(q)})
               }).then( (res) => {
                   sites = new Set();
+
+                  if (res.body == null) {
+                      alert("NO RESULTS");
+                  }
+
                   res.body.rows.forEach(function(row) {
                       row.values.forEach(function(v) {
                         sites.add(v.namespace);
