@@ -322,6 +322,10 @@ print("{0} sites qualified for rogue zone".format(len(qualify_resp.sites)))
 
             <h4 class="ui header">View</h4>
 
+            <div class="ui segment">
+                <img class="ui centered image" src="img/viewdef.png" alt="View definition + eval"></img>
+            </div>
+
             <p>
                 A <b>View</b> is a table of metadata defined by the execution of a Brick query against a set of sites.
                 The columns of the table consist of the variables in the <code>SELECT</code> clause of the Brick query that defines
@@ -501,9 +505,9 @@ NUM_TO_PLOT=5
 
 # use a groupby to grab the UUID values for each VAV and iterate through the resulting groups
 for r in resp.view('airflow').groupby('VV').agg({'SyArFwSt_uuid': list, 'SyArFwSr_uuid': list})[:NUM_TO_PLOT].iterrows():
-  # get the pandas Series for the sensor values 
+  # get the pandas Series for the sensor values
   sensor_values = sensor_df[r[1]['SyArFwSr_uuid']]
-  # get the pandas Series for the setpoint values 
+  # get the pandas Series for the setpoint values
   setpoint_values = setpoint_df[r[1]['SyArFwSt_uuid']]
   # create a new DataFrame with these data columns
   df = pd.concat([sensor_values, setpoint_values], axis=1).dropna(axis=0)
