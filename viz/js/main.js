@@ -66,15 +66,10 @@
                       $("#errdiv").hide();
                   }
 
-                  res.body.rows.forEach(function(row) {
-                      row.values.forEach(function(v) {
-                        sites.add(v.namespace);
-                      })
-                  });
-                  document.getElementById("numsites").textContent = sites.size
+                  //res.body.rows.forEach(function(row) {
+                  //});
                   document.getElementById("numresults").textContent = res.body.rows.length
                   console.log("# results:", res.body.rows.length);
-                  console.log("# sites:", sites.size);
                   _queryres.length = 0;
                   _querycols.length = 0;
                   console.log(q);
@@ -84,12 +79,17 @@
                   }
                   console.log(_querycols);
                   res.body.rows.forEach(function(row) {
+                      row.values.forEach(function(v) {
+                        sites.add(v.namespace);
+                      })
                       var toadd = row.values.map( (r) => r.value )
                       for (i=toadd.length;i<_MAXCOLS;i++) {
                           toadd.push(null);
                       }
                       _queryres.push( toadd );
                   });
+                  document.getElementById("numsites").textContent = sites.size
+                  console.log("# sites:", sites.size);
               }, (reason) => {
                   console.error(reason);
                   $("#errdiv").show();

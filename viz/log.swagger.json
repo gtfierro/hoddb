@@ -1,6 +1,6 @@
 {
   "swagger": "2.0",
-  "host": "hoddb.mortardata.org:9001",
+  "host": "hoddb.mortardata.org",
   "info": {
     "title": "log.proto",
     "version": "version not set"
