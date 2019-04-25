@@ -478,9 +478,27 @@ resp.view('airflow').head()
             </p>
             <pre data-executable="true" data-language="python">
 print("Columns: ", resp.view_columns("airflow"))
-list(resp.query("SELECT distinct site from airflow"))
+print("Sites: ", list(resp.query("SELECT distinct site from airflow")))
             </pre>
 
+        </div>
+
+        <div class="ui green raised segment">
+            <h3 class="ui header">Check In</h3>
+            <div class="ui form">
+                <div class="required field questionfield">
+                    <label>Would a View or would a DataFrame contain the names of thermostats and which rooms they are in?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+                <div class="required field questionfield">
+                    <label>Would a View or would a DataFrame contain the sensor values for each CO2 sensor?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+                <div class="required field questionfield">
+                    <label>Would a View or would a DataFrame contain the number of occupancy sensors in a building?</label>
+                    <textarea rows="2"></textarea>
+                </div>
+            </div>
         </div>
 
         <div class="ui raised segment">
@@ -500,6 +518,7 @@ list(resp.query("SELECT distinct site from airflow"))
 valid_sensor_cols = (resp['sensors'] > 0).any().where(lambda x: x).dropna().index
 sensor_df = resp['sensors'][valid_sensor_cols]
 setpoint_df = resp['setpoints']
+print("Finished cleaning")
             </pre>
 
 			<p>
@@ -511,10 +530,13 @@ NUM_TO_PLOT=5
 
 # use a groupby to grab the UUID values for each VAV and iterate through the resulting groups
 for r in resp.view('airflow').groupby('VV').agg({'SyArFwSt_uuid': list, 'SyArFwSr_uuid': list})[:NUM_TO_PLOT].iterrows():
+  sensor_uuid = r[1]['SyArFwSr_uuid']
+  setpoint_uuid = r[1]['SyArFwSt_uuid']
+  if sensor_uuid not in sensor_df or setpoint_uuid not in setpoint_df: continue
   # get the pandas Series for the sensor values
-  sensor_values = sensor_df[r[1]['SyArFwSr_uuid']]
+  sensor_values = sensor_df[sensor_uuid]
   # get the pandas Series for the setpoint values
-  setpoint_values = setpoint_df[r[1]['SyArFwSt_uuid']]
+  setpoint_values = setpoint_df[setpoint_uuid]
   # create a new DataFrame with these data columns
   df = pd.concat([sensor_values, setpoint_values], axis=1).dropna(axis=0)
   # change the column names from UUIDs to something human readable
@@ -579,18 +601,18 @@ for idx, equip in enumerate(equipment):
         idx = list(lal.groups[g])
         if len(idx) < 2: continue
         data = df[idx[0]:idx[-1]]
-        if len(data) >= 4: # 2 hours
+        if len(data) >= 24: # 12 hours
             fmt = {
                 'site': res[0][3],
                 'equip': equip,
                 'hours': len(data) / 2,
                 'start': idx[0],
-                'end': idx[1],
+                'end': idx[-1],
                 'diff': (data['setpoint'] - data['airflow']).mean(),
             }
             print("Low Airflow for {hours} hours From {start} to {end}, avg diff {diff:.2f} CFM".format(**fmt))
-            </pre>
 print("Finished!")
+            </pre>
         </div>
 
 
@@ -600,7 +622,7 @@ print("Finished!")
             <p>
             You have now successfully built and executed a rogue zone application for airflow. You will now construct a similar application that analyzes temperature sensors and setpoints.
             Using the <a href="https://querybuilder.mortardata.org" target="_blank">Interactive Brick Query Builder</a>, construct a Brick query that retrieves HVAC zones, their related thermostat, and
-            the thermostat's temperature sensors and setpoints. Paste this query below
+            the thermostat's temperature sensors and setpoints. Paste this query below and execute the cell
             </p>
 
 
@@ -622,8 +644,8 @@ print("{0} sites qualified".format(len(qualify_resp.sites)))
 
             <pre data-executable="true" data-language="python">
 rogue_temp_view = pymortar.View(
-    name= # FILL IN,
-    definition= #  FILL IN
+    name= # FILL IN name of your choice,
+    definition= #  FILL IN Brick query you created above
 )
 print("Defined View")
 
@@ -633,8 +655,8 @@ sensor_df = pymortar.DataFrame(
 	window= "1h",
 	timeseries=[
 		pymortar.Timeseries(
-			view= # FILL IN
-			dataVars=[ " FILL IN " ],
+			view= # FILL IN name of view,
+			dataVars=[ "FILL IN variable related to sensors (remember '?' prefix)" ],
 		)
 	]
 )
@@ -645,8 +667,8 @@ setpoint_df = pymortar.DataFrame(
 	window= "1h",
 	timeseries=[
 		pymortar.Timeseries(
-			view= # FILL IN
-			dataVars=[ " FILL IN " ],
+			view= # FILL IN name of view,
+			dataVars=[ "FILL IN variables related to setpoints (remember '?' prefix)" ],
 		)
 	]
 )
@@ -667,21 +689,34 @@ request = pymortar.FetchRequest(
 		setpoint_df,
     ],
     time=pymortar.TimeParams(
-        start="2018-05-01T00:00:00Z",
+        start="2018-07-01T00:00:00Z",
         end="2018-09-01T00:00:00Z",
     )
 )
 
+print("Fetching data...")
 resp = client.fetch(request)
 print("Retrieved data:", resp)
             </pre>
 
             <p>
-            If all went well, then you should be able to run the next cell to get a nice plot
+            If all went well, then you should be able to run the next cell to get a nice plot of temperatures and setpoints for each thermostat
             </p>
 
             <pre data-executable="true" data-language="python">
-fig = resp['sensors'].plot(legend=False, figsize=(15,7))
+NUM_TO_PLOT=5
+df = resp.view(resp.views[0])
+for thermostat in df['Tt'].unique()[:NUM_TO_PLOT]:
+  d = df[df.Tt == thermostat][['SyArTeHgSt_uuid','SyArTeCgSt_uuid','TeSr_uuid']]
+  hsp = d.values[0][0]
+  csp = d.values[0][1]
+  temp = d.values[0][2]
+  if hsp not in resp['setpoints'] or csp not in resp['setpoints'] or temp not in resp['sensors']: continue
+  data = pd.concat([resp['setpoints'][hsp], resp['setpoints'][csp], resp['sensors'][temp]], axis=1)
+  data.columns = ['hsp','csp','temp']
+  fig = data.plot(figsize=(15,8))
+  fig.set_ylabel('Celsius')
+  fig.set_title(thermostat + ' Zone')
             </pre>
 
         </div>
@@ -690,6 +725,7 @@ fig = resp['sensors'].plot(legend=False, figsize=(15,7))
 
         <div class="ui green raised segment">
             <h3 class="ui header">Check In</h3>
+	
             <div class="ui form">
                 <div class="required field questionfield">
                     <label>Did you get what you wanted from the tutorial? Why or why not?</label>
@@ -713,6 +749,14 @@ fig = resp['sensors'].plot(legend=False, figsize=(15,7))
                 </div>
             </div>
 
+            <p>
+            Thanks for completing the Mortar tutorial!
+            </p>
+
+            <div id="submitdiv" class="ui message">
+                <div class="header">Submitting Response:</div>
+                <p id="submitmsg"></p>
+            </div>
             <button id="submitanswers" class="positive ui button">Submit Answers</button>
 
         </div>

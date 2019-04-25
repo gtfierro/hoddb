@@ -1,5 +1,6 @@
 (function($){
     $(document).ready(function(){
+        $("#submitdiv").hide();
         //$('.tabular.menu .item').tab()
         //$.tab('change tab','tab-account');
         //$.tab('change tab','tab-intro');
@@ -23,9 +24,20 @@
             });
 
 
-             var myWindow = window.open("", "MsgWindow", "width=200,height=100");
+            $.post("/postform", JSON.stringify(submission), function(e) {
+                $("#submitdiv").show();
+                $("#submitdiv").addClass("positive");
+                $("#submitmsg").text("successful!");
+            })
+              .fail(function(e) {
+                    $("#submitdiv").show();
+                    $("#submitdiv").addClass("negative");
+                    console.error(e)
+                    $("#submigmsg").text("unsuccessful!");
+                    });
+             //var myWindow = window.open("", "MsgWindow", "width=200,height=100");
 
-             myWindow.document.write(JSON.stringify(submission)); 
+             //myWindow.document.write(JSON.stringify(submission)); 
 
 
             console.log(submission);
