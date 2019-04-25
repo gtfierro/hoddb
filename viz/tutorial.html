@@ -32,16 +32,34 @@
             the Mortar platform.
             </p>
 
-            Terminology:
-            <ul class="list">
-                <li><b>Site</b>: a single facility; any building with its own street address</li>
-                <li>timeseries</li>
-                <li>Point</li>
-            </ul>
-            <!--<div class="ui blue icon large message">
-                <i class="pencil alternate icon"></i>
-                Boxes like these will give you directions to follow.
-            </div>-->
+	        <p>
+                <b>This tutorial</b> will walk you through the process of building a portable building analytics application -- Rogue Zone Airflow Identification -- and
+                executing it on several real buildings using the Mortar platform. This document is not a comprehensive introduction to Mortar and its capabilities, but the tutorial
+                will link to external documentation and resources where you can learn more.
+            </p>
+
+            <div class="ui secondary segment">
+                <h4 class="ui header">Technical Requirements</h4>
+
+                <p>
+                    This tutorial requires
+                </p>
+                <ul class="list">
+                    <li>A <b>modern browser</b> (the tutorial has been tested on Firefox and Chrome) with <b>javascript enabled</b></li>
+                    <li>A <b>working internet connection</b> (but no fancy ports -- just 443 and 80)</li>
+                    <li>Base-level knowledge of Python</li>
+                </ul>
+
+                <p>
+                    The tutorial is also dependent on the <a href="https://mybinder.org/" target="_blank">mybinder.org</a> service for hosting remote Jupyter Notebooks.
+                    The "Start Notebook" button below tracks the status of the connection to the Jupyter notebook backend hosted on mybinder.org; if you lose your connection
+                    or the notebook seems unresponsive, the easiest way to fix is to reload the page and start again. Clicking the "Start Notebook" button again may also
+                    resolve the issue.
+                </p>
+            </div>
+
+            <p><b>Click the button below to start!</b></p>
+
             <button id="startnotebook" class="positive ui button">Start Notebook</button>
             <span class="thebe-status-field"></span>
         </div>
@@ -50,7 +68,7 @@
             <h3 class="ui header">Check In</h3>
             <div class="ui form">
                 <div class="required field questionfield">
-                    <label>What do you want to learn about Brick and Mortar?</label>
+                    <label>TODO: fix the question</label>
                     <textarea rows="2"></textarea>
                 </div>
             </div>
@@ -75,7 +93,7 @@
             <img class="ui centered medium image" src="img/login2.png" alt="Fill out the form"></img>
 
             <p>
-            Please remember the username and password you choose! Enter them into the text box below
+            Please remember the username and password you choose! Enter them into the text box below and then execute the cell.
             </p>
             <pre data-executable="true" data-language="python">%matplotlib inline
 import pymortar
@@ -96,11 +114,27 @@ print("Success! Got client")
 
         </div>
 
-        <div class="ui secondary raised segment">
-            <h3 class="ui header">Aside: Common Building Equipment</h3>
+        <div class="ui secondary segment">
+            <h3 class="ui header">Aside: Useful Terms</h3>
             <p>
-            Define AHU, RTU, etc
+                Here is a short dictionary of terms we will use in the tutorial:
             </p>
+            <ul class="list">
+                <li><b>Site</b>: a single facility; any building with its own street address</li>
+                <li><b>Timeseries</b>: a sequence of values with associated times, e.g. the readings of a temperature sensor</li>
+                <li><b>Brick schema</b>: the class hierarchy and relationships defined by Brick</li>
+                <li><b>Brick model</b>: a directed graph representing the entities (class instances) and relationships present in a building and its subsystems</li>
+            </ul>
+
+            <p>
+               Some common building terms and types of building equipment
+            </p>
+            <ul class="list">
+                <li><b>AHU</b>: an "Air Handling Unit" is a device that regulates and circulates air as part of an HVAC system <a href="https://en.wikipedia.org/wiki/Air_handler" target="_blank">[wikipedia]</a>
+                <li><b>RTU</b>: a "Rooftop Unit" is a special kind of AHU that comes in a single package</li>
+                <li><b>VAV</b>: a "Variable Air Volume Box" is controls airflow at a zone level <a href="https://en.wikipedia.org/wiki/Variable_air_volume" target="_blank">[wikipedia]</a></li>
+                <li><b>HVAC Zone</b>: an HVAC zone is the group of rooms that are conditioned by the same VAV</li>
+            </ul>
         </div>
 
         <div class="ui raised segment" data-tab="tab-query-explore-1">
@@ -113,8 +147,10 @@ print("Success! Got client")
 
             <p>
             Nodes represent Brick <i>classes</i>. Edges represent Brick <i>relationships</i>.
+            </p>
 
-            Click on nodes to expand them to reveal their relationships to other nodes. Change the starting class by clicking an item in the "Start From..." box. The query builder automatically constructs a
+            <p>
+            Click on nodes to expand them to reveal their relationships to other nodes. The query builder automatically constructs a
             SPARQL query from the nodes you have selected (indicated by a green highlight). Later, you will copy queries from the interface into a Jupyter notebook.
             </p>
 
@@ -137,6 +173,49 @@ print("Success! Got client")
 
             <img class="ui centered image" src="img/querybuilder1.png" alt="HodDB Query Builder"></img>
 
+        </div>
+
+        <div class="ui secondary segment">
+            <h3 class="ui header">Aside: Understanding SPARQL Queries</h3>
+            <p>
+            The Brick queries you have been generating use a query language called SPARQL. SPARQL queries have two parts -- <code>SELECT</code> and <code>WHERE</code> -- which consist of <i>variables</i> and <i>terms</i>.
+            </p>
+
+            <div class="ui segment">
+                <img class="ui large centered image" src="img/fullquery.png" alt="Full example query"></img>
+            </div>
+
+            <p>
+            The definitions below will refer to this SPARQL query
+            </p>
+
+            <div class="ui unordered large list">
+                <div class="ui divider"></div>
+                <div class="item">
+                    <b>Variables</b>, identified by their <code>?</code> prefix (e.g. <code>?sensor</code>) represent nodes and edges that will be "filled in" by the query processor. The variables in our running example are <code>?tstat</code> and <code>?sensor</code>
+                </div>
+                <div class="ui divider"></div>
+                <div class="item">
+                    A <b>term</b> is a sequence representing two nodes and the directed edge between them. A term can refer to nodes and edges by name (e.g. <code>brick:Room</code> or <code>bf:feeds</code> or <code>mybuilding:Thermostat_123</code>) or with a variable.
+                    Terms can be thought of as "patterns" matching parts of the graph representing the Brick model.
+
+                    The following is one of three terms from our running example. It contains one variable.
+                    <div class="ui segment">
+                        <img class="ui large centered image" src="img/term1.png" alt="Term 1"></img>
+                    </div>
+                </div>
+                <div class="ui divider"></div>
+                <div class="item">
+                    The <b><code>SELECT</code></b> clause of a SPARQL query consists of a list of variables. This defines which variables will be returned by the evaluation of the query. Specifically, each row in the result contains a value for each variable in the <code>SELECT</code> clause. The <code>SELECT</code> clause below specifies two variables: <code>?tstat</code> and <code>?sensor</code>
+                    <div class="ui segment">
+                        <img class="ui medium centered image" src="img/selectclause.png" alt="Select clause"></img>
+                    </div>
+                </div>
+                <div class="ui divider"></div>
+                <div class="item">
+                    The <b><code>WHERE</code></b> clause of a SPARQL query contains all of the terms that restrict the output of the evaluated query. Each query result (a "row") is an assignment of entities in a Brick graph to variables in the query the matches the pattern defined by the terms in the <code>WHERE</code> clause.
+                </div>
+            </div>
         </div>
 
         <div class="ui green raised segment">
@@ -182,8 +261,6 @@ resp = client.qualify(["""
 """])
 print("{0} sites qualified".format(len(resp.sites)))
             </pre>
-
-
         </div>
 
 
@@ -203,7 +280,6 @@ print("{0} sites qualified".format(len(resp.sites)))
 
             <b>TODO: replace this with a simpler image</b>
             <img class="ui centered huge image" src="img/appanatomy.png" alt="Application anatomy"></img>
-
         </div>
 
         <div class="ui raised segment">
@@ -351,7 +427,7 @@ print("Retrieved data:", resp)
 			</p>
         </div>
 
-        <div class="ui secondary raised segment">
+        <div class="ui secondary segment">
             <h3 class="ui header">Aside: Exploring a Fetch Response</h3>
 
             <p>
@@ -414,8 +490,29 @@ list(resp.query("SELECT distinct site from airflow"))
 valid_sensor_cols = (resp['sensors'] > 0).any().where(lambda x: x).dropna().index
 sensor_df = resp['sensors'][valid_sensor_cols]
 setpoint_df = resp['setpoints']
+            </pre>
 
-fig = sensor_df.plot(figsize=(15,7), legend=False)
+			<p>
+                For fun, we can plot some of the sensor/setpoint pairs of a few VAVs. The Python code below uses a Pandas <a href="https://pandas.pydata.org/pandas-docs/version/0.22/groupby.html" target="_blank"><code>groupby</code></a> function to grab the columns of data for each pair of air flow sensor/setpoint for each VAV, creates a new DataFrame, and plots it.
+            </p>
+            <pre data-executable="true" data-language="python">
+# CHANGE THIS to see more VAVs
+NUM_TO_PLOT=5
+
+# use a groupby to grab the UUID values for each VAV and iterate through the resulting groups
+for r in resp.view('airflow').groupby('VV').agg({'SyArFwSt_uuid': list, 'SyArFwSr_uuid': list})[:NUM_TO_PLOT].iterrows():
+  # get the pandas Series for the sensor values 
+  sensor_values = sensor_df[r[1]['SyArFwSr_uuid']]
+  # get the pandas Series for the setpoint values 
+  setpoint_values = setpoint_df[r[1]['SyArFwSt_uuid']]
+  # create a new DataFrame with these data columns
+  df = pd.concat([sensor_values, setpoint_values], axis=1).dropna(axis=0)
+  # change the column names from UUIDs to something human readable
+  df.columns = ['air flow sensor','air flow setpoint']
+  # plot the data!
+  fig = df.plot(figsize=(15,8))
+  fig.set_ylabel('cfm')
+  fig.set_title(r[0])
             </pre>
         </div>
 
@@ -439,6 +536,7 @@ fig = sensor_df.plot(figsize=(15,7), legend=False)
             <pre data-executable="true" data-language="python">
 # get all the equipment we will run the analysis for. Equipment relates sensors and setpoints
 equipment = [r[0] for r in resp.query("select distinct VV from airflow")]
+print("Processing {0} VAVs...".format(len(equipment)))
 
 for idx, equip in enumerate(equipment):
     # for each equipment, pull the UUID for the sensor and setpoint
@@ -454,7 +552,6 @@ for idx, equip in enumerate(equipment):
     setpoint_col = res[0][1]
     if sensor_col is None or setpoint_col is None: continue
     if sensor_col not in sensor_df or setpoint_col not in setpoint_df: continue
-    print("Processing VAV ", res[0][2], " for site ", res[0][3])
 
     # create the dataframe for this pair of sensor and setpoint
     df = pd.DataFrame([sensor_df[sensor_col], setpoint_df[setpoint_col]]).T
@@ -483,6 +580,7 @@ for idx, equip in enumerate(equipment):
             }
             print("Low Airflow for {hours} hours From {start} to {end}, avg diff {diff:.2f} CFM".format(**fmt))
             </pre>
+print("Finished!")
         </div>
 
 
