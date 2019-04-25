@@ -72,6 +72,8 @@
             After entering the code, you should see a message the the sign up was successful.
             </p>
 
+            <img class="ui centered medium image" src="img/login2.png" alt="Fill out the form"></img>
+
             <p>
             Please remember the username and password you choose! Enter them into the text box below
             </p>
@@ -85,7 +87,6 @@ client = pymortar.Client({
 })
             </pre>
 
-            <img class="ui centered medium image" src="img/login2.png" alt="Fill out the form"></img>
         </div>
 
         <div class="ui raised segment" data-tab="tab-query-explore-1">
@@ -93,7 +94,7 @@ client = pymortar.Client({
 
             <p>
             Recall that a Brick model describes the <i>elements</i> and <i>structure</i> of a building and its subsystems and shows the <i>relationships</i> between them.
-            Here you will use the <a href="https://hoddb.mortardata.org" target="_blank">Interactive Brick Query Builder</a> to explore relationships between common building assets like thermostats and rooms.
+            Here you will use the Interactive Brick Query Builder to explore relationships between common building assets like thermostats and rooms.
             </p>
 
             <p>
@@ -108,14 +109,16 @@ client = pymortar.Client({
             </p>
 
             <p>
-            After you are familiar with the interface, try to find the connections between the following pairs of Brick classes. Pick one class to start with (e.g. <code>Thermostat</code>) and expand nodes in the interface until you find a node with a label corresponding to the other class in the pair. Pay attention to the labels on the edges
+            Try to find connections between pairs of Brick classes; this should mirror how these types of things are connected in a real building.
+            Pick one class to start with (e.g. <code>Floor</code>) and, by clicking and exploring, find a path to the other class (e.g. <code>Room</code>).
+            The edge labels will tell you how each of these classes is related.
             </p>
 
             <div class="ui bulleted list">
-                <div class="item"><code>Floor</code> and <code>Room</code></div>
-                <div class="item"><code>Thermostat</code> and <code>Heating Setpoint</code></div>
-                <div class="item"><code>VAV</code> and <code>Damper Position</code></div>
-                <div class="item"><code>VAV</code> and <code>Room</code></div>
+                <div class="item">Find a path from <code>Floor</code> to <code>Room</code></div>
+                <div class="item">Find a path from <code>Thermostat</code> to <code>Supply Air Temperature Heating Setpoint</code></div>
+                <div class="item">Find a path from <code>VAV</code> to <code>Damper Position</code></div>
+                <div class="item">Find a path from <code>VAV</code> to <code>Room</code></div>
             </div>
 
             <img class="ui centered image" src="img/querybuilder1.png" alt="HodDB Query Builder"></img>

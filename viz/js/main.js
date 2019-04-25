@@ -58,8 +58,12 @@
               }).then( (res) => {
                   sites = new Set();
 
-                  if (res.body == null) {
-                      alert("NO RESULTS");
+                  if (res.body.rows == null) {
+                      $("#errdiv").show();
+                      $("#errmessage").text("No results");
+                      return;
+                  } else {
+                      $("#errdiv").hide();
                   }
 
                   res.body.rows.forEach(function(row) {
@@ -88,10 +92,13 @@
                   });
               }, (reason) => {
                   console.error(reason);
+                  $("#errdiv").show();
+                  $("#errmessage").text(reason);
               });
           },
           getNodes: function(n) {
               if (n == null) { return }
+              $("#querydisplay").addClass("active");
               console.log("N",n);
               client.then( (res) => {
                   return res.apis.HodDB.Select({body: JSON.stringify({
@@ -123,6 +130,10 @@
                       ],
                   })});
               }).then( (res) => {
+                  if (res.body.rows == null) {
+                      $("#querydisplay").removeClass("active");
+                      return
+                  }
                   res.body.rows.forEach(function(row) {
                       if (row.values[1].value == "Class") { return }
                       if (row.values[4].value == "Class") { return }
@@ -132,7 +143,9 @@
                       addNodeIfNotExist(row.values[4].value);
                       addEdgeIfNotExist(row.values[1].value, row.values[4].value, row.values[2].value);
                   });
+                  $("#querydisplay").removeClass("active");
               }, (reason, x) => {
+                  $("#querydisplay").removeClass("active");
                   console.error(reason, x);
               });
 
@@ -311,6 +324,8 @@
         network = new vis.Network(container, data, options);
 
         var dt = null;
+
+        $("#errdiv").hide();
 
         $('.tabular.menu .item').tab(
             {

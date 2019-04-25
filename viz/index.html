@@ -9,7 +9,39 @@
 </head>
 <body>
     <div class="ui grid container">
-        <h1 class="ui dividing header">Brick Query Builder</h1>
+        <div class="row">
+            <div class="four wide column">
+                <h1 class="ui dividing header">Brick Query Builder</h1>
+                <p>
+                    Construct Brick queries interactively by expanding and selecting nodes.
+                </p>
+            </div>
+            <div class="twelve wide column">
+                <div class="ui info message">
+                    <div class="header">
+                        How To Use
+                    </div>
+                    <div class="ui grid">
+                        <div class="row">
+                            <div class="eight wide column">
+                                <ul class="list">
+                                    <li><b>Nodes</b> represent Brick classes appearing in Brick models. <b>Edges</b> represent relationships between instances of classes</li>
+                                    <li><b>Click</b> nodes to see their relationships to neighboring nodes.</li>
+                                    <li><b>Select</b> nodes for the query by clicking them. Nodes highlighted in green selected. Click a node again to de-select.</li>
+                                </ul>
+                            </div>
+                            <div class="eight wide column">
+                                <ul class="list">
+                                    <li>Click class names in "Start From..." to <b>reset</b> the graph content and position</li>
+                                    <li><b>Click and drag</b> to move the graph around.</li>
+                                    <li><b>Scroll in and out</b> to zoom in and out of the graph.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row">
             <div class="ten wide column fullpage">
@@ -18,7 +50,10 @@
                     <a class="item" data-tab="results">Results</a>
                 </div>
                 <div class="ui bottom attached tab segment" data-tab="builder" height="800px">
-                    <div id="viewport" width="100%" height="800px"></div>
+                     <div class="ui inverted dimmer" id="querydisplay">
+                        <div class="ui loader"></div>
+                     </div>
+                        <div id="viewport" width="100%" height="800px"></div>
                 </div>
                 <div class="ui bottom attached tab segment" data-tab="results">
                     <div id="tablewrap">
@@ -37,6 +72,10 @@
                     <div class="row">
                         <div class="columns">
                             <h4 class="ui top attached block header">Query Results</h4>
+                            <div id="errdiv" class="ui negative message">
+                                <div class="header">Error running query</div>
+                                <p id="errmessage"></p>
+                            </div>
                             <div class="ui bottom attached segment">
                                 <p><b># Sites:</b> <span id="numsites">0</span></p>
                                 <p><b># Results:</b> <span id="numresults">0</span></p>
