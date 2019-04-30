@@ -323,7 +323,7 @@
     $(document).ready(function(){
         network = new vis.Network(container, data, options);
 
-        var clipboard = new ClipboardJS('.btn');
+        var clipboard = new ClipboardJS('#copybutton');
 
         clipboard.on('success', function(e) {
                 console.info('Action:', e.action);
@@ -338,13 +338,12 @@
                 console.error('Trigger:', e.trigger);
         });
 
-        $('.btn').popup({
+        $('#copybutton').popup({
           on: 'click',
           onVisible: function() {
               console.log('shown');
               setInterval(function() {
-                  console.log('hide/');
-                  $('.btn').popup('hide');
+                  $('#copybutton').popup('hide');
               }, 1500);
         }
         });
@@ -399,7 +398,7 @@
 
         var client = new Client(nodes, edges);
 
-        $(".button").click(function(e) {
+        $(".brickclass").click(function(e) {
             startclass = e.currentTarget.dataset.brickclass;
             console.log(nodes);
             nodes.clear();
