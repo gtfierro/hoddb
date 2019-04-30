@@ -287,7 +287,7 @@ print("{0} sites qualified".format(len(resp.sites)))
             </p>
 
             <p>
-            When you are done, augment the query with relationships to the <code>HVAC Zone</code> and <code>Room</code> that will be affected by a rogue zone.
+            When you are done, augment the query with relationships to the <code>HVAC Zone</code>.
             </p>
 
             <pre data-executable="true" data-language="python">
@@ -522,7 +522,7 @@ NUM_TO_PLOT=5
 for r in resp.view('airflow').groupby('VV').agg({'SyArFwSt_uuid': list, 'SyArFwSr_uuid': list})[:NUM_TO_PLOT].iterrows():
   sensor_uuid = r[1]['SyArFwSr_uuid']
   setpoint_uuid = r[1]['SyArFwSt_uuid']
-  if sensor_uuid not in sensor_df or setpoint_uuid not in setpoint_df: continue
+  if sensor_uuid[0] not in sensor_df or setpoint_uuid[0] not in setpoint_df: continue
   # get the pandas Series for the sensor values
   sensor_values = sensor_df[sensor_uuid]
   # get the pandas Series for the setpoint values

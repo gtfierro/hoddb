@@ -313,7 +313,7 @@
     var yasqe = YASQE(document.getElementById("query"));
     yasqe.options.syntaxErrorCheck = false;
     yasqe.options.showQueryButton = false;
-    yasqe.options.readOnly = true;
+    //yasqe.options.readOnly = true;
     yasqe.options.createShareLink = null;
     //yasqe.options.lineNumbers = false;
     yasqe.setSize("100%")
@@ -322,6 +322,32 @@
 
     $(document).ready(function(){
         network = new vis.Network(container, data, options);
+
+        var clipboard = new ClipboardJS('.btn');
+
+        clipboard.on('success', function(e) {
+                console.info('Action:', e.action);
+                console.info('Text:', e.text);
+                console.info('Trigger:', e.trigger);
+
+                e.clearSelection();
+        });
+
+        clipboard.on('error', function(e) {
+                console.error('Action:', e.action);
+                console.error('Trigger:', e.trigger);
+        });
+
+        $('.btn').popup({
+          on: 'click',
+          onVisible: function() {
+              console.log('shown');
+              setInterval(function() {
+                  console.log('hide/');
+                  $('.btn').popup('hide');
+              }, 1500);
+        }
+        });
 
         var dt = null;
 
