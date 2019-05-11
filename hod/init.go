@@ -92,7 +92,6 @@ func MakeHodDB(cfg *Config) (*HodDB, error) {
 		ticker := time.NewTicker(1 * time.Minute)
 		defer ticker.Stop()
 		for range ticker.C {
-			log.Debug("running gc")
 		againDb:
 			err := db.RunValueLogGC(0.7)
 			if err == nil {
