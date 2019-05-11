@@ -148,9 +148,12 @@ func (hod *HodDB) hashURI(graph string, u turtle.URI) EntityKey {
 
 	hk := hashkeyentry{graph, u}
 
+	hod.RLock()
 	if key, found := hod.hashes[hk]; found {
+		hod.RUnlock()
 		return key
 	}
+	hod.RUnlock()
 
 	var key EntityKey
 
