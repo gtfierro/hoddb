@@ -19,7 +19,6 @@ require (
 	github.com/rs/cors v1.6.0
 	github.com/sirupsen/logrus v1.4.1
 	github.com/spaolacci/murmur3 v1.1.0
-	github.com/spf13/cobra v0.0.3 // indirect
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.3.0
 	github.com/tinylib/msgp v1.1.0
