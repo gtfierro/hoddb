@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	logpb "git.sr.ht/~gabe/hod/proto"
-	"git.sr.ht/~gabe/hod/turtle"
+	turtle "git.sr.ht/~gabe/hod/turtle"
 )
 
 var _e4 = [4]byte{0, 0, 0, 0}

@@ -3,11 +3,13 @@ package hod
 import (
 	"fmt"
 	logpb "git.sr.ht/~gabe/hod/proto"
-	"git.sr.ht/~gabe/hod/turtle"
+	turtle "git.sr.ht/~gabe/hod/turtle"
 )
 
 const (
-	OWL_NAMESPACE = "http://www.w3.org/2002/07/owl"
+	OWL_NAMESPACE  = "http://www.w3.org/2002/07/owl"
+	RDF_NAMESPACE  = "http://www.w3.org/1999/02/22-rdf-syntax-ns"
+	RDFS_NAMESPACE = "http://www.w3.org/2000/01/rdf-schema"
 )
 
 type InferenceRule = func(triple turtle.Triple) []turtle.Triple
@@ -32,7 +34,6 @@ type Graph struct {
 }
 
 func (hod *HodDB) LoadFileBundle(bundle FileBundle) (Graph, error) {
-	p := turtle.GetParser()
 
 	g := Graph{
 		Name: bundle.GraphName,
@@ -40,11 +41,14 @@ func (hod *HodDB) LoadFileBundle(bundle FileBundle) (Graph, error) {
 	}
 
 	// load graph
-	dataset, _ := p.Parse(bundle.TTLFile)
+	dataset, err := turtle.Parse(bundle.TTLFile)
+	if err != nil {
+		return g, err
+	}
 
 	// load ontologies
 	for _, ontology_file := range bundle.OntologyFiles {
-		ontology_dataset, _ := p.Parse(ontology_file)
+		ontology_dataset, _ := turtle.Parse(ontology_file)
 		for _, triple := range ontology_dataset.Triples {
 			dataset.Triples = append(dataset.Triples, triple)
 		}

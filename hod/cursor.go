@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	logpb "git.sr.ht/~gabe/hod/proto"
-	"git.sr.ht/~gabe/hod/turtle"
+	turtle "git.sr.ht/~gabe/hod/turtle"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
 	"github.com/spaolacci/murmur3"

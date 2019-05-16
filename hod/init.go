@@ -1,7 +1,7 @@
 package hod
 
 import (
-	"git.sr.ht/~gabe/hod/turtle"
+	turtle "git.sr.ht/~gabe/hod/turtle"
 	"github.com/dgraph-io/badger"
 	"github.com/pkg/errors"
 	"github.com/pkg/profile"

@@ -500,7 +500,12 @@ func ParseString(_var interface{}) (string, error) {
 }
 
 func ParseQuotedString(_var interface{}) (string, error) {
-	return string(_var.(*token.Token).Lit), nil
+	s := string(_var.(*token.Token).Lit)
+	// strip quotes
+	if len(s) > 2 {
+		s = s[1 : len(s)-1]
+	}
+	return s, nil
 }
 
 func NewPathSequence(_pred interface{}) ([]PathPattern, error) {

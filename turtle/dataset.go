@@ -43,3 +43,10 @@ func (d *DataSet) NumTriples() int {
 func (d *DataSet) NumNamespaces() int {
 	return d.nscount
 }
+
+//func main() {
+//	filename := "Brick.ttl"
+//	ds, err := Parse(filename)
+//	fmt.Println(ds)
+//	fmt.Println(err)
+//}

@@ -1,27 +1,12 @@
-//go:generate msgp
-//msgp:ignore Parser
 package turtle
 
-// #cgo CFLAGS: -I ../raptor/src
-// #cgo LDFLAGS: -lraptor2
-// #include <stdio.h>
-// #include <raptor2.h>
-import "C"
 import (
+	"fmt"
+	rdf "git.sr.ht/~gabe/hod/turtle/rdfparser"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
-	"sync"
-	"time"
 )
-
-var p *Parser
-
-type Parser struct {
-	dataset *DataSet
-	sync.Mutex
-}
 
 type URI struct {
 	Namespace string `msg:"n"`
@@ -90,62 +75,23 @@ func MakeTriple(sub, pred, obj string) Triple {
 	}
 }
 
-func init() {
-	p = &Parser{}
-}
-
-//export transform
-func transform(_subject, _predicate, _object *C.char, sub_len, pred_len, obj_len C.int) {
-	subject := C.GoStringN(_subject, sub_len)
-	predicate := C.GoStringN(_predicate, pred_len)
-	object := C.GoStringN(_object, obj_len)
-	p.dataset.AddTripleStrings(subject, predicate, object)
-}
-
-//export registerNamespace
-func registerNamespace(_namespace, _prefix *C.char, ns_len, pfx_len C.int) {
-	namespace := C.GoStringN(_namespace, ns_len)
-	prefix := C.GoStringN(_prefix, pfx_len)
-	p.dataset.addNamespace(prefix, namespace)
-}
-
-// Return Parser instance
-func GetParser() *Parser {
-	return p
-}
-
 // Parses the given filename using the turtle format.
 // Returns the dataset, and the time elapsed in parsing
-func (p *Parser) Parse(filename string) (DataSet, time.Duration) {
-	p.Lock()
-	defer p.Unlock()
-	start := time.Now()
-	p.dataset = newDataSet()
-	p.parseFile(filename)
-	took := time.Since(start)
-	return *p.dataset, took
-}
+func Parse(filename string) (DataSet, error) {
+	dataset := newDataSet()
+	f, err := os.Open(filename)
+	if err != nil {
+		return *dataset, err
+	}
+	dec := rdf.NewTripleDecoder(f, rdf.Turtle)
+	for triple, err := dec.Decode(); err != io.EOF; triple, err = dec.Decode() {
+		dataset.AddTripleStrings(triple.Subj.String(), triple.Pred.String(), triple.Obj.String())
+	}
+	fmt.Println(dataset.triplecount)
+	fmt.Println(dec.Namespaces())
+	for ns, uri := range dec.Namespaces() {
+		dataset.addNamespace(ns, uri)
+	}
 
-// Writes the contents of the reader to a temporary file, and then reads in that file
-func (p *Parser) ParseReader(r io.Reader) (DataSet, time.Duration, error) {
-	p.Lock()
-	defer p.Unlock()
-	start := time.Now()
-	p.dataset = newDataSet()
-	f, err := ioutil.TempFile(".", "_raptor")
-	defer f.Close()
-	if err != nil {
-		return *p.dataset, time.Since(start), err
-	}
-	defer func() {
-		os.Remove(f.Name())
-	}()
-	_, err = io.Copy(f, r)
-	if err != nil {
-		return *p.dataset, time.Since(start), err
-	}
-	//log.Printf("Wrote %d bytes", n)
-	p.parseFile(f.Name())
-	took := time.Since(start)
-	return *p.dataset, took, nil
+	return *dataset, nil
 }
