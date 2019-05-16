@@ -14,22 +14,22 @@ proto: proto/log.proto
 	# protoc -I proto proto/log.proto
 
 build:
-	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o log
+	go build -o log
 
 test:
 	# the -count=1 flag makes the test non-cacheable
 	rm -rf _log_test_
-	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go test -count=1 -v  ./...
+	go test -count=1 -v  ./...
 
 test-insert:
 	rm -rf _log_test_
-	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go test -v -test.run=TestInsert ./...
+	go test -v -test.run=TestInsert ./...
 
 bench:
-	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go test -bench=. -test.run=xxxx -v ./...
+	go test -bench=. -test.run=xxxx -v ./...
 
 bench-util:
-	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go test -bench=Util -test.run=xxxx -v ./...
+	go test -bench=Util -test.run=xxxx -v ./...
 
 clean:
 	rm -rf _hod_
