@@ -1,7 +1,6 @@
 package turtle
 
 import (
-	"fmt"
 	rdf "git.sr.ht/~gabe/hod/turtle/rdfparser"
 	"io"
 	"os"
@@ -87,8 +86,6 @@ func Parse(filename string) (DataSet, error) {
 	for triple, err := dec.Decode(); err != io.EOF; triple, err = dec.Decode() {
 		dataset.AddTripleStrings(triple.Subj.String(), triple.Pred.String(), triple.Obj.String())
 	}
-	fmt.Println(dataset.triplecount)
-	fmt.Println(dec.Namespaces())
 	for ns, uri := range dec.Namespaces() {
 		dataset.addNamespace(ns, uri)
 	}
