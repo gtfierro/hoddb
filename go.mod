@@ -21,7 +21,6 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.3.0
-	github.com/tinylib/msgp v1.1.0
 	github.com/zhangxinngang/murmur v0.0.0-20140309145047-4e88ee1a5950
 	google.golang.org/genproto v0.0.0-20190508193815-b515fa19cec8
 	google.golang.org/grpc v1.20.1
