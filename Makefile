@@ -1,4 +1,4 @@
-RELEASE?=v0.7.0
+RELEASE?=v0.7.1
 .PHONY: proto
 
 run: build
