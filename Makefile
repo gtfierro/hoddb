@@ -5,13 +5,13 @@ run: build
 	rm -rf _hod_
 	./log
 
+install-python-deps:
+	python -m pip install grpcio-tools googleapis-common-protos --user
+
 proto: proto/log.proto
 	export GOPATH=/home/gabe/go
-	#protoc -I proto --js_out=import_style=commonjs:viz/js --grpc-web_out=import_style=commonjs,mode=grpcwebtext:viz/js --go_out=plugins=grpc:proto proto/log.proto
-	protoc -I proto -I /home/gabe/go/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --go_out=plugins=grpc:proto proto/log.proto
-	protoc -I proto -I /home/gabe/go/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --grpc-gateway_out=logtostderr=true:proto proto/log.proto
-	protoc -I proto -I /home/gabe/go/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --swagger_out=logtostderr=true:viz proto/log.proto
-	# protoc -I proto proto/log.proto
+	protoc -I proto -I /home/gabe/go/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --go_out=plugins=grpc:proto --grpc-gateway_out=logtostderr=true:proto --swagger_out=logtostderr=true:viz proto/log.proto
+	python3 -m grpc_tools.protoc -I proto -I /home/gabe/go/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --python_out=. --grpc_python_out=. proto/log.proto
 
 build:
 	go build -o log
