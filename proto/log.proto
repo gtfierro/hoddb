@@ -10,6 +10,7 @@ service HodDB {
           body: "*"
         };
     };
+    rpc Parse(ParseRequest) returns (SelectQuery);
     rpc Count(SelectQuery) returns (Response);
     rpc Versions(VersionQuery) returns (Response);
 }
@@ -36,6 +37,10 @@ enum Pattern {
     ZeroOne = 1;
     ZeroPlus = 2;
     OnePlus = 3;
+}
+
+message ParseRequest {
+    string query = 1;
 }
 
 message Response {
