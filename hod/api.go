@@ -271,7 +271,7 @@ func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *l
 
 	var cursor *Cursor
 	resp = new(logpb.Response)
-	if len(query.Graphs) == 1 && query.Graphs[0] == "*" {
+	if len(query.Graphs) == 0 || (len(query.Graphs) == 1 && query.Graphs[0] == "*") {
 		var graphs []string
 		for graph := range hod.graphs {
 			graphs = append(graphs, graph)

@@ -269,6 +269,51 @@ database:
 	}
 }
 
+func TestQueryTwoGraphs(t *testing.T) {
+	require := require.New(t)
+	dir, err := ioutil.TempDir("", "_log_test_")
+	require.NoError(err)
+	defer os.RemoveAll(dir) // clean up
+
+	cfgStr := fmt.Sprintf(`
+database:
+    path: %s
+    `, dir)
+	cfg, err := ReadConfigFromString(cfgStr)
+	require.NoError(err, "read config")
+	require.NotNil(cfg, "config")
+
+	hod, err := MakeHodDB(cfg)
+	require.NoError(err, "open log")
+	require.NotNil(hod, "log")
+
+	// load soda AND test
+	bundle := FileBundle{
+		GraphName:     "soda",
+		TTLFile:       "berkeley.ttl",
+		OntologyFiles: []string{"Brick.ttl", "BrickFrame.ttl"},
+	}
+	err = hod.Load(bundle)
+
+	require.NoError(err, "load files")
+	bundle = FileBundle{
+		GraphName:     "test",
+		TTLFile:       "example.ttl",
+		OntologyFiles: []string{"Brick.ttl", "BrickFrame.ttl"},
+	}
+	err = hod.Load(bundle)
+	require.NoError(err, "load files")
+
+	// test no graphs
+	q, err := hod.ParseQuery(`SELECT ?x WHERE { ?x rdf:type brick:Room };`, 0)
+	require.NoError(err)
+	require.NotNil(q)
+	resp, err := hod.Select(context.Background(), q)
+	require.NoError(err)
+	require.NotNil(resp)
+	require.Equal(resp.Count, int64(244), "Testing default to querying all graphs")
+}
+
 func TestQueryBerkeley(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)
