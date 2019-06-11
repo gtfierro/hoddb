@@ -186,6 +186,10 @@ func (hod *HodDB) Versions(ctx context.Context, request *logpb.VersionQuery) (*l
 	return resp, nil
 }
 
+func (hod *HodDB) Parse(ctx context.Context, request *logpb.ParseRequest) (*logpb.SelectQuery, error) {
+	return hod.ParseQuery(request.Query, 0)
+}
+
 func (hod *HodDB) ParseQuery(qstr string, version int64) (*logpb.SelectQuery, error) {
 	q, err := query.Parse(qstr)
 	if err != nil {
