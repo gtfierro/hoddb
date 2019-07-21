@@ -214,6 +214,9 @@ func (hod *HodDB) ParseQuery(qstr string, version int64) (*logpb.SelectQuery, er
 		for _, pred := range triple.Predicates {
 			// TODO: use pattern
 			uri := hod.expandURI(convertURI(pred.Predicate), "")
+			if uri == nil {
+				return nil, errors.New("graph not found")
+			}
 			switch pred.Pattern {
 			case sparql.PATTERN_SINGLE:
 				uri.Pattern = logpb.Pattern_Single

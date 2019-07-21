@@ -53,13 +53,12 @@ func (db *HodDB) Backup(w io.Writer) error {
 
 	// write the hashes, uris to the store
 	hashpfx := []byte("hashpfx")
-	entitypfx := []byte("entitypfx")
 	db.Lock()
 	defer db.Unlock()
 
+	// Backup db.hashes
 	wb := db.db.NewWriteBatch()
 	defer wb.Cancel()
-
 	for hashkey, entitykey := range db.hashes {
 		serializedkey, err := json.Marshal(hashkey)
 		if err != nil {
@@ -76,6 +75,8 @@ func (db *HodDB) Backup(w io.Writer) error {
 		return err
 	}
 
+	// Backup db.uris
+	entitypfx := []byte("entitypfx")
 	wb2 := db.db.NewWriteBatch()
 	defer wb2.Cancel()
 
@@ -92,6 +93,34 @@ func (db *HodDB) Backup(w io.Writer) error {
 		}
 	}
 	if err := wb2.Flush(); err != nil {
+		return err
+	}
+
+	// Backup db.namespaces
+	nspfx := []byte("namespacepfx")
+	wb3 := db.db.NewWriteBatch()
+	defer wb3.Cancel()
+	db.namespaces.Range(func(key, value interface{}) bool {
+		// (map[string]map[string]string)
+		//key
+		var b []byte
+		b = append(b, nspfx...)
+		b = append(b, []byte(key.(string))...)
+		//value
+		serialized, err := json.Marshal(value)
+		if err != nil {
+			log.Error(err)
+			return false
+		}
+
+		if err := wb3.Set(b, serialized); err != nil {
+			log.Error(err)
+			return false
+		}
+
+		return true
+	})
+	if err := wb3.Flush(); err != nil {
 		return err
 	}
 
@@ -205,7 +234,7 @@ func MakeHodDBLambda(cfg *Config, backup io.Reader) (*HodDB, error) {
 			item := it.Item()
 			k := item.Key()
 			err := item.Value(func(v []byte) error {
-				fmt.Printf("key=%s, value=%s\n", k, v)
+				//fmt.Printf("key=%s, value=%s\n", k, v)
 				serializedhashkey := k[len(prefix):]
 				var hashkey hashkeyentry
 				if err := json.Unmarshal(serializedhashkey, &hashkey); err != nil {
@@ -232,7 +261,7 @@ func MakeHodDBLambda(cfg *Config, backup io.Reader) (*HodDB, error) {
 			item := it.Item()
 			k := item.Key()
 			err := item.Value(func(v []byte) error {
-				fmt.Printf("key=%s, value=%s\n", k, v)
+				//fmt.Printf("key=%s, value=%s\n", k, v)
 				entitykey := EntityKeyFromBytes(k[len(prefix):])
 				var uri turtle.URI
 				if err := json.Unmarshal(v, &uri); err != nil {
@@ -240,6 +269,34 @@ func MakeHodDBLambda(cfg *Config, backup io.Reader) (*HodDB, error) {
 				}
 
 				hod.uris[entitykey] = uri
+
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		prefix := []byte("namespacepfx")
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			// populate hod.namespaces
+			err := item.Value(func(v []byte) error {
+				fmt.Printf("key=%s, value=%s\n", k, v)
+				key := string(k[len(prefix):])
+				var nsmap = make(map[string]string)
+				if err := json.Unmarshal(v, &nsmap); err != nil {
+					return err
+				}
+
+				hod.namespaces.Store(key, nsmap)
+				hod.graphs[key] = struct{}{}
 
 				return nil
 			})
@@ -262,35 +319,21 @@ func MakeHodDBLambda(cfg *Config, backup io.Reader) (*HodDB, error) {
 		}
 	}()
 
-	hod.namespaces.Store("ciee", map[string]string{
-		"bf":    "https://brickschema.org/schema/1.0.3/BrickFrame",
-		"bldg":  "http://xbos.io/ontologies/ciee",
-		"brick": "https://brickschema.org/schema/1.0.3/Brick",
-		"owl":   "http://www.w3.org/2002/07/owl",
-		"rdf":   "http://www.w3.org/1999/02/22-rdf-syntax-ns",
-		"rdfs":  "http://www.w3.org/2000/01/rdf-schema",
-		"xml":   "http://www.w3.org/XML/1998/namespace",
-		"xsd":   "http://www.w3.org/2001/XMLSchema",
+	hod.namespaces.Range(func(k, v interface{}) bool {
+		fmt.Println(k, v)
+		return true
 	})
-	hod.graphs["ciee"] = struct{}{}
-
-	//	numBuildings := len(cfg.Database.Buildings)
-	//
-	//	processed := 0
-	//	for graphname, graphfile := range cfg.Database.Buildings {
-	//		bundle := FileBundle{
-	//			GraphName:     graphname,
-	//			TTLFile:       graphfile,
-	//			OntologyFiles: cfg.Database.Ontologies,
-	//		}
-	//		s := time.Now()
-	//		if err := hod.Load(bundle); err != nil {
-	//			log.Error(errors.Wrapf(err, "Could not load file %s", graphname))
-	//		}
-	//		processtime := time.Since(s)
-	//		processed += 1
-	//		log.Infof("Loaded in %d/%d (%.2f%%) buildings from config file (%s took %s)", processed, numBuildings, 100*float64(processed)/float64(numBuildings), graphname, processtime)
-	//	}
+	//	hod.namespaces.Store("ciee", map[string]string{
+	//		"bf":    "https://brickschema.org/schema/1.0.3/BrickFrame",
+	//		"bldg":  "http://xbos.io/ontologies/ciee",
+	//		"brick": "https://brickschema.org/schema/1.0.3/Brick",
+	//		"owl":   "http://www.w3.org/2002/07/owl",
+	//		"rdf":   "http://www.w3.org/1999/02/22-rdf-syntax-ns",
+	//		"rdfs":  "http://www.w3.org/2000/01/rdf-schema",
+	//		"xml":   "http://www.w3.org/XML/1998/namespace",
+	//		"xsd":   "http://www.w3.org/2001/XMLSchema",
+	//	})
+	//	hod.graphs["ciee"] = struct{}{}
 
 	return hod, nil
 }
