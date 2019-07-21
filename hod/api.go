@@ -40,7 +40,7 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 			return errors.Wrap(err, "Error txn commit")
 		}
 	}
-	if err := txn.Commit(nil); err != nil {
+	if err := txn.Commit(); err != nil {
 		txn.Discard()
 		return errors.Wrap(err, "last commit")
 	}
@@ -94,7 +94,7 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 			return errors.Wrap(err, "Error txn commit")
 		}
 	}
-	if err := txn.Commit(nil); err != nil {
+	if err := txn.Commit(); err != nil {
 		txn.Discard()
 		return errors.Wrap(err, "last commit")
 	}
@@ -106,7 +106,7 @@ func (hod *HodDB) setWithCommit(txn *badger.Txn, key, value []byte) error {
 	//log.Debug("Set Entity ", key)
 	if setErr := txn.Set(key, value); setErr == badger.ErrTxnTooBig {
 		log.Warning("commit too big")
-		if txerr := txn.Commit(nil); txerr != nil {
+		if txerr := txn.Commit(); txerr != nil {
 			txn.Discard()
 			return errors.Wrap(txerr, "commit log entry")
 		}
