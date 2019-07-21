@@ -1,0 +1,7 @@
+_db_
+# backups
+*.badger 
+*.json
+*.zip
+make_backup/graphs
+make_backup/make_backup
