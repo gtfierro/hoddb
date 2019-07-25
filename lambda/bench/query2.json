@@ -1,0 +1,5 @@
+{
+    "query": "SELECT ?room WHERE { ?room rdf:type brick:Room };",
+    "graph": "csu-dominguez-hills"
+}
+

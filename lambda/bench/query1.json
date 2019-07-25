@@ -1,0 +1,4 @@
+{
+    "query": "SELECT ?temp ?room ?zone WHERE { ?temp rdf:type/rdfs:subClassOf* brick:Temperature_Sensor . ?temp bf:hasLocation ?room . ?room rdf:type brick:Room . ?room bf:isPartOf ?zone . ?zone rdf:type brick:HVAC_Zone };",
+    "graph": "ciee"
+}
