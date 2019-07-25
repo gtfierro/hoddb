@@ -8,6 +8,6 @@
 Gabe Fierro, David E. Culler.
 ACM Transactions on Sensor Networks, January 2018.
 
-Design and Analysis of a Query Processor for Brick [pdf](http://people.eecs.berkeley.edu/~gtfierro/papers/hoddb.pdf)
+**Design and Analysis of a Query Processor for Brick** [[pdf](http://people.eecs.berkeley.edu/~gtfierro/papers/hoddb.pdf)]
 Gabe Fierro, David E. Culler.
 4th ACM International Conference on Systems for Energy-Efficient Built Environments (BuildSys), Delft, The Netherlands, November 2017.
