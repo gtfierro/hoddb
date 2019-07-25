@@ -4,7 +4,7 @@
 
 ## Publications
 
-Design and Analysis of a Query Processor for Brick (Journal Extension) [pdf](http://people.eecs.berkeley.edu/~gtfierro/papers/hoddb_tosn.pdf)
+**Design and Analysis of a Query Processor for Brick (Journal Extension)** [[pdf](http://people.eecs.berkeley.edu/~gtfierro/papers/hoddb_tosn.pdf)]
 Gabe Fierro, David E. Culler.
 ACM Transactions on Sensor Networks, January 2018.
 
