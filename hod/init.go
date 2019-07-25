@@ -49,6 +49,10 @@ type HodDB struct {
 	graphs     map[string]struct{}
 }
 
+func (db *HodDB) Close() error {
+	return db.db.Close()
+}
+
 func (db *HodDB) Backup(w io.Writer) error {
 
 	// write the hashes, uris to the store
