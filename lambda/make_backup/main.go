@@ -11,8 +11,8 @@ import (
 )
 
 var config = flag.String("config", "hodconfig.yml", "Path to hodconfig.yml file")
-var ttl = flag.String("ttl", "ciee.ttl", "Name of building")
-var building = flag.String("building", "ciee.ttl", "Path to building.ttl file")
+var ttl = flag.String("ttl", "ciee.ttl", "Path to building ttl file")
+var building = flag.String("building", "ciee", "Name of building")
 
 func main() {
 	flag.Parse()
