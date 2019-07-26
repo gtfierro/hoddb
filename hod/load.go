@@ -2,8 +2,8 @@ package hod
 
 import (
 	"fmt"
-	logpb "git.sr.ht/~gabe/hod/proto"
-	turtle "git.sr.ht/~gabe/hod/turtle"
+	logpb "github.com/gtfierro/hoddb/proto"
+	turtle "github.com/gtfierro/hoddb/turtle"
 )
 
 const (

@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"git.sr.ht/~gabe/hod/hod"
-	logpb "git.sr.ht/~gabe/hod/proto"
+	"github.com/gtfierro/hoddb/hod"
+	logpb "github.com/gtfierro/hoddb/proto"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
