@@ -2,7 +2,7 @@ package hod
 
 import (
 	"fmt"
-	logpb "git.sr.ht/~gabe/hod/proto"
+	logpb "github.com/gtfierro/hoddb/proto"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"

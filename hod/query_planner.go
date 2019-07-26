@@ -2,8 +2,8 @@ package hod
 
 import (
 	"fmt"
-	sparql "git.sr.ht/~gabe/hod/lang/ast"
-	logpb "git.sr.ht/~gabe/hod/proto"
+	sparql "github.com/gtfierro/hoddb/lang/ast"
+	logpb "github.com/gtfierro/hoddb/proto"
 	"sort"
 	//"reflect"
 	"strings"

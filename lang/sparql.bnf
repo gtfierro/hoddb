@@ -16,7 +16,7 @@ url : '<' {.} '>' ;
 string : _varstring ;
 quotedstring : _charstring ;
 
-<< import "git.sr.ht/~gabe/hod/lang/ast" >>
+<< import "github.com/gtfierro/hoddb/lang/ast" >>
 
 /* syntax */
 QueryUnit

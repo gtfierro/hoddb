@@ -1,7 +1,7 @@
 package hod
 
 import (
-	logpb "git.sr.ht/~gabe/hod/proto"
+	logpb "github.com/gtfierro/hoddb/proto"
 )
 
 type edge struct {

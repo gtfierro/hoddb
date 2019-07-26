@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
-	logpb "git.sr.ht/~gabe/hod/proto"
-	turtle "git.sr.ht/~gabe/hod/turtle"
+	logpb "github.com/gtfierro/hoddb/proto"
+	turtle "github.com/gtfierro/hoddb/turtle"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
 	"github.com/spaolacci/murmur3"

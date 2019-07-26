@@ -3,7 +3,7 @@ package hod
 import (
 	"context"
 	"fmt"
-	logpb "git.sr.ht/~gabe/hod/proto"
+	logpb "github.com/gtfierro/hoddb/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/rs/cors"
 	logrus "github.com/sirupsen/logrus"

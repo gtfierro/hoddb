@@ -1,7 +1,7 @@
 package turtle
 
 import (
-	rdf "git.sr.ht/~gabe/hod/turtle/rdfparser"
+	rdf "github.com/gtfierro/hoddb/turtle/rdfparser"
 	"io"
 	"os"
 	"strings"

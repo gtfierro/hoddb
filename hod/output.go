@@ -3,7 +3,7 @@ package hod
 import (
 	"os"
 
-	logpb "git.sr.ht/~gabe/hod/proto"
+	logpb "github.com/gtfierro/hoddb/proto"
 	"github.com/olekukonko/tablewriter"
 )
 

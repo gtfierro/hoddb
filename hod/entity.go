@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"strings"
 
-	logpb "git.sr.ht/~gabe/hod/proto"
-	turtle "git.sr.ht/~gabe/hod/turtle"
+	logpb "github.com/gtfierro/hoddb/proto"
+	turtle "github.com/gtfierro/hoddb/turtle"
 )
 
 var _e4 = [4]byte{0, 0, 0, 0}

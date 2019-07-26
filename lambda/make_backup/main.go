@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"git.sr.ht/~gabe/hod/hod"
+	"github.com/gtfierro/hoddb/hod"
 	"github.com/pkg/errors"
 	"log"
 	"os"
