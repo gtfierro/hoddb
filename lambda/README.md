@@ -1,4 +1,4 @@
-# Cloudless Brick Queries
+# Serverless Brick Queries
 
 Super quick lambda implementation for HodDB.
 

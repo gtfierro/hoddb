@@ -64,6 +64,8 @@ func (hod *HodDB) LoadFileBundle(bundle FileBundle) (Graph, error) {
 // find some basic OWL inference instances that we can do
 func (g *Graph) getInferenceRules() {
 	for _, triple := range g.Data.Triples {
+
+		// RULE: populate inverse edges
 		if triple.Predicate.Namespace == OWL_NAMESPACE && triple.Predicate.Value == "inverseOf" {
 			pred := triple.Subject
 			invpred := triple.Object
