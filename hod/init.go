@@ -1,9 +1,9 @@
 package hod
 
 import (
-	turtle "github.com/gtfierro/hoddb/turtle"
 	"github.com/dgraph-io/badger"
 	"github.com/dgraph-io/badger/options"
+	turtle "github.com/gtfierro/hoddb/turtle"
 	"github.com/pkg/errors"
 	"github.com/pkg/profile"
 	logrus "github.com/sirupsen/logrus"
@@ -53,8 +53,105 @@ func (db *HodDB) Close() error {
 	return db.db.Close()
 }
 
-func (db *HodDB) Backup(w io.Writer) error {
+// loads internal data structures from badger:
+// db.hashes, db.uris, db.namespaces, db.graphs
+func (db *HodDB) loadInternal() error {
+	// read in the hash, entity keys
+	err1 := db.db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		prefix := []byte("hashpfx")
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			err := item.Value(func(v []byte) error {
+				//fmt.Printf("key=%s, value=%s\n", k, v)
+				serializedhashkey := k[len(prefix):]
+				var hashkey hashkeyentry
+				if err := json.Unmarshal(serializedhashkey, &hashkey); err != nil {
+					return err
+				}
 
+				entitykey := EntityKeyFromBytes(v)
+				db.hashes[hashkey] = entitykey
+
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err1 != nil {
+		return errors.Wrap(err1, "could not load hashes from db")
+	}
+
+	err2 := db.db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		prefix := []byte("entitypfx")
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			err := item.Value(func(v []byte) error {
+				//fmt.Printf("key=%s, value=%s\n", k, v)
+				entitykey := EntityKeyFromBytes(k[len(prefix):])
+				var uri turtle.URI
+				if err := json.Unmarshal(v, &uri); err != nil {
+					return err
+				}
+
+				db.uris[entitykey] = uri
+
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err2 != nil {
+		return errors.Wrap(err2, "could not load hashes from db")
+	}
+
+	err3 := db.db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		prefix := []byte("namespacepfx")
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			// populate db.namespaces
+			err := item.Value(func(v []byte) error {
+				fmt.Printf("key=%s, value=%s\n", k, v)
+				key := string(k[len(prefix):])
+				var nsmap = make(map[string]string)
+				if err := json.Unmarshal(v, &nsmap); err != nil {
+					return err
+				}
+
+				db.namespaces.Store(key, nsmap)
+				db.graphs[key] = struct{}{}
+
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err3 != nil {
+		return errors.Wrap(err3, "could not load hashes from db")
+	}
+	return nil
+}
+
+// save internal structures HodDB needs:
+// db.hashes, db.uris, db.namespaces, db.graphs
+func (db *HodDB) saveInternal() error {
 	// write the hashes, uris to the store
 	hashpfx := []byte("hashpfx")
 	db.Lock()
@@ -127,7 +224,10 @@ func (db *HodDB) Backup(w io.Writer) error {
 	if err := wb3.Flush(); err != nil {
 		return err
 	}
+	return nil
+}
 
+func (db *HodDB) Backup(w io.Writer) error {
 	_, err := db.db.Backup(w, 0)
 	return err
 }
@@ -167,6 +267,9 @@ func MakeHodDB(cfg *Config) (*HodDB, error) {
 		uris:   make(map[EntityKey]turtle.URI),
 		graphs: make(map[string]struct{}),
 	}
+	if err := hod.loadInternal(); err != nil {
+		return nil, errors.Wrap(err, "could not reconstitute")
+	}
 
 	//err = hod.buildVersionManager(cfg)
 	//if err != nil {
@@ -204,6 +307,11 @@ func MakeHodDB(cfg *Config) (*HodDB, error) {
 		log.Infof("Loaded in %d/%d (%.2f%%) buildings from config file (%s took %s)", processed, numBuildings, 100*float64(processed)/float64(numBuildings), graphname, processtime)
 	}
 
+	// write namespaces, etc to the badger file
+	if err := hod.saveInternal(); err != nil {
+		return nil, errors.Wrap(err, "Could not save internal data structures")
+	}
+
 	return hod, nil
 }
 
@@ -229,87 +337,9 @@ func MakeHodDBLambda(cfg *Config, backup io.Reader) (*HodDB, error) {
 		graphs: make(map[string]struct{}),
 	}
 
-	// read in the hash, entity keys
-	db.View(func(txn *badger.Txn) error {
-		it := txn.NewIterator(badger.DefaultIteratorOptions)
-		defer it.Close()
-		prefix := []byte("hashpfx")
-		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-			item := it.Item()
-			k := item.Key()
-			err := item.Value(func(v []byte) error {
-				//fmt.Printf("key=%s, value=%s\n", k, v)
-				serializedhashkey := k[len(prefix):]
-				var hashkey hashkeyentry
-				if err := json.Unmarshal(serializedhashkey, &hashkey); err != nil {
-					return err
-				}
-
-				entitykey := EntityKeyFromBytes(v)
-				hod.hashes[hashkey] = entitykey
-
-				return nil
-			})
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-
-	db.View(func(txn *badger.Txn) error {
-		it := txn.NewIterator(badger.DefaultIteratorOptions)
-		defer it.Close()
-		prefix := []byte("entitypfx")
-		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-			item := it.Item()
-			k := item.Key()
-			err := item.Value(func(v []byte) error {
-				//fmt.Printf("key=%s, value=%s\n", k, v)
-				entitykey := EntityKeyFromBytes(k[len(prefix):])
-				var uri turtle.URI
-				if err := json.Unmarshal(v, &uri); err != nil {
-					return err
-				}
-
-				hod.uris[entitykey] = uri
-
-				return nil
-			})
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-
-	db.View(func(txn *badger.Txn) error {
-		it := txn.NewIterator(badger.DefaultIteratorOptions)
-		defer it.Close()
-		prefix := []byte("namespacepfx")
-		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-			item := it.Item()
-			k := item.Key()
-			// populate hod.namespaces
-			err := item.Value(func(v []byte) error {
-				fmt.Printf("key=%s, value=%s\n", k, v)
-				key := string(k[len(prefix):])
-				var nsmap = make(map[string]string)
-				if err := json.Unmarshal(v, &nsmap); err != nil {
-					return err
-				}
-
-				hod.namespaces.Store(key, nsmap)
-				hod.graphs[key] = struct{}{}
-
-				return nil
-			})
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+	if err := hod.loadInternal(); err != nil {
+		return nil, errors.Wrap(err, "could not reconstitute internal data structures")
+	}
 
 	go func() {
 		ticker := time.NewTicker(1 * time.Minute)
