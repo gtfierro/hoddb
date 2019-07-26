@@ -271,11 +271,6 @@ func MakeHodDB(cfg *Config) (*HodDB, error) {
 		return nil, errors.Wrap(err, "could not reconstitute")
 	}
 
-	//err = hod.buildVersionManager(cfg)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
 	// start GC on the database
 	go func() {
 		ticker := time.NewTicker(1 * time.Minute)
@@ -317,7 +312,6 @@ func MakeHodDB(cfg *Config) (*HodDB, error) {
 
 func MakeHodDBLambda(cfg *Config, backup io.Reader) (*HodDB, error) {
 
-	//dbdir := filepath.Join(cfg.Database.Path, "/tmp/_db_")
 	opts := badger.DefaultOptions("/tmp/_db_")
 	opts.TableLoadingMode = options.LoadToRAM
 	opts.ValueLogLoadingMode = options.MemoryMap
@@ -357,17 +351,6 @@ func MakeHodDBLambda(cfg *Config, backup io.Reader) (*HodDB, error) {
 		fmt.Println(k, v)
 		return true
 	})
-	//	hod.namespaces.Store("ciee", map[string]string{
-	//		"bf":    "https://brickschema.org/schema/1.0.3/BrickFrame",
-	//		"bldg":  "http://xbos.io/ontologies/ciee",
-	//		"brick": "https://brickschema.org/schema/1.0.3/Brick",
-	//		"owl":   "http://www.w3.org/2002/07/owl",
-	//		"rdf":   "http://www.w3.org/1999/02/22-rdf-syntax-ns",
-	//		"rdfs":  "http://www.w3.org/2000/01/rdf-schema",
-	//		"xml":   "http://www.w3.org/XML/1998/namespace",
-	//		"xsd":   "http://www.w3.org/2001/XMLSchema",
-	//	})
-	//	hod.graphs["ciee"] = struct{}{}
 
 	return hod, nil
 }
