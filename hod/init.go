@@ -43,7 +43,6 @@ type HodDB struct {
 	uris   map[EntityKey]turtle.URI
 	sync.RWMutex
 
-	// TODO: serialize/deserialize
 	// map graph name to namespaces (map[string]map[string]string)
 	namespaces sync.Map
 	graphs     map[string]struct{}

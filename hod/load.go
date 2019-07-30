@@ -29,7 +29,6 @@ type FileBundle struct {
 	OntologyFiles []string
 }
 
-// TODO: the value should be the hash of the files together
 func (bundle FileBundle) getKeyValue() ([]byte, []byte) {
 	var files = []string{bundle.TTLFile}
 	ontology_files := bundle.OntologyFiles[:]
@@ -46,7 +45,6 @@ func (bundle FileBundle) getKeyValue() ([]byte, []byte) {
 			log.Fatal(err)
 		}
 	}
-
 	return bundle.getKey(), h.Sum(nil)
 }
 

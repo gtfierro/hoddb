@@ -31,7 +31,6 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 
 	log.Println("entities compiled", len(entities))
 
-	//TODO: do we postpone until we do extended edges?
 	txn := hod.db.NewTransaction(true)
 
 	for _, ent := range entities {
@@ -211,8 +210,6 @@ func (hod *HodDB) ParseQuery(qstr string, version int64) (*logpb.SelectQuery, er
 		Filter:    logpb.TimeFilter_Before,
 		//Where:
 	}
-
-	// TODO: expand
 
 	for _, triple := range q.Where.Terms {
 		term := &logpb.Triple{
