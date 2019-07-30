@@ -1,7 +1,13 @@
 package hod
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"io"
+	"os"
+	"sort"
+
+	"github.com/dgraph-io/badger"
 	logpb "github.com/gtfierro/hoddb/proto"
 	turtle "github.com/gtfierro/hoddb/turtle"
 )
@@ -23,6 +29,37 @@ type FileBundle struct {
 	OntologyFiles []string
 }
 
+// TODO: the value should be the hash of the files together
+func (bundle FileBundle) getKeyValue() ([]byte, []byte) {
+	var files = []string{bundle.TTLFile}
+	ontology_files := bundle.OntologyFiles[:]
+	sort.Strings(ontology_files)
+	files = append(files, ontology_files...)
+	h := sha256.New()
+	for _, filename := range files {
+		f, err := os.Open(filename)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		if _, err := io.Copy(h, f); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return bundle.getKey(), h.Sum(nil)
+}
+
+func (bundle FileBundle) getKey() []byte {
+	keyname := []byte("filebundle" + bundle.GraphName + bundle.TTLFile)
+	ontology_files := bundle.OntologyFiles[:]
+	sort.Strings(ontology_files)
+	for _, file := range ontology_files {
+		keyname = append(keyname, []byte(file)...)
+	}
+	return keyname
+}
+
 type Graph struct {
 	// name of the graph
 	Name string
@@ -33,7 +70,38 @@ type Graph struct {
 	hod   *HodDB
 }
 
-func (hod *HodDB) LoadFileBundle(bundle FileBundle) (Graph, error) {
+func (hod *HodDB) markBundleLoaded(bundle FileBundle) error {
+	key, value := bundle.getKeyValue()
+	txn := hod.db.NewTransaction(true)
+	if err := txn.Set(key, value); err != nil {
+		txn.Discard()
+		return err
+	}
+	if err := txn.Commit(); err != nil {
+		txn.Discard()
+		return err
+	}
+	return nil
+}
+
+func (hod *HodDB) isFileBundleLoaded(bundle FileBundle) (bool, error) {
+	key := bundle.getKey()
+	txn := hod.db.NewTransaction(false)
+	_, err := txn.Get(key)
+	if err == badger.ErrKeyNotFound {
+		return false, nil
+	} else if err != nil {
+		txn.Discard()
+		return false, err
+	}
+	if err := txn.Commit(); err != nil {
+		txn.Discard()
+		return false, err
+	}
+	return true, nil
+}
+
+func (hod *HodDB) loadFileBundle(bundle FileBundle) (Graph, error) {
 
 	g := Graph{
 		Name: bundle.GraphName,
