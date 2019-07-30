@@ -6,18 +6,22 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dgraph-io/badger"
+	"github.com/golang/protobuf/proto"
 	query "github.com/gtfierro/hoddb/lang"
 	sparql "github.com/gtfierro/hoddb/lang/ast"
 	logpb "github.com/gtfierro/hoddb/proto"
 	turtle "github.com/gtfierro/hoddb/turtle"
-	"github.com/dgraph-io/badger"
-	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/zhangxinngang/murmur"
 )
 
 func (hod *HodDB) Load(bundle FileBundle) error {
-	graph, err := hod.LoadFileBundle(bundle)
+	if loaded, err := hod.isFileBundleLoaded(bundle); loaded && err == nil {
+		log.Infof("File bundle already loaded: %v", bundle)
+		return nil
+	}
+	graph, err := hod.loadFileBundle(bundle)
 	if err != nil {
 		return errors.Wrapf(err, "could not load file %s for graph %s", bundle.TTLFile, bundle.GraphName)
 	}
@@ -97,6 +101,10 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 	if err := txn.Commit(); err != nil {
 		txn.Discard()
 		return errors.Wrap(err, "last commit")
+	}
+
+	if err := hod.markBundleLoaded(bundle); err != nil {
+		return errors.Wrap(err, "could not mark bundle as loaded")
 	}
 
 	return nil
