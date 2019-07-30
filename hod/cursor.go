@@ -6,10 +6,10 @@ import (
 	"strings"
 	"sync"
 
-	logpb "github.com/gtfierro/hoddb/proto"
-	turtle "github.com/gtfierro/hoddb/turtle"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/protobuf/proto"
+	logpb "github.com/gtfierro/hoddb/proto"
+	turtle "github.com/gtfierro/hoddb/turtle"
 	"github.com/spaolacci/murmur3"
 	"github.com/zhangxinngang/murmur"
 )

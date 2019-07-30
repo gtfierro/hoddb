@@ -3,8 +3,8 @@ package hod
 import (
 	"context"
 	"fmt"
-	logpb "github.com/gtfierro/hoddb/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	logpb "github.com/gtfierro/hoddb/proto"
 	"github.com/rs/cors"
 	logrus "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
