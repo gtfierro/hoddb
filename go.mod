@@ -16,6 +16,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pelletier/go-toml v1.4.0 // indirect
+	github.com/perlin-network/noise v1.1.1-0.20190305094204-f9c1f15b7d8d
 	github.com/pkg/errors v0.8.1
 	github.com/pkg/profile v1.3.0
 	github.com/rs/cors v1.6.0
