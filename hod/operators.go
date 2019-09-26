@@ -498,37 +498,24 @@ func (op *resolveVarTripleAll) GetTerm() queryTerm {
 }
 
 func (op *resolveVarTripleAll) run(cursor *Cursor) error {
-	//var (
-	//	subjectVar   = op.term.Subject.String()
-	//	objectVar    = op.term.Object.String()
-	//	predicateVar = op.term.Predicates[0].Predicate.String()
-	//)
-	//var relation = newRelation([]string{subjectVar, predicateVar, objectVar})
-	//var content [][]EntityKey
+	var (
+		subjectVar   = op.term.triple.Subject.Value
+		objectVar    = op.term.triple.Object.Value
+		predicateVar = op.term.triple.Predicate[0].Value
+	)
+	var content [][]EntityKey
 
-	//iter := func(subjectHash EntityKey, entity Entity) bool {
-	//	for _, predHash := range entity.GetAllPredicates() {
-	//		for _, objectHash := range entity.ListOutEndpoints(predHash) {
-	//			content = append(content, []EntityKey{subjectHash, predHash, objectHash})
-	//		}
-	//	}
-	//	return false // continue iter
-	//}
-	//if err := ctx.iterAllEntities(iter); err != nil {
-	//	return err
-	//}
-
-	//relation.add3Values(subjectVar, predicateVar, objectVar, content)
-	//if len(ctx.rel.rows) > 0 {
-	//	//panic("This should not happen! Tell Gabe")
-	//	ctx.rel.join(relation, []string{subjectVar}, ctx)
-	//	//ctx.markJoined(subjectVar)
-	//} else {
-	//	// in this case, we just replace the relation
-	//	ctx.rel = relation
-	//}
-	//ctx.markJoined(subjectVar)
-	//ctx.markJoined(predicateVar)
-	//ctx.markJoined(objectVar)
+	iter := func(subjectHash EntityKey, entity *Entity) bool {
+		for _, predHash := range entity.GetAllPredicates() {
+			for _, objectHash := range entity.OutEdges(predHash) {
+				content = append(content, []EntityKey{subjectHash, predHash, objectHash})
+			}
+		}
+		return false // continue iter
+	}
+	if err := cursor.iterAllEntities(iter); err != nil {
+		return err
+	}
+	cursor.rel.add3Values(subjectVar, predicateVar, objectVar, content)
 	return nil
 }

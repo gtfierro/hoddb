@@ -222,6 +222,10 @@ var berkeley_graph_test_cases = []struct {
 		"COUNT ?building FROM soda WHERE { ?building rdfs:label \"Soda Hall\" };",
 		1,
 	},
+	{
+		"COUNT ?s ?p ?o FROM soda WHERE {?s ?p ?o};",
+		13967,
+	},
 }
 
 func TestQueryExample(t *testing.T) {
