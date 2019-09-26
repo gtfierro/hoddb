@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.21.1
 	github.com/dgraph-io/badger v1.6.0
 	github.com/golang/protobuf v1.3.2
-	github.com/grpc-ecosystem/grpc-gateway v1.9.4
+	github.com/grpc-ecosystem/grpc-gateway v1.11.2
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0
 	github.com/magiconair/properties v1.8.1 // indirect
@@ -29,6 +29,6 @@ require (
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
 	golang.org/x/text v0.3.2 // indirect
-	google.golang.org/genproto v0.0.0-20190716160619-c506a9f90610
+	google.golang.org/genproto v0.0.0-20190916214212-f660b8655731
 	google.golang.org/grpc v1.22.0
 )
