@@ -16,15 +16,7 @@ import (
 	"github.com/zhangxinngang/murmur"
 )
 
-func (hod *HodDB) Load(bundle FileBundle) error {
-	if loaded, err := hod.isFileBundleLoaded(bundle); loaded && err == nil {
-		log.Infof("File bundle already loaded: %v", bundle)
-		return nil
-	}
-	graph, err := hod.loadFileBundle(bundle)
-	if err != nil {
-		return errors.Wrapf(err, "could not load file %s for graph %s", bundle.TTLFile, bundle.GraphName)
-	}
+func (hod *HodDB) LoadGraph(graph Graph) error {
 	graph.ExpandTriples()
 
 	entities := graph.CompileEntities()
@@ -100,6 +92,23 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 	if err := txn.Commit(); err != nil {
 		txn.Discard()
 		return errors.Wrap(err, "last commit")
+	}
+
+	return nil
+}
+
+func (hod *HodDB) Load(bundle FileBundle) error {
+	if loaded, err := hod.isFileBundleLoaded(bundle); loaded && err == nil {
+		log.Infof("File bundle already loaded: %v", bundle)
+		return nil
+	}
+	graph, err := hod.loadFileBundle(bundle)
+	if err != nil {
+		return errors.Wrapf(err, "could not load file %s for graph %s", bundle.TTLFile, bundle.GraphName)
+	}
+
+	if err := hod.LoadGraph(graph); err != nil {
+		return errors.Wrap(err, "could not load graph")
 	}
 
 	if err := hod.markBundleLoaded(bundle); err != nil {

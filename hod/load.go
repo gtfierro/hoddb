@@ -100,7 +100,6 @@ func (hod *HodDB) isFileBundleLoaded(bundle FileBundle) (bool, error) {
 }
 
 func (hod *HodDB) loadFileBundle(bundle FileBundle) (Graph, error) {
-
 	g := Graph{
 		Name: bundle.GraphName,
 		hod:  hod,
@@ -241,4 +240,27 @@ func (g *Graph) CompileEntities() map[EntityKey]*Entity {
 	}
 
 	return entities
+}
+
+// what do we need for ad-hoc update sof triples?
+// - graph name
+// - triples
+// - ontology files?
+
+func (hod *HodDB) MakeTripleUpdate(data turtle.DataSet, name string) (Graph, error) {
+	// load ontologies
+	for _, ontology_file := range hod.cfg.Database.Ontologies {
+		ontology_dataset, _ := turtle.Parse(ontology_file)
+		for _, triple := range ontology_dataset.Triples {
+			data.Triples = append(data.Triples, triple)
+		}
+	}
+	g := Graph{
+		Name: name,
+		Data: data,
+		hod:  hod,
+	}
+	g.getInferenceRules()
+
+	return g, nil
 }
