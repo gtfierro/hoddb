@@ -1,0 +1,12 @@
+HodConfig = "1.yml"
+ListenPort = 3000
+
+[[PublicPolicy]]
+Graphs = ["test"]
+Definition = """SELECT ?s ?p ?o WHERE {
+    ?s  rdf:type/rdfs:subClassOf* brick:Point .
+    ?s ?p ?o
+};"""
+
+#[[Peer]]
+#Address = "localhost:3001"

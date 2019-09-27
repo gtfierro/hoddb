@@ -1,7 +1,7 @@
 database:
     path: "_hod2_"
-    buildings:
-        test: ../example.ttl
+    buildings: 
+        test: "../ns.ttl"
     ontologies:
         - "../BrickFrame.ttl"
         - "../Brick.ttl"

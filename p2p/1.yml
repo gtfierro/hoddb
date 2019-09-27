@@ -1,7 +1,7 @@
 database:
     path: "_hod_"
     buildings:
-        soda: ../berkeley.ttl
+        test: ../example.ttl
     ontologies:
         - "../BrickFrame.ttl"
         - "../Brick.ttl"

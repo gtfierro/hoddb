@@ -1,0 +1,10 @@
+HodConfig = "2.yml"
+ListenPort = 3001
+
+[[Peer]]
+Address = "localhost:3000"
+[[Peer.Wants]]
+    Graphs = ["test"]
+    Definition = """SELECT ?s ?p ?o WHERE {
+                    ?s ?p ?o
+                 };"""
