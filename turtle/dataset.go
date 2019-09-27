@@ -18,8 +18,8 @@ var defaultNamespaces = map[string]string{
 	"owl":   OWL_NAMESPACE,
 	"rdf":   RDF_NAMESPACE,
 	"rdfs":  RDFS_NAMESPACE,
-	"BF":    BF_NAMESPACE,
-	"BRICK": BRICK_NAMESPACE,
+	"bf":    BF_NAMESPACE,
+	"brick": BRICK_NAMESPACE,
 }
 
 type DataSet struct {
