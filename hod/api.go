@@ -213,11 +213,10 @@ func (hod *HodDB) ParseQuery(qstr string, version int64) (*logpb.SelectQuery, er
 	}
 
 	sq := &logpb.SelectQuery{
-		Vars:      q.Variables,
+		Vars:      q.Select.Vars,
 		Graphs:    q.From.Databases,
 		Timestamp: version,
 		Filter:    logpb.TimeFilter_Before,
-		//Where:
 	}
 
 	for _, triple := range q.Where.Terms {
