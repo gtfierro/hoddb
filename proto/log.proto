@@ -126,4 +126,5 @@ message TupleRequest {
 message TupleUpdate {
     P2PHeader header = 1;
     repeated Row rows = 2;
+    repeated string vars = 3;
 }
