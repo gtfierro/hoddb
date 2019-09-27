@@ -3,6 +3,7 @@ module github.com/gtfierro/hoddb
 go 1.12
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/RoaringBitmap/roaring v0.4.17
 	github.com/aws/aws-lambda-go v1.11.1
 	github.com/aws/aws-sdk-go v1.21.1
