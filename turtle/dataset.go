@@ -2,6 +2,8 @@ package turtle
 
 import (
 	"strings"
+
+	pb "github.com/gtfierro/hoddb/proto"
 )
 
 const (
@@ -12,6 +14,14 @@ const (
 	BRICK_NAMESPACE = "https://brickschema.org/schema/1.0.3/Brick#"
 )
 
+var defaultNamespaces = map[string]string{
+	"owl":   OWL_NAMESPACE,
+	"rdf":   RDF_NAMESPACE,
+	"rdfs":  RDFS_NAMESPACE,
+	"BF":    BF_NAMESPACE,
+	"BRICK": BRICK_NAMESPACE,
+}
+
 type DataSet struct {
 	triplecount int
 	nscount     int
@@ -20,12 +30,16 @@ type DataSet struct {
 }
 
 func newDataSet() *DataSet {
-	return &DataSet{
+	ds := &DataSet{
 		triplecount: 0,
 		nscount:     0,
 		Namespaces:  make(map[string]string),
 		Triples:     []Triple{},
 	}
+	for k, v := range defaultNamespaces {
+		ds.addNamespace(k, v)
+	}
+	return ds
 }
 
 func (d *DataSet) AddTripleStrings(subject, predicate, object string) {
@@ -50,6 +64,18 @@ func (d *DataSet) NumTriples() int {
 
 func (d *DataSet) NumNamespaces() int {
 	return d.nscount
+}
+
+func DataSetFromRows(rows []*pb.Row) DataSet {
+	d := newDataSet()
+	// TODO: assuming triples
+	for _, row := range rows {
+		s := URI{Namespace: row.Values[0].Namespace, Value: row.Values[0].Value}
+		p := URI{Namespace: row.Values[1].Namespace, Value: row.Values[1].Value}
+		o := URI{Namespace: row.Values[2].Namespace, Value: row.Values[2].Value}
+		d.AddTripleURIs(s, p, o)
+	}
+	return *d
 }
 
 //func main() {
