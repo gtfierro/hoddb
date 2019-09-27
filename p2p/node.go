@@ -134,7 +134,6 @@ func (n *Node) handleRequests(peer *noise.Peer) {
 func (n *Node) handleUpdates(peer *noise.Peer) {
 	c := peer.Receive(opcodeUpdateMessage)
 	var rows []*pb.Row
-	var lastUpdated = time.Now()
 	var timer = time.NewTimer(10 * time.Second)
 
 	commit := func() error {
@@ -150,7 +149,6 @@ func (n *Node) handleUpdates(peer *noise.Peer) {
 		if err := n.db.LoadGraph(update); err != nil {
 			return errors.Wrap(err, "Could not apply update")
 		}
-		lastUpdated = time.Now()
 		rows = rows[:0] // saves underlying memory
 		timer.Stop()
 		timer.Reset(10 * time.Second)
