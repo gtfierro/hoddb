@@ -1,6 +1,7 @@
 package turtle
 
 import (
+	pb "github.com/gtfierro/hoddb/proto"
 	rdf "github.com/gtfierro/hoddb/turtle/rdfparser"
 	"io"
 	"os"
@@ -71,6 +72,14 @@ func MakeTriple(sub, pred, obj string) Triple {
 		Subject:   s,
 		Predicate: p,
 		Object:    o,
+	}
+}
+
+func TripleFromRow(row pb.Row) Triple {
+	return Triple{
+		Subject:   URI{Namespace: row.Values[0].Namespace, Value: row.Values[0].Value},
+		Predicate: URI{Namespace: row.Values[1].Namespace, Value: row.Values[1].Value},
+		Object:    URI{Namespace: row.Values[2].Namespace, Value: row.Values[2].Value},
 	}
 }
 
