@@ -264,3 +264,20 @@ func (hod *HodDB) MakeTripleUpdate(data turtle.DataSet, name string) (Graph, err
 
 	return g, nil
 }
+
+func LoadTriplesFromFile(filename string) (turtle.DataSet, error) {
+	d, _ := turtle.Parse(filename)
+	return d, nil
+}
+
+func LoadTriplesFromFileIntoDataSet(filename string, dataset turtle.DataSet) error {
+	d, _ := turtle.Parse(filename)
+	for _, triple := range d.Triples {
+		dataset.Triples = append(dataset.Triples, triple)
+	}
+	for g, ns := range d.Namespaces {
+		dataset.Namespaces[g] = ns
+	}
+
+	return nil
+}
