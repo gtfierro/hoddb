@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/gtfierro/hoddb/hod"
+	query "github.com/gtfierro/hoddb/lang"
 	pb "github.com/gtfierro/hoddb/proto"
 	"github.com/gtfierro/hoddb/turtle"
 	"github.com/pkg/errors"
@@ -25,6 +27,7 @@ type Node struct {
 func NewNode(cfg *Config) (*Node, error) {
 
 	var n = new(Node)
+	n.views = make(map[string]time.Time)
 
 	// set up HodDB
 	hcfg, err := hod.ReadConfig(cfg.HodConfig)
@@ -86,6 +89,9 @@ func (n *Node) peerInit(node *noise.Node, peer *noise.Peer) error {
 	go n.handleRequests(peer)
 	go n.handleUpdates(peer)
 	for _, pcfg := range n.desiredPeers {
+		for _, view := range pcfg.Wants {
+			n.views[view.Definition] = time.Now()
+		}
 		go n.requestUpdates(peer, pcfg)
 	}
 	return nil
@@ -200,6 +206,24 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 			log.Error(err)
 			continue
 		}
+		_q, err := query.Parse(want.Definition)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+
+		// add triples by substituting the query results into the query
+		all_variables := _q.Variables
+		log.Debug("all vars ", all_variables)
+		for _, term := range q.Where {
+			log.Debug("terms> ", term)
+		}
+
+		// TODO: need to save the query view representation inside the node.
+		// When we get the contents of a view back, we can check which query it
+		// is for. Use the query terms to "generate" the source triples that we
+		// then insert into our local database.
+
 		log.Println("requesting>", want)
 		req := tupleRequest{
 			Header: header{
@@ -216,4 +240,8 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 		}
 	}
 	//}
+}
+
+func isVariable(uri *pb.URI) bool {
+	return uri == nil || strings.HasPrefix(uri.Value, "?")
 }
