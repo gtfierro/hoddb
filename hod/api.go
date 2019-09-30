@@ -308,23 +308,27 @@ func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *l
 			return
 		}
 
+		var _vars = make(map[string]struct{})
 		var vars []string
 		for idx, triple := range query.Where {
 			if isVariable(triple.Subject) {
-				vars = append(vars, triple.Subject.Value)
+				_vars[triple.Subject.Value] = struct{}{}
 			} else {
 				query.Where[idx].Subject = hod.expandURI(triple.Subject, graph)
 			}
 			if isVariable(triple.Predicate[0]) {
-				vars = append(vars, triple.Predicate[0].Value)
+				_vars[triple.Predicate[0].Value] = struct{}{}
 			} else {
 				query.Where[idx].Predicate[0] = hod.expandURI(triple.Predicate[0], graph)
 			}
 			if isVariable(triple.Object) {
-				vars = append(vars, triple.Object.Value)
+				_vars[triple.Object.Value] = struct{}{}
 			} else {
 				query.Where[idx].Object = hod.expandURI(triple.Object, graph)
 			}
+		}
+		for v := range _vars {
+			vars = append(vars, v)
 		}
 		dg := makeDependencyGraph(cursor, vars, query.Where)
 		qp, err := formQueryPlan(dg, nil)
@@ -334,7 +338,7 @@ func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *l
 			log.Error(err)
 			return resp, err
 		}
-		qp.variables = query.Vars
+		qp.variables = vars
 		cursor.addQueryPlan(qp)
 		cursor.selectVars = query.Vars
 
