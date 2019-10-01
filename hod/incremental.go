@@ -173,26 +173,16 @@ func (hod *HodDB) expand(dataset turtle.DataSet) error {
 	}
 
 	stable_triples := make(map[turtle.Triple]int)
-	// triples that we have added through processing
-	added_triples := make(map[turtle.Triple]int)
-	// triples we need to process
-	pending_triples := make(map[turtle.Triple]int)
 
 	// add triples to the initial set
 	for _, triple := range dataset.Triples {
-		pending_triples[triple] = 0
+		stable_triples[triple] = 0
 	}
 
-	// loop through all of the rules and generate the new triples.
-	// Triples we generate go into "pending"
-
+	var changed = true
 	// run this until no more pending triples
-	for len(pending_triples) > 0 || len(added_triples) > 0 {
-		// move pending triples to added triples
-		for t := range added_triples {
-			stable_triples[t] = 0
-			delete(added_triples, t)
-		}
+	for changed {
+		changed = false
 		// add stable triples to database
 		dataset.Triples = dataset.Triples[:0]
 		for triple := range stable_triples {
@@ -202,25 +192,20 @@ func (hod *HodDB) expand(dataset turtle.DataSet) error {
 			return err
 		}
 
-		for t := range pending_triples {
-			added_triples[t] = 0
-			delete(pending_triples, t)
-		}
-
 		// apply rules
 		for _, rule := range hod.rules {
 			generated := rule()
-			//fmt.Println("generated: ", generated)
 			if generated != nil {
 				for _, pending_triple := range generated {
 					if _, found := stable_triples[pending_triple]; !found {
-						pending_triples[pending_triple] = 0
+						changed = true
+						stable_triples[pending_triple] = 0
 					}
 				}
 			}
 		}
 
-		log.Println("stable: ", len(stable_triples), "added: ", len(added_triples), "pending: ", len(pending_triples))
+		log.Println("generated: ", len(stable_triples))
 	}
 
 	dataset.Triples = dataset.Triples[:0]

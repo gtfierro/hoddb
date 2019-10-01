@@ -216,7 +216,7 @@ func (g *Graph) CompileEntities() map[EntityKey]*Entity {
 		}
 
 		ent, err := g.hod.GetEntity(key)
-		if err == badger.ErrKeyNotFound || err == nil {
+		if err == badger.ErrKeyNotFound {
 			ent = newEntity(key)
 			entities[key] = ent
 			return ent
@@ -224,7 +224,7 @@ func (g *Graph) CompileEntities() map[EntityKey]*Entity {
 			log.Error(err)
 		}
 		ent.FromCompiled()
-		fmt.Printf("compiled %+v\n", ent)
+		entities[key] = ent
 		return ent
 	}
 

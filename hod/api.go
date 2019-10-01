@@ -143,7 +143,6 @@ func (hod *HodDB) GetEntity(key EntityKey) (*Entity, error) {
 		compiled: new(logpb.Entity),
 		key:      key,
 	}
-	//log.Debug("Get Entity ", key)
 	err := hod.db.View(func(t *badger.Txn) error {
 		it, err := t.Get(key.Bytes())
 		if err != nil {
@@ -310,25 +309,30 @@ func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *l
 
 		var _vars = make(map[string]struct{})
 		var vars []string
+
+		trackVar := func(varname string) {
+			if _, found := _vars[varname]; !found {
+				_vars[varname] = struct{}{}
+				vars = append(vars, varname)
+			}
+		}
+
 		for idx, triple := range query.Where {
 			if isVariable(triple.Subject) {
-				_vars[triple.Subject.Value] = struct{}{}
+				trackVar(triple.Subject.Value)
 			} else {
 				query.Where[idx].Subject = hod.expandURI(triple.Subject, graph)
 			}
 			if isVariable(triple.Predicate[0]) {
-				_vars[triple.Predicate[0].Value] = struct{}{}
+				trackVar(triple.Predicate[0].Value)
 			} else {
 				query.Where[idx].Predicate[0] = hod.expandURI(triple.Predicate[0], graph)
 			}
 			if isVariable(triple.Object) {
-				_vars[triple.Object.Value] = struct{}{}
+				trackVar(triple.Object.Value)
 			} else {
 				query.Where[idx].Object = hod.expandURI(triple.Object, graph)
 			}
-		}
-		for v := range _vars {
-			vars = append(vars, v)
 		}
 		dg := makeDependencyGraph(cursor, vars, query.Where)
 		qp, err := formQueryPlan(dg, nil)
