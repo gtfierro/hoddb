@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	turtle "github.com/gtfierro/hoddb/turtle"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,10 +33,8 @@ database:
 	load_file := func(filename string) {
 		dataset, err := LoadTriplesFromFile(filename)
 		require.NoError(err, "Load "+filename)
-		err = hod.expand(dataset)
-		require.NoError(err, "expand "+filename)
 		err = hod.AddTriples(dataset)
-		require.NoError(err, "Add Dataset")
+		require.NoError(err, "expand "+filename)
 	}
 	load_file("BrickFrame.ttl")
 	load_file("Brick.ttl")
@@ -67,4 +66,31 @@ database:
 	require.NoError(err, q4)
 	require.Equal(2, len(rows), q4)
 
+	// add new triples
+	newDataset := turtle.DataSet{
+		Triples: []turtle.Triple{
+			{
+				Subject:   turtle.ParseURI("https://buildsys.org/ontologies/building_example#vav_1"),
+				Predicate: turtle.ParseURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+				Object:    turtle.ParseURI("https://brickschema.org/schema/1.0.3/Brick#VAV"),
+			},
+			{
+				Subject:   turtle.ParseURI("https://buildsys.org/ontologies/building_example#ahu_1"),
+				Predicate: turtle.ParseURI("https://brickschema.org/schema/1.0.3/BrickFrame#feeds"),
+				Object:    turtle.ParseURI("https://buildsys.org/ontologies/building_example#vav_2"),
+			},
+		},
+	}
+	err = hod.AddTriples(newDataset)
+	require.NoError(err, "expand new triples")
+
+	q5 := "SELECT ?x ?y WHERE { ?x bf:feeds ?y};"
+	rows, err = hod.run_query(q5)
+	require.NoError(err, q5)
+	require.Equal(3, len(rows), q5)
+
+	q6 := "SELECT ?x ?y WHERE { ?x bf:isFedBy ?y};"
+	rows, err = hod.run_query(q6)
+	require.NoError(err, q6)
+	require.Equal(3, len(rows), q6)
 }

@@ -116,7 +116,7 @@ func (hod *HodDB) AddRules(rules []inferenceRule2) error {
 	if err != nil {
 		return nil
 	}
-	err = hod.expand(triples)
+	err = hod.AddTriples(triples)
 
 	return err
 }
@@ -125,7 +125,7 @@ func (hod *HodDB) AddRules(rules []inferenceRule2) error {
 
 // TODO: the problem is that we are overwriting entities when we have new
 // tuples about them.  need to have these entities merge in
-func (hod *HodDB) AddTriples(ds turtle.DataSet) error {
+func (hod *HodDB) addTriples(ds turtle.DataSet) error {
 	graph := Graph{
 		Name: _GRAPHNAME,
 		hod:  hod,
@@ -166,9 +166,12 @@ func (hod *HodDB) AddTriples(ds turtle.DataSet) error {
 	return nil
 }
 
-func (hod *HodDB) expand(dataset turtle.DataSet) error {
+func (hod *HodDB) AddTriples(dataset turtle.DataSet) error {
 
-	if err := hod.AddTriples(dataset); err != nil {
+	//for _, pending_triple := range dataset.Triples {
+	//	log.Info(pending_triple.Subject, " ", pending_triple.Predicate, " ", pending_triple.Object)
+	//}
+	if err := hod.addTriples(dataset); err != nil {
 		return err
 	}
 
@@ -188,7 +191,7 @@ func (hod *HodDB) expand(dataset turtle.DataSet) error {
 		for triple := range stable_triples {
 			dataset.Triples = append(dataset.Triples, triple)
 		}
-		if err := hod.AddTriples(dataset); err != nil {
+		if err := hod.addTriples(dataset); err != nil {
 			return err
 		}
 
@@ -198,6 +201,7 @@ func (hod *HodDB) expand(dataset turtle.DataSet) error {
 			if generated != nil {
 				for _, pending_triple := range generated {
 					if _, found := stable_triples[pending_triple]; !found {
+						//log.Warning(pending_triple.Subject.Value, " ", pending_triple.Predicate.Value, " ", pending_triple.Object.Value)
 						changed = true
 						stable_triples[pending_triple] = 0
 					}
@@ -213,7 +217,7 @@ func (hod *HodDB) expand(dataset turtle.DataSet) error {
 		dataset.Triples = append(dataset.Triples, triple)
 	}
 
-	if err := hod.AddTriples(dataset); err != nil {
+	if err := hod.addTriples(dataset); err != nil {
 		return err
 	}
 
