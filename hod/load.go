@@ -211,10 +211,20 @@ func (g *Graph) CompileEntities() map[EntityKey]*Entity {
 
 	getEntity := func(key EntityKey) *Entity {
 		ent, found := entities[key]
-		if !found {
+		if found {
+			return ent
+		}
+
+		ent, err := g.hod.GetEntity(key)
+		if err == badger.ErrKeyNotFound || err == nil {
 			ent = newEntity(key)
 			entities[key] = ent
+			return ent
+		} else if err != nil {
+			log.Error(err)
 		}
+		ent.FromCompiled()
+		fmt.Printf("compiled %+v\n", ent)
 		return ent
 	}
 

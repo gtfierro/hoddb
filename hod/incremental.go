@@ -122,6 +122,9 @@ func (hod *HodDB) AddRules(rules []inferenceRule2) error {
 }
 
 // adds triples with no inference
+
+// TODO: the problem is that we are overwriting entities when we have new
+// tuples about them.  need to have these entities merge in
 func (hod *HodDB) AddTriples(ds turtle.DataSet) error {
 	graph := Graph{
 		Name: _GRAPHNAME,
@@ -207,7 +210,7 @@ func (hod *HodDB) expand(dataset turtle.DataSet) error {
 		// apply rules
 		for _, rule := range hod.rules {
 			generated := rule()
-			fmt.Println("generated: ", generated)
+			//fmt.Println("generated: ", generated)
 			if generated != nil {
 				for _, pending_triple := range generated {
 					if _, found := stable_triples[pending_triple]; !found {
