@@ -22,13 +22,13 @@ type Node struct {
 	desiredPeers []Peer
 	db           *hod.HodDB
 	node         *noise.Node
-	views        map[string]time.Time
+	cfg          *Config
 }
 
 func NewNode(cfg *Config) (*Node, error) {
 
 	var n = new(Node)
-	n.views = make(map[string]time.Time)
+	n.cfg = cfg
 
 	// set up HodDB
 	hcfg, err := hod.ReadConfig(cfg.HodConfig)
@@ -41,6 +41,18 @@ func NewNode(cfg *Config) (*Node, error) {
 	}
 	if n.db == nil {
 		panic("null db")
+	}
+
+	// set up views
+	log.Warningf("%+v\n", cfg)
+	if err := n.db.NewGraph("public"); err != nil {
+		panic(err)
+	}
+	for _, policy := range cfg.PublicPolicy {
+		log.Warning("policy:", policy)
+		if err := n.updateView("public", policy); err != nil {
+			panic(err)
+		}
 	}
 
 	n.listenPort = cfg.ListenPort
@@ -68,6 +80,23 @@ func NewNode(cfg *Config) (*Node, error) {
 	go n.dialPeers()
 
 	return n, nil
+}
+
+func (n *Node) updateView(name string, v View) error {
+	q, err := n.db.ParseQuery(v.Definition, 0)
+	if err != nil {
+		return err
+	}
+	q.Graphs = []string{"test"}
+	resp, err := n.db.Select(context.Background(), q)
+	if err != nil {
+		return err
+	}
+	dataset := expandTriples(q.Where, resp.Rows, q.Vars)
+	if err := n.db.AddTriples(name, dataset); err != nil {
+		return errors.Wrap(err, "Could not apply update")
+	}
+	return nil
 }
 
 func (n *Node) Request(req *pb.TupleRequest, srv pb.P2P_RequestServer) error {
@@ -127,9 +156,6 @@ func (n *Node) peerInit(node *noise.Node, peer *noise.Peer) error {
 	go n.handleRequests(peer)
 	go n.handleUpdates(peer)
 	for _, pcfg := range n.desiredPeers {
-		for _, view := range pcfg.Wants {
-			n.views[view.Definition] = time.Now()
-		}
 		go n.requestUpdates(peer, pcfg)
 	}
 	return nil
@@ -181,6 +207,55 @@ func (n *Node) handleRequests(peer *noise.Peer) {
 	}
 }
 
+func expandTriples(where []*pb.Triple, rows []*pb.Row, vars []string) turtle.DataSet {
+	var generatedRows []turtle.Triple
+	for _, term := range where {
+		var (
+			subIdx  int = -1
+			predIdx int = -1
+			objIdx  int = -1
+		)
+		if isVariable(term.Subject) {
+			subIdx = indexOf(vars, term.Subject.Value)
+		}
+		if isVariable(term.Predicate[0]) {
+			predIdx = indexOf(vars, term.Predicate[0].Value)
+		}
+		if isVariable(term.Object) {
+			objIdx = indexOf(vars, term.Object.Value)
+		}
+
+		for _, row := range rows {
+			triple := turtle.Triple{}
+			if subIdx >= 0 {
+				triple.Subject = turtle.URI{Namespace: row.Values[subIdx].Namespace, Value: row.Values[subIdx].Value}
+			} else {
+				triple.Subject = turtle.URI{Namespace: term.Subject.Namespace, Value: term.Subject.Value}
+			}
+
+			if predIdx >= 0 {
+				triple.Predicate = turtle.URI{Namespace: row.Values[predIdx].Namespace, Value: row.Values[predIdx].Value}
+			} else {
+				triple.Predicate = turtle.URI{Namespace: term.Predicate[0].Namespace, Value: term.Predicate[0].Value}
+			}
+
+			if objIdx >= 0 {
+				triple.Object = turtle.URI{Namespace: row.Values[objIdx].Namespace, Value: row.Values[objIdx].Value}
+			} else {
+				triple.Object = turtle.URI{Namespace: term.Object.Namespace, Value: term.Object.Value}
+			}
+
+			log.Debug("generated> ", triple)
+			generatedRows = append(generatedRows, triple)
+		}
+	}
+
+	dataset := turtle.DataSet{
+		Triples: generatedRows,
+	}
+	return dataset
+}
+
 func (n *Node) handleUpdates(peer *noise.Peer) {
 	c := peer.Receive(opcodeUpdateMessage)
 
@@ -191,54 +266,9 @@ func (n *Node) handleUpdates(peer *noise.Peer) {
 		log.Infof("Updating with %d rows", len(upd.Rows))
 
 		// add triples by substituting the query results into the query
-		var generatedRows []turtle.Triple
-		for _, term := range upd.Definition.Where {
-			var (
-				subIdx  int = -1
-				predIdx int = -1
-				objIdx  int = -1
-			)
-			if isVariable(term.Subject) {
-				subIdx = indexOf(upd.Vars, term.Subject.Value)
-			}
-			if isVariable(term.Predicate[0]) {
-				predIdx = indexOf(upd.Vars, term.Predicate[0].Value)
-			}
-			if isVariable(term.Object) {
-				objIdx = indexOf(upd.Vars, term.Object.Value)
-			}
+		dataset := expandTriples(upd.Definition.Where, upd.Rows, upd.Vars)
 
-			for _, row := range upd.Rows {
-				triple := turtle.Triple{}
-				if subIdx >= 0 {
-					triple.Subject = turtle.URI{Namespace: row.Values[subIdx].Namespace, Value: row.Values[subIdx].Value}
-				} else {
-					triple.Subject = turtle.URI{Namespace: term.Subject.Namespace, Value: term.Subject.Value}
-				}
-
-				if predIdx >= 0 {
-					triple.Predicate = turtle.URI{Namespace: row.Values[predIdx].Namespace, Value: row.Values[predIdx].Value}
-				} else {
-					triple.Predicate = turtle.URI{Namespace: term.Predicate[0].Namespace, Value: term.Predicate[0].Value}
-				}
-
-				if objIdx >= 0 {
-					triple.Object = turtle.URI{Namespace: row.Values[objIdx].Namespace, Value: row.Values[objIdx].Value}
-				} else {
-					triple.Object = turtle.URI{Namespace: term.Object.Namespace, Value: term.Object.Value}
-				}
-
-				log.Debug("generated> ", triple)
-				generatedRows = append(generatedRows, triple)
-			}
-		}
-
-		dataset := turtle.DataSet{
-			Triples: generatedRows,
-		}
-		_ = dataset
-
-		if err := n.db.AddTriples(dataset); err != nil {
+		if err := n.db.AddTriples("test", dataset); err != nil {
 			return errors.Wrap(err, "Could not apply update")
 		}
 		//rows = rows[:0] // saves underlying memory
@@ -250,6 +280,11 @@ func (n *Node) handleUpdates(peer *noise.Peer) {
 		// update if last commit was more than 30 seconds ago or we have 20,000 rows
 		if err := commit(upd); err != nil {
 			log.Error(err)
+		}
+		for _, policy := range n.cfg.PublicPolicy {
+			if err := n.updateView("public", policy); err != nil {
+				panic(err)
+			}
 		}
 	}
 }
@@ -282,6 +317,7 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 			log.Error(err)
 			continue
 		}
+		q.Graphs = []string{"public"}
 
 		// TODO: need to save the query view representation inside the node.
 		// When we get the contents of a view back, we can check which query it

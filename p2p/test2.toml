@@ -5,9 +5,9 @@ ListenPort = 3001
 Address = "localhost:3000"
 [[Peer.Wants]]
     Graphs = ["test"]
-    Definition = """SELECT ?s ?equip WHERE {
+    Definition = """SELECT ?s ?p ?o WHERE {
                     ?s rdf:type/rdfs:subClassOf* brick:Point .
-                    ?s bf:isPointOf ?equip .
+                    ?s ?p ?o
                  };"""
 [[Peer.Wants]]
     Graphs = ["test"]
