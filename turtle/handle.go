@@ -86,7 +86,7 @@ func TripleFromRow(row pb.Row) Triple {
 // Parses the given filename using the turtle format.
 // Returns the dataset, and the time elapsed in parsing
 func Parse(filename string) (DataSet, error) {
-	dataset := newDataSet()
+	dataset := NewDataSet()
 	f, err := os.Open(filename)
 	if err != nil {
 		return *dataset, err

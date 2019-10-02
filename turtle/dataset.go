@@ -29,7 +29,7 @@ type DataSet struct {
 	Triples     []Triple
 }
 
-func newDataSet() *DataSet {
+func NewDataSet() *DataSet {
 	ds := &DataSet{
 		triplecount: 0,
 		nscount:     0,
@@ -67,7 +67,7 @@ func (d *DataSet) NumNamespaces() int {
 }
 
 func DataSetFromRows(rows []*pb.Row) DataSet {
-	d := newDataSet()
+	d := NewDataSet()
 	// TODO: assuming triples
 	for _, row := range rows {
 		s := URI{Namespace: row.Values[0].Namespace, Value: row.Values[0].Value}
