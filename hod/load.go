@@ -36,6 +36,9 @@ func (bundle FileBundle) getKeyValue() ([]byte, []byte) {
 	files = append(files, ontology_files...)
 	h := sha256.New()
 	for _, filename := range files {
+		if filename == "" {
+			continue
+		}
 		f, err := os.Open(filename)
 		if err != nil {
 			log.Fatal(err)
@@ -106,9 +109,19 @@ func (hod *HodDB) loadFileBundle(bundle FileBundle) (Graph, error) {
 	}
 
 	// load graph
-	dataset, err := turtle.Parse(bundle.TTLFile)
-	if err != nil {
-		return g, err
+	var (
+		dataset turtle.DataSet
+		err     error
+	)
+	log.Warning(bundle.TTLFile)
+	if bundle.TTLFile != "" {
+		dataset, err = turtle.Parse(bundle.TTLFile)
+		if err != nil {
+			return g, err
+		}
+	} else {
+		_dataset := turtle.NewDataSet()
+		dataset = *_dataset
 	}
 
 	// load ontologies

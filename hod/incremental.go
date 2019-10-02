@@ -109,25 +109,25 @@ func (hod *HodDB) all_triples() (turtle.DataSet, error) {
 
 // Adds rules to the internal list
 // Then, loop through everything to generate any new triples
-func (hod *HodDB) AddRules(rules []inferenceRule2) error {
-	hod.rules = append(hod.rules, rules...)
-
-	triples, err := hod.all_triples()
-	if err != nil {
-		return nil
-	}
-	err = hod.AddTriples(triples)
-
-	return err
-}
+//func (hod *HodDB) AddRules(rules []inferenceRule2) error {
+//	hod.rules = append(hod.rules, rules...)
+//
+//	triples, err := hod.all_triples()
+//	if err != nil {
+//		return nil
+//	}
+//	err = hod.AddTriples(triples)
+//
+//	return err
+//}
 
 // adds triples with no inference
 
 // TODO: the problem is that we are overwriting entities when we have new
 // tuples about them.  need to have these entities merge in
-func (hod *HodDB) addTriples(ds turtle.DataSet) error {
+func (hod *HodDB) addTriples(graphname string, ds turtle.DataSet) error {
 	graph := Graph{
-		Name: _GRAPHNAME,
+		Name: graphname,
 		hod:  hod,
 		Data: ds,
 	}
@@ -144,7 +144,7 @@ func (hod *HodDB) addTriples(ds turtle.DataSet) error {
 	}
 	entities := graph.CompileEntities()
 
-	log.Println("entities compiled", len(entities))
+	//log.Println("entities compiled", len(entities))
 
 	txn := hod.db.NewTransaction(true)
 
@@ -166,12 +166,12 @@ func (hod *HodDB) addTriples(ds turtle.DataSet) error {
 	return nil
 }
 
-func (hod *HodDB) AddTriples(dataset turtle.DataSet) error {
+func (hod *HodDB) AddTriples(graphname string, dataset turtle.DataSet) error {
 
 	//for _, pending_triple := range dataset.Triples {
 	//	log.Info(pending_triple.Subject, " ", pending_triple.Predicate, " ", pending_triple.Object)
 	//}
-	if err := hod.addTriples(dataset); err != nil {
+	if err := hod.addTriples(graphname, dataset); err != nil {
 		return err
 	}
 
@@ -191,7 +191,7 @@ func (hod *HodDB) AddTriples(dataset turtle.DataSet) error {
 		for triple := range stable_triples {
 			dataset.Triples = append(dataset.Triples, triple)
 		}
-		if err := hod.addTriples(dataset); err != nil {
+		if err := hod.addTriples(graphname, dataset); err != nil {
 			return err
 		}
 
@@ -209,7 +209,7 @@ func (hod *HodDB) AddTriples(dataset turtle.DataSet) error {
 			}
 		}
 
-		log.Println("generated: ", len(stable_triples))
+		//log.Println("generated: ", len(stable_triples))
 	}
 
 	dataset.Triples = dataset.Triples[:0]
@@ -217,9 +217,21 @@ func (hod *HodDB) AddTriples(dataset turtle.DataSet) error {
 		dataset.Triples = append(dataset.Triples, triple)
 	}
 
-	if err := hod.addTriples(dataset); err != nil {
+	if err := hod.addTriples(graphname, dataset); err != nil {
 		return err
 	}
+	log.Infof("Added %d rows", len(dataset.Triples))
 
+	return nil
+}
+
+func (hod *HodDB) NewGraph(name string) error {
+	bundle := FileBundle{
+		GraphName:     name,
+		OntologyFiles: hod.cfg.Database.Ontologies,
+	}
+	if err := hod.Load(bundle); err != nil {
+		return errors.Wrapf(err, "Could not create graph %s", name)
+	}
 	return nil
 }
