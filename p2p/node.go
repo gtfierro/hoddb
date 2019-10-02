@@ -28,14 +28,15 @@ type Node struct {
 func NewNode(cfg *Config) (*Node, error) {
 
 	var n = new(Node)
+	var err error
 	n.cfg = cfg
 
 	// set up HodDB
-	hcfg, err := hod.ReadConfig(cfg.HodConfig)
-	if err != nil {
-		log.Fatal(errors.Wrap(err, "Could not load config file"))
-	}
-	n.db, err = hod.MakeHodDB(hcfg)
+	//hcfg, err := hod.ReadConfig(cfg.HodConfig)
+	//if err != nil {
+	//	log.Fatal(errors.Wrap(err, "Could not load config file"))
+	//}
+	n.db, err = hod.MakeHodDB(cfg.HodConfig)
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "open log"))
 	}
@@ -44,12 +45,10 @@ func NewNode(cfg *Config) (*Node, error) {
 	}
 
 	// set up views
-	log.Warningf("%+v\n", cfg)
 	if err := n.db.NewGraph("public"); err != nil {
 		panic(err)
 	}
 	for _, policy := range cfg.PublicPolicy {
-		log.Warning("policy:", policy)
 		if err := n.updateView("public", policy); err != nil {
 			panic(err)
 		}
@@ -82,6 +81,11 @@ func NewNode(cfg *Config) (*Node, error) {
 	return n, nil
 }
 
+func (n *Node) Shutdown() {
+	//TODO
+	n.node.Kill()
+}
+
 func (n *Node) updateView(name string, v View) error {
 	q, err := n.db.ParseQuery(v.Definition, 0)
 	if err != nil {
@@ -106,7 +110,7 @@ func (n *Node) Request(req *pb.TupleRequest, srv pb.P2P_RequestServer) error {
 		return err
 	}
 	count := len(res.Rows)
-	chunksize := 100
+	chunksize := 400
 	lower := 0
 	upper := chunksize
 	if upper > count {
@@ -175,8 +179,7 @@ func (n *Node) handleRequests(peer *noise.Peer) {
 
 		// loop through results and send to the peer
 		count := len(res.Rows)
-		log.Debug("count rows", count)
-		chunksize := 100
+		chunksize := 400
 		lower := 0
 		upper := chunksize
 		if upper > count {
@@ -186,7 +189,6 @@ func (n *Node) handleRequests(peer *noise.Peer) {
 			if upper > count {
 				upper = count
 			}
-			log.Warning("update", res.Rows[lower:upper])
 			response := tupleUpdate{
 				Header: header{
 					Timestamp: time.Now(),
@@ -245,7 +247,7 @@ func expandTriples(where []*pb.Triple, rows []*pb.Row, vars []string) turtle.Dat
 				triple.Object = turtle.URI{Namespace: term.Object.Namespace, Value: term.Object.Value}
 			}
 
-			log.Debug("generated> ", triple)
+			//log.Debug("generated> ", triple)
 			generatedRows = append(generatedRows, triple)
 		}
 	}
@@ -310,7 +312,7 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 	// TODO: re-run periodically to check if things change
 	//for range time.Tick(30 * time.Second) {
 	for _, want := range peercfg.Wants {
-		time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Second)
 		log.Info("requesting>", want)
 		q, err := n.db.ParseQuery(want.Definition, 0)
 		if err != nil {

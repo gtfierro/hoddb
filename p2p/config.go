@@ -4,11 +4,11 @@ import (
 	"io"
 
 	"github.com/BurntSushi/toml"
+	"github.com/gtfierro/hoddb/hod"
 )
 
 type Config struct {
-	// path to HodDB
-	HodConfig string
+	HodConfig *hod.Config
 	//TODO: embed the configuration?
 
 	ListenPort int
