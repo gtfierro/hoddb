@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gtfierro/hoddb/hod"
-	query "github.com/gtfierro/hoddb/lang"
+	//query "github.com/gtfierro/hoddb/lang"
 	pb "github.com/gtfierro/hoddb/proto"
 	"github.com/gtfierro/hoddb/turtle"
 	"github.com/pkg/errors"
@@ -22,6 +22,7 @@ type Node struct {
 	desiredPeers []Peer
 	db           *hod.HodDB
 	node         *noise.Node
+	views        map[string]time.Time
 }
 
 func NewNode(cfg *Config) (*Node, error) {
@@ -69,6 +70,43 @@ func NewNode(cfg *Config) (*Node, error) {
 	return n, nil
 }
 
+func (n *Node) Request(req *pb.TupleRequest, srv pb.P2P_RequestServer) error {
+
+	res, err := n.db.Select(context.Background(), req.Definition)
+	if err != nil {
+		return err
+	}
+	count := len(res.Rows)
+	chunksize := 100
+	lower := 0
+	upper := chunksize
+	if upper > count {
+		upper = count
+	}
+	for upper <= count {
+		if upper > count {
+			upper = count
+		}
+		response := tupleUpdate{
+			Header: header{
+				Timestamp: time.Now(),
+				From:      []byte("put something better here"),
+			},
+			Rows:       res.Rows[lower:upper],
+			Vars:       res.Variables,
+			Definition: *req.Definition,
+		}
+
+		if err = srv.Send(response.ToProto()); err != nil {
+			return errors.Wrap(err, "Could not send response")
+		}
+
+		lower += chunksize
+		upper += chunksize
+	}
+	return nil
+}
+
 func (n *Node) dialPeers() {
 	// TODO: do we need to attempt reconnection manually?
 	for _, peer := range n.desiredPeers {
@@ -111,20 +149,26 @@ func (n *Node) handleRequests(peer *noise.Peer) {
 
 		// loop through results and send to the peer
 		count := len(res.Rows)
+		log.Debug("count rows", count)
 		chunksize := 100
 		lower := 0
 		upper := chunksize
+		if upper > count {
+			upper = count
+		}
 		for upper <= count {
 			if upper > count {
 				upper = count
 			}
+			log.Warning("update", res.Rows[lower:upper])
 			response := tupleUpdate{
 				Header: header{
 					Timestamp: time.Now(),
 					From:      []byte("put something better here"),
 				},
-				Rows: res.Rows[lower:upper],
-				Vars: res.Variables,
+				Rows:       res.Rows[lower:upper],
+				Vars:       res.Variables,
+				Definition: msg.Definition,
 			}
 			if err = peer.SendMessage(response); err != nil {
 				log.Error(errors.Wrap(err, "Could not send response"))
@@ -139,42 +183,73 @@ func (n *Node) handleRequests(peer *noise.Peer) {
 
 func (n *Node) handleUpdates(peer *noise.Peer) {
 	c := peer.Receive(opcodeUpdateMessage)
-	var rows []*pb.Row
-	var timer = time.NewTimer(10 * time.Second)
 
-	commit := func() error {
-		if len(rows) == 0 {
+	commit := func(upd tupleUpdate) error {
+		if len(upd.Rows) == 0 {
 			return nil
 		}
-		log.Infof("Updating with %d rows", len(rows))
-		dataset := turtle.DataSetFromRows(rows)
-		update, err := n.db.MakeTripleUpdate(dataset, "test")
-		if err != nil {
-			return errors.Wrap(err, "Could not make update")
+		log.Infof("Updating with %d rows", len(upd.Rows))
+
+		// add triples by substituting the query results into the query
+		var generatedRows []turtle.Triple
+		for _, term := range upd.Definition.Where {
+			var (
+				subIdx  int = -1
+				predIdx int = -1
+				objIdx  int = -1
+			)
+			if isVariable(term.Subject) {
+				subIdx = indexOf(upd.Vars, term.Subject.Value)
+			}
+			if isVariable(term.Predicate[0]) {
+				predIdx = indexOf(upd.Vars, term.Predicate[0].Value)
+			}
+			if isVariable(term.Object) {
+				objIdx = indexOf(upd.Vars, term.Object.Value)
+			}
+
+			for _, row := range upd.Rows {
+				triple := turtle.Triple{}
+				if subIdx >= 0 {
+					triple.Subject = turtle.URI{Namespace: row.Values[subIdx].Namespace, Value: row.Values[subIdx].Value}
+				} else {
+					triple.Subject = turtle.URI{Namespace: term.Subject.Namespace, Value: term.Subject.Value}
+				}
+
+				if predIdx >= 0 {
+					triple.Predicate = turtle.URI{Namespace: row.Values[predIdx].Namespace, Value: row.Values[predIdx].Value}
+				} else {
+					triple.Predicate = turtle.URI{Namespace: term.Predicate[0].Namespace, Value: term.Predicate[0].Value}
+				}
+
+				if objIdx >= 0 {
+					triple.Object = turtle.URI{Namespace: row.Values[objIdx].Namespace, Value: row.Values[objIdx].Value}
+				} else {
+					triple.Object = turtle.URI{Namespace: term.Object.Namespace, Value: term.Object.Value}
+				}
+
+				log.Debug("generated> ", triple)
+				generatedRows = append(generatedRows, triple)
+			}
 		}
-		if err := n.db.LoadGraph(update); err != nil {
+
+		dataset := turtle.DataSet{
+			Triples: generatedRows,
+		}
+		_ = dataset
+
+		if err := n.db.AddTriples(dataset); err != nil {
 			return errors.Wrap(err, "Could not apply update")
 		}
-		rows = rows[:0] // saves underlying memory
-		timer.Stop()
-		timer.Reset(10 * time.Second)
+		//rows = rows[:0] // saves underlying memory
 		return nil
 	}
 
-	for {
-		select {
-		case msg := <-c:
-			rows = append(rows, msg.(tupleUpdate).Rows...)
-			// update if last commit was more than 30 seconds ago or we have 20,000 rows
-			if len(rows) > 20000 {
-				if err := commit(); err != nil {
-					log.Error(err)
-				}
-			}
-		case <-timer.C:
-			if err := commit(); err != nil {
-				log.Error(err)
-			}
+	for msg := range c {
+		upd := msg.(tupleUpdate)
+		// update if last commit was more than 30 seconds ago or we have 20,000 rows
+		if err := commit(upd); err != nil {
+			log.Error(err)
 		}
 	}
 }
@@ -185,8 +260,7 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 	go func() {
 		// check queries
 		for range time.Tick(5 * time.Second) {
-			//q, err := n.db.ParseQuery("SELECT ?x ?y ?z WHERE { ?x ?y ?z };", 0)
-			q, err := n.db.ParseQuery("SELECT ?x WHERE { ?x rdf:type/rdfs:subClassOf* brick:Point};", 0)
+			q, err := n.db.ParseQuery("SELECT ?x ?y ?z WHERE { ?x ?y ?z };", 0)
 			if err != nil {
 				panic(err)
 			}
@@ -201,22 +275,12 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 	// TODO: re-run periodically to check if things change
 	//for range time.Tick(30 * time.Second) {
 	for _, want := range peercfg.Wants {
+		time.Sleep(10 * time.Second)
+		log.Info("requesting>", want)
 		q, err := n.db.ParseQuery(want.Definition, 0)
 		if err != nil {
 			log.Error(err)
 			continue
-		}
-		_q, err := query.Parse(want.Definition)
-		if err != nil {
-			log.Error(err)
-			continue
-		}
-
-		// add triples by substituting the query results into the query
-		all_variables := _q.Variables
-		log.Debug("all vars ", all_variables)
-		for _, term := range q.Where {
-			log.Debug("terms> ", term)
 		}
 
 		// TODO: need to save the query view representation inside the node.
@@ -224,7 +288,6 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 		// is for. Use the query terms to "generate" the source triples that we
 		// then insert into our local database.
 
-		log.Println("requesting>", want)
 		req := tupleRequest{
 			Header: header{
 				Timestamp: time.Now(),
@@ -244,4 +307,13 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 
 func isVariable(uri *pb.URI) bool {
 	return uri == nil || strings.HasPrefix(uri.Value, "?")
+}
+
+func indexOf(l []string, value string) int {
+	for i, v := range l {
+		if v == value {
+			return i
+		}
+	}
+	return -1
 }

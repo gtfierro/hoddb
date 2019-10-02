@@ -21,9 +21,10 @@ type tupleRequest struct {
 }
 
 type tupleUpdate struct {
-	Header header
-	Rows   []*pb.Row
-	Vars   []string
+	Header     header
+	Rows       []*pb.Row
+	Vars       []string
+	Definition pb.SelectQuery
 }
 
 func (tupleRequest) Read(reader payload.Reader) (noise.Message, error) {
@@ -47,21 +48,34 @@ func (tupleRequest) Read(reader payload.Reader) (noise.Message, error) {
 
 	return req, nil
 }
-
-func (req tupleRequest) Write() []byte {
-	_req := &pb.TupleRequest{
+func (req tupleRequest) ToProto() *pb.TupleRequest {
+	return &pb.TupleRequest{
 		Header: &pb.P2PHeader{
 			Time: req.Header.Timestamp.UnixNano(),
 			From: req.Header.From,
 		},
 		Definition: &req.Definition,
 	}
+}
 
-	b, err := proto.Marshal(_req)
+func (req tupleRequest) Write() []byte {
+	b, err := proto.Marshal(req.ToProto())
 	if err != nil {
 		panic(err)
 	}
 	return payload.NewWriter(nil).WriteBytes(b).Bytes()
+}
+
+func (upd tupleUpdate) ToProto() *pb.TupleUpdate {
+	return &pb.TupleUpdate{
+		Header: &pb.P2PHeader{
+			Time: upd.Header.Timestamp.UnixNano(),
+			From: upd.Header.From,
+		},
+		Rows:       upd.Rows,
+		Vars:       upd.Vars,
+		Definition: &upd.Definition,
+	}
 }
 
 func (tupleUpdate) Read(reader payload.Reader) (noise.Message, error) {
@@ -83,19 +97,13 @@ func (tupleUpdate) Read(reader payload.Reader) (noise.Message, error) {
 	}
 	upd.Rows = _upd.Rows
 	upd.Vars = _upd.Vars
+	upd.Definition = *_upd.Definition
 
 	return upd, nil
 }
 
 func (upd tupleUpdate) Write() []byte {
-	_upd := &pb.TupleUpdate{
-		Header: &pb.P2PHeader{
-			Time: upd.Header.Timestamp.UnixNano(),
-			From: upd.Header.From,
-		},
-		Rows: upd.Rows,
-		Vars: upd.Vars,
-	}
+	_upd := upd.ToProto()
 
 	b, err := proto.Marshal(_upd)
 	if err != nil {
