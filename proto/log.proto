@@ -15,6 +15,10 @@ service HodDB {
     rpc Versions(VersionQuery) returns (Response);
 }
 
+service P2P {
+    rpc Request(TupleRequest) returns (stream TupleUpdate);
+}
+
 enum TimeFilter {
     At = 0;
     Before = 1;
@@ -127,4 +131,5 @@ message TupleUpdate {
     P2PHeader header = 1;
     repeated Row rows = 2;
     repeated string vars = 3;
+    SelectQuery definition = 4;
 }
