@@ -33,7 +33,7 @@ database:
 	load_file := func(filename string) {
 		dataset, err := LoadTriplesFromFile(filename)
 		require.NoError(err, "Load "+filename)
-		err = hod.AddTriples(dataset)
+		err = hod.AddTriples("test2", dataset)
 		require.NoError(err, "expand "+filename)
 	}
 	load_file("BrickFrame.ttl")
@@ -81,7 +81,7 @@ database:
 			},
 		},
 	}
-	err = hod.AddTriples(newDataset)
+	err = hod.AddTriples("test2", newDataset)
 	require.NoError(err, "expand new triples")
 
 	q5 := "SELECT ?x ?y WHERE { ?x bf:feeds ?y};"
