@@ -82,7 +82,7 @@ func TestChangesPropagate(t *testing.T) {
 			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
 		},
 	}
-	node2, err := setup_node(3001, "../ns.ttl", nil, []Peer{peer1})
+	node2, err := setup_node(3001, "ns.ttl", nil, []Peer{peer1})
 	require.NoError(err, "setup node 2")
 	require.NotNil(node2, "setup node 2")
 
@@ -110,7 +110,7 @@ func TestChangesPropagate2(t *testing.T) {
 			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
 		},
 	}
-	node2, err := setup_node(3001, "../ns.ttl", nil, []Peer{peer1})
+	node2, err := setup_node(3001, "ns.ttl", nil, []Peer{peer1})
 	require.NoError(err, "setup node 2")
 	require.NotNil(node2, "setup node 2")
 	defer node2.Shutdown()
