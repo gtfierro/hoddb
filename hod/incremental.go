@@ -1,6 +1,7 @@
 package hod
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -166,13 +167,19 @@ func (hod *HodDB) addTriples(graphname string, ds turtle.DataSet) error {
 	return nil
 }
 
-func (hod *HodDB) AddTriples(graphname string, dataset turtle.DataSet) error {
+func (hod *HodDB) AddTriples(graphname string, dataset turtle.DataSet) (bool, error) {
 
 	//for _, pending_triple := range dataset.Triples {
 	//	log.Info(pending_triple.Subject, " ", pending_triple.Predicate, " ", pending_triple.Object)
 	//}
+	d1, err := hod.all_triples()
+	if err != nil {
+		panic(err)
+	}
+	before_hash := d1.Hash()
+
 	if err := hod.addTriples(graphname, dataset); err != nil {
-		return err
+		return false, err
 	}
 
 	stable_triples := make(map[turtle.Triple]int)
@@ -192,7 +199,7 @@ func (hod *HodDB) AddTriples(graphname string, dataset turtle.DataSet) error {
 			dataset.Triples = append(dataset.Triples, triple)
 		}
 		if err := hod.addTriples(graphname, dataset); err != nil {
-			return err
+			return false, err
 		}
 
 		// apply rules
@@ -218,11 +225,16 @@ func (hod *HodDB) AddTriples(graphname string, dataset turtle.DataSet) error {
 	}
 
 	if err := hod.addTriples(graphname, dataset); err != nil {
-		return err
+		return false, err
 	}
-	log.Infof("Added %d rows", len(dataset.Triples))
+	//log.Infof("Added %d rows", len(dataset.Triples))
+	d1, err = hod.all_triples()
+	if err != nil {
+		panic(err)
+	}
+	after_hash := d1.Hash()
 
-	return nil
+	return !bytes.Equal(before_hash, after_hash), nil
 }
 
 func (hod *HodDB) NewGraph(name string) error {
