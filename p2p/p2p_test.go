@@ -193,7 +193,7 @@ func TestTransitive(t *testing.T) {
 	require.NoError(err, "setup node1")
 	defer node3.Shutdown()
 
-	time.Sleep(30 * time.Second)
+	time.Sleep(40 * time.Second)
 	res, err := run_query(node3, "test", "SELECT ?s WHERE { ?s rdf:type brick:Temperature_Sensor };")
 	require.NoError(err, "query")
 	require.Equal(2, len(res), "results")
