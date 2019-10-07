@@ -1,9 +1,12 @@
 package turtle
 
 import (
+	"fmt"
+	"sort"
 	"strings"
 
 	pb "github.com/gtfierro/hoddb/proto"
+	"github.com/spaolacci/murmur3"
 )
 
 const (
@@ -64,6 +67,19 @@ func (d *DataSet) NumTriples() int {
 
 func (d *DataSet) NumNamespaces() int {
 	return d.nscount
+}
+
+func (d *DataSet) Hash() []byte {
+	h := murmur3.New64()
+	var s = make([]string, len(d.Triples))
+	for idx, triple := range d.Triples {
+		s[idx] = fmt.Sprintf("%s%s%s", triple.Subject, triple.Predicate, triple.Object)
+	}
+	sort.Strings(s)
+	for _, t := range s {
+		h.Write([]byte(t))
+	}
+	return h.Sum(nil)
 }
 
 func DataSetFromRows(rows []*pb.Row) DataSet {
