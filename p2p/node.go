@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -147,20 +148,23 @@ func (n *Node) dialPeers() {
 		if err != nil {
 			log.Error(errors.Wrapf(err, "Could not dial peer %s. Retrying in 4 sec", peer.Address))
 			time.Sleep(4 * time.Second)
-		} else {
-			break
 		}
 	}
 }
 
 // gets run when we connect to a peer
 func (n *Node) peerInit(node *noise.Node, peer *noise.Peer) error {
-	log.Info("Connected to peer ", peer.RemoteIP().String(), ":", string(peer.RemotePort()))
+	log.Infof("Connected to peer %s:%d", peer.RemoteIP().String(), peer.RemotePort())
 	// TODO: add context so these all get fixed up
 	go n.handleRequests(peer)
 	go n.handleUpdates(peer)
+	peerip := fmt.Sprintf("localhost:%d", peer.RemotePort())
 	for _, pcfg := range n.desiredPeers {
-		go n.requestUpdates(peer, pcfg)
+		if peerip == pcfg.Address {
+			pcfg := pcfg
+			fmt.Println("connecting:", peerip)
+			go n.requestUpdates(peer, pcfg)
+		}
 	}
 	return nil
 }
@@ -170,6 +174,7 @@ func (n *Node) handleRequests(peer *noise.Peer) {
 	for _msg := range c {
 		msg := _msg.(tupleRequest)
 
+		log.Infof("Got request %v from %s:%d", msg, peer.RemoteIP(), peer.RemotePort())
 		// evaluate a request for tuples
 		res, err := n.db.Select(context.Background(), &msg.Definition)
 		if err != nil {
@@ -282,6 +287,7 @@ func (n *Node) handleUpdates(peer *noise.Peer) {
 		// update if last commit was more than 30 seconds ago or we have 20,000 rows
 		if err := commit(upd); err != nil {
 			log.Error(err)
+			continue
 		}
 		for _, policy := range n.cfg.PublicPolicy {
 			if err := n.updateView("public", policy); err != nil {
@@ -294,26 +300,25 @@ func (n *Node) handleUpdates(peer *noise.Peer) {
 func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 	// periodically loop through peers and request our views
 
-	go func() {
-		// check queries
-		for range time.Tick(5 * time.Second) {
-			q, err := n.db.ParseQuery("SELECT ?x ?y ?z WHERE { ?x ?y ?z };", 0)
-			if err != nil {
-				panic(err)
-			}
-			resp, err := n.db.Select(context.Background(), q)
-			if err != nil {
-				panic(err)
-			}
-			log.Warning("DB now has", len(resp.Rows))
-		}
-	}()
+	//go func() {
+	//	// check queries
+	//	for range time.Tick(5 * time.Second) {
+	//		q, err := n.db.ParseQuery("SELECT ?x ?y ?z WHERE { ?x ?y ?z };", 0)
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//		resp, err := n.db.Select(context.Background(), q)
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//		log.Warning("DB now has", len(resp.Rows))
+	//	}
+	//}()
 
 	// TODO: re-run periodically to check if things change
 	//for range time.Tick(30 * time.Second) {
 	for _, want := range peercfg.Wants {
-		time.Sleep(1 * time.Second)
-		log.Info("requesting>", want)
+		log.Infof("requesting %v from %s:%d", want, peer.RemoteIP(), peer.RemotePort())
 		q, err := n.db.ParseQuery(want.Definition, 0)
 		if err != nil {
 			log.Error(err)
@@ -339,6 +344,7 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 			log.Error(err)
 			continue
 		}
+		time.Sleep(1 * time.Second)
 	}
 	//}
 }
