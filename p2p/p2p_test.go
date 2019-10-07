@@ -124,3 +124,77 @@ func TestChangesPropagate2(t *testing.T) {
 	require.NoError(err, "query node2")
 	require.Equal(8290, len(res2), "results node2")
 }
+
+// root node gets populated with data from the leaf nodes
+func TestStarTopo(t *testing.T) {
+	require := require.New(t)
+
+	// set up leafnodes
+	leaf1, err := setup_node(3001, "test_ttl/leaf1.ttl", []View{public_policy_all}, nil)
+	require.NoError(err, "setup leaf1")
+	require.NotNil(leaf1, "setup leaf1")
+	defer leaf1.Shutdown()
+
+	leaf2, err := setup_node(3002, "test_ttl/leaf2.ttl", []View{public_policy_all}, nil)
+	require.NoError(err, "setup leaf2")
+	require.NotNil(leaf2, "setup leaf2")
+	defer leaf2.Shutdown()
+
+	// peer declarations for the root node
+	leaf1_peer := Peer{
+		Address: "localhost:3001",
+		Wants: []View{
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+		},
+	}
+	_ = leaf1_peer
+	leaf2_peer := Peer{
+		Address: "localhost:3002",
+		Wants: []View{
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+		},
+	}
+
+	root, err := setup_node(3000, "../example.ttl", nil, []Peer{leaf1_peer, leaf2_peer})
+	require.NoError(err, "setup root")
+	require.NotNil(root, "setup root")
+	defer root.Shutdown()
+
+	time.Sleep(30 * time.Second)
+	res, err := run_query(root, "test", "SELECT ?s WHERE { ?s rdf:type brick:Temperature_Sensor };")
+	require.NoError(err, "query root")
+	require.Equal(2, len(res), "results root")
+}
+
+func TestTransitivve(t *testing.T) {
+	require := require.New(t)
+
+	node1, err := setup_node(3000, "test_ttl/leaf1.ttl", []View{public_policy_all}, nil)
+	require.NoError(err, "setup node1")
+	node1_peer := Peer{
+		Address: "localhost:3000",
+		Wants: []View{
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+		},
+	}
+	defer node1.Shutdown()
+
+	node2, err := setup_node(3001, "test_ttl/leaf2.ttl", []View{public_policy_all}, []Peer{node1_peer})
+	require.NoError(err, "setup node2")
+	node2_peer := Peer{
+		Address: "localhost:3001",
+		Wants: []View{
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+		},
+	}
+	defer node2.Shutdown()
+
+	node3, err := setup_node(3002, "ns.ttl", []View{public_policy_all}, []Peer{node2_peer})
+	require.NoError(err, "setup node1")
+	defer node3.Shutdown()
+
+	time.Sleep(40 * time.Second)
+	res, err := run_query(node3, "test", "SELECT ?s WHERE { ?s rdf:type brick:Temperature_Sensor };")
+	require.NoError(err, "query")
+	require.Equal(2, len(res), "results")
+}
