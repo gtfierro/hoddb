@@ -1,9 +1,11 @@
+//go:generate stringer -type=PeerState
 package main
 
 import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gtfierro/hoddb/hod"
@@ -18,12 +20,25 @@ import (
 	"github.com/perlin-network/noise/protocol"
 )
 
+type PeerState uint
+
+const (
+	UNKNOWN PeerState = iota
+	DIRTY
+	SYNCED
+)
+
 type Node struct {
 	listenPort   int
 	desiredPeers []Peer
 	db           *hod.HodDB
 	node         *noise.Node
 	cfg          *Config
+
+	// map of peer Address -> dirty
+	// a peer is dirty if we have updated and haven't updated it yet
+	downstream map[string]PeerState
+	sync.RWMutex
 }
 
 func NewNode(cfg *Config) (*Node, error) {
@@ -31,6 +46,7 @@ func NewNode(cfg *Config) (*Node, error) {
 	var n = new(Node)
 	var err error
 	n.cfg = cfg
+	n.downstream = make(map[string]PeerState)
 
 	// set up HodDB
 	//hcfg, err := hod.ReadConfig(cfg.HodConfig)
@@ -50,13 +66,16 @@ func NewNode(cfg *Config) (*Node, error) {
 		panic(err)
 	}
 	for _, policy := range cfg.PublicPolicy {
-		if err := n.updateView("public", policy); err != nil {
+		if _, err := n.updateView("public", policy); err != nil {
 			panic(err)
 		}
 	}
 
 	n.listenPort = cfg.ListenPort
 	n.desiredPeers = cfg.Peer
+	for _, pcfg := range n.desiredPeers {
+		n.updatePeerState(pcfg.Address, DIRTY)
+	}
 
 	// initialize p2p params
 	params := noise.DefaultParams()
@@ -82,26 +101,44 @@ func NewNode(cfg *Config) (*Node, error) {
 	return n, nil
 }
 
+func (n *Node) updatePeerState(peerAddress string, state PeerState) {
+	n.Lock()
+	n.downstream[peerAddress] = state
+	n.Unlock()
+}
+
+func (n *Node) getPeerState(peerAddress string) PeerState {
+	n.RLock()
+	state := n.downstream[peerAddress]
+	n.RUnlock()
+	return state
+}
+
+func (n *Node) markAllPeers(state PeerState) {
+	n.Lock()
+	for addr := range n.downstream {
+		n.downstream[addr] = state
+	}
+	n.Unlock()
+}
+
 func (n *Node) Shutdown() {
 	//TODO
 	n.node.Kill()
 }
 
-func (n *Node) updateView(name string, v View) error {
+func (n *Node) updateView(name string, v View) (bool, error) {
 	q, err := n.db.ParseQuery(v.Definition, 0)
 	if err != nil {
-		return err
+		return false, err
 	}
 	q.Graphs = []string{"test"}
 	resp, err := n.db.Select(context.Background(), q)
 	if err != nil {
-		return err
+		return false, err
 	}
 	dataset := expandTriples(q.Where, resp.Rows, q.Vars)
-	if err := n.db.AddTriples(name, dataset); err != nil {
-		return errors.Wrap(err, "Could not apply update")
-	}
-	return nil
+	return n.db.AddTriples(name, dataset)
 }
 
 func (n *Node) Request(req *pb.TupleRequest, srv pb.P2P_RequestServer) error {
@@ -171,6 +208,7 @@ func (n *Node) peerInit(node *noise.Node, peer *noise.Peer) error {
 
 func (n *Node) handleRequests(peer *noise.Peer) {
 	c := peer.Receive(opcodeRequestMessage)
+	peeraddr := fmt.Sprintf("%s:%d", peer.RemoteIP(), peer.RemotePort())
 	for _msg := range c {
 		msg := _msg.(tupleRequest)
 
@@ -211,6 +249,7 @@ func (n *Node) handleRequests(peer *noise.Peer) {
 			lower += chunksize
 			upper += chunksize
 		}
+		n.updatePeerState(peeraddr, SYNCED)
 	}
 }
 
@@ -265,6 +304,7 @@ func expandTriples(where []*pb.Triple, rows []*pb.Row, vars []string) turtle.Dat
 
 func (n *Node) handleUpdates(peer *noise.Peer) {
 	c := peer.Receive(opcodeUpdateMessage)
+	//peeraddr := fmt.Sprintf("%s:%d", peer.RemoteIP(), peer.RemotePort())
 
 	commit := func(upd tupleUpdate) error {
 		if len(upd.Rows) == 0 {
@@ -275,9 +315,13 @@ func (n *Node) handleUpdates(peer *noise.Peer) {
 		// add triples by substituting the query results into the query
 		dataset := expandTriples(upd.Definition.Where, upd.Rows, upd.Vars)
 
-		if err := n.db.AddTriples("test", dataset); err != nil {
+		_, err := n.db.AddTriples("test", dataset)
+		if err != nil {
 			return errors.Wrap(err, "Could not apply update")
+			//} else if changed {
+			//	n.updatePeerState(peeraddr, DIRTY)
 		}
+		//log.Warningf("Changed: %v from %s", changed, peeraddr)
 		//rows = rows[:0] // saves underlying memory
 		return nil
 	}
@@ -289,11 +333,24 @@ func (n *Node) handleUpdates(peer *noise.Peer) {
 			log.Error(err)
 			continue
 		}
+		var anychanged = false
 		for _, policy := range n.cfg.PublicPolicy {
-			if err := n.updateView("public", policy); err != nil {
-				panic(err)
+			changed, err := n.updateView("public", policy)
+			if err != nil {
+				log.Error(errors.Wrap(err, "Could not update view"))
 			}
+			anychanged = anychanged || changed
+			log.Warningf("Changed: %v . (any? %v)", changed, anychanged)
 		}
+		if anychanged {
+			n.markAllPeers(DIRTY)
+		}
+		//if err != nil {
+		//} else if changed {
+		//	n.markAllPeers(DIRTY)
+		//} else {
+		//	n.markAllPeers(SYNCED)
+		//}
 	}
 }
 
@@ -316,37 +373,44 @@ func (n *Node) requestUpdates(peer *noise.Peer, peercfg Peer) {
 	//}()
 
 	// TODO: re-run periodically to check if things change
-	//for range time.Tick(30 * time.Second) {
-	for _, want := range peercfg.Wants {
-		log.Infof("requesting %v from %s:%d", want, peer.RemoteIP(), peer.RemotePort())
-		q, err := n.db.ParseQuery(want.Definition, 0)
-		if err != nil {
-			log.Error(err)
+	peeraddr := fmt.Sprintf("%s:%d", peer.RemoteIP(), peer.RemotePort())
+	for range time.Tick(10 * time.Second) {
+		state := n.getPeerState(peeraddr)
+		if state == SYNCED {
 			continue
 		}
-		q.Graphs = []string{"public"}
+		fmt.Println(peeraddr, state)
+		for _, want := range peercfg.Wants {
+			log.Infof("requesting %v from %s", want, peeraddr)
+			q, err := n.db.ParseQuery(want.Definition, 0)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			q.Graphs = []string{"public"}
 
-		// TODO: need to save the query view representation inside the node.
-		// When we get the contents of a view back, we can check which query it
-		// is for. Use the query terms to "generate" the source triples that we
-		// then insert into our local database.
+			// TODO: need to save the query view representation inside the node.
+			// When we get the contents of a view back, we can check which query it
+			// is for. Use the query terms to "generate" the source triples that we
+			// then insert into our local database.
 
-		req := tupleRequest{
-			Header: header{
-				Timestamp: time.Now(),
-				From:      []byte("id 1"),
-			},
-			Definition: *q,
+			req := tupleRequest{
+				Header: header{
+					Timestamp: time.Now(),
+					From:      []byte("id 1"),
+				},
+				Definition: *q,
+			}
+
+			err = peer.SendMessage(req)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			time.Sleep(1 * time.Second)
 		}
-
-		err = peer.SendMessage(req)
-		if err != nil {
-			log.Error(err)
-			continue
-		}
-		time.Sleep(1 * time.Second)
+		n.updatePeerState(peeraddr, SYNCED)
 	}
-	//}
 }
 
 func isVariable(uri *pb.URI) bool {

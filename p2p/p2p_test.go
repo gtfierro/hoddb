@@ -85,16 +85,16 @@ func TestChangesPropagate(t *testing.T) {
 	node2, err := setup_node(3001, "ns.ttl", nil, []Peer{peer1})
 	require.NoError(err, "setup node 2")
 	require.NotNil(node2, "setup node 2")
+	defer node2.Shutdown()
 
 	res, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o };")
 	require.NoError(err, "query node2")
 	require.Equal(8289, len(res), "results node2")
 
-	time.Sleep(20 * time.Second)
+	time.Sleep(30 * time.Second)
 	res2, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o };")
 	require.NoError(err, "query node2")
 	require.Equal(8310, len(res2), "results node2")
-	defer node2.Shutdown()
 }
 
 func TestChangesPropagate2(t *testing.T) {
@@ -119,7 +119,7 @@ func TestChangesPropagate2(t *testing.T) {
 	require.NoError(err, "query node2")
 	require.Equal(8289, len(res), "results node2")
 
-	time.Sleep(20 * time.Second)
+	time.Sleep(30 * time.Second)
 	res2, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o };")
 	require.NoError(err, "query node2")
 	require.Equal(8290, len(res2), "results node2")
@@ -166,7 +166,7 @@ func TestStarTopo(t *testing.T) {
 	require.Equal(2, len(res), "results root")
 }
 
-func TestTransitivve(t *testing.T) {
+func TestTransitive(t *testing.T) {
 	require := require.New(t)
 
 	node1, err := setup_node(3000, "test_ttl/leaf1.ttl", []View{public_policy_all}, nil)
@@ -193,7 +193,7 @@ func TestTransitivve(t *testing.T) {
 	require.NoError(err, "setup node1")
 	defer node3.Shutdown()
 
-	time.Sleep(40 * time.Second)
+	time.Sleep(30 * time.Second)
 	res, err := run_query(node3, "test", "SELECT ?s WHERE { ?s rdf:type brick:Temperature_Sensor };")
 	require.NoError(err, "query")
 	require.Equal(2, len(res), "results")
