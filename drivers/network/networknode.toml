@@ -6,8 +6,8 @@ Ontologies = ["../../BrickFrame.ttl","../../Brick.ttl"]
 Buildings = {test="ns.ttl"}
 
 [HodConfig.Http]
-Enable = false
+Enable = true
 [HodConfig.Grpc]
-Enable = false
+Enable = true
 [HodConfig.Output]
 LogLevel = "info"

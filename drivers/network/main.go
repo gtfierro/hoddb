@@ -51,6 +51,12 @@ func (mon *NetworkMonitor) TriplesFromPacket(pkt gopacket.Packet) (triples []rdf
 		ents := mon.getEntitiesWithProperty(pred, obj)
 		if len(ents) > 0 {
 			defaultsub = ents[0]
+		} else {
+			triples = append(triples, rdf.Triple{
+				Subject:   defaultsub,
+				Predicate: RDF.URI("type"),
+				Object:    NETWORK.URI("Host"),
+			})
 		}
 		triples = append(triples, rdf.Triple{
 			Subject:   defaultsub,
@@ -58,7 +64,6 @@ func (mon *NetworkMonitor) TriplesFromPacket(pkt gopacket.Packet) (triples []rdf
 			Object:    obj,
 		})
 	}
-
 	// decode link layer
 	var linkflow gopacket.Flow
 	if m, ok := pkt.LinkLayer().(*layers.Ethernet); ok {

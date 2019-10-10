@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/gtfierro/hoddb/hod"
 	"github.com/gtfierro/hoddb/p2p"
@@ -26,6 +27,9 @@ func NewNetworkMonitor(cfg *p2p.Config) (*NetworkMonitor, error) {
 		return nil, errors.Wrap(err, "make hoddb")
 	}
 	mon.db = mon.node.GetHodDB()
+	go func() {
+		log.Fatal(mon.db.ServeGRPC())
+	}()
 	return mon, nil
 }
 
@@ -67,7 +71,7 @@ func (mon *NetworkMonitor) AddTriples(triples []rdf.Triple) error {
 	ds.Triples = triples
 	ds.AddNamespace("net", string(NETWORK))
 	ds.AddNamespace("mynet", string(MYNET))
-	changed, err := mon.db.AddTriples("test", *ds)
-	fmt.Println("added triples", len(triples), "changed?", changed)
+	err := mon.db.AddTriples("test", *ds)
+	fmt.Println("added triples", len(triples))
 	return err
 }
