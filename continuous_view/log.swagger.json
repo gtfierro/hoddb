@@ -1,0 +1,297 @@
+{
+  "swagger": "2.0",
+  "host": "127.0.0.1:47809",
+  "info": {
+    "title": "log.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/hoddb/parse": {
+      "post": {
+        "operationId": "Parse",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protoSelectQuery"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protoParseRequest"
+            }
+          }
+        ],
+        "tags": [
+          "HodDB"
+        ]
+      }
+    },
+    "/v1/hoddb/select": {
+      "post": {
+        "operationId": "Select",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protoResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protoSelectQuery"
+            }
+          }
+        ],
+        "tags": [
+          "HodDB"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protoP2PHeader": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "from": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "p2p messages for experiment"
+    },
+    "protoParseRequest": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        }
+      }
+    },
+    "protoPattern": {
+      "type": "string",
+      "enum": [
+        "Single",
+        "ZeroOne",
+        "ZeroPlus",
+        "OnePlus"
+      ],
+      "default": "Single"
+    },
+    "protoResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "format": "int64"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoRow"
+          }
+        }
+      }
+    },
+    "protoRow": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoURI"
+          }
+        }
+      }
+    },
+    "protoSelectQuery": {
+      "type": "object",
+      "properties": {
+        "vars": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of vars to select, including '*'"
+        },
+        "graphs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of graphs to select, including '*'"
+        },
+        "filter": {
+          "$ref": "#/definitions/protoTimeFilter",
+          "title": "time filter"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        },
+        "where": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoTriple"
+          },
+          "title": "where clause"
+        }
+      }
+    },
+    "protoTimeFilter": {
+      "type": "string",
+      "enum": [
+        "At",
+        "Before",
+        "After"
+      ],
+      "default": "At"
+    },
+    "protoTriple": {
+      "type": "object",
+      "properties": {
+        "subject": {
+          "$ref": "#/definitions/protoURI"
+        },
+        "predicate": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoURI"
+          }
+        },
+        "object": {
+          "$ref": "#/definitions/protoURI"
+        }
+      }
+    },
+    "protoTupleUpdate": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "$ref": "#/definitions/protoP2PHeader"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoRow"
+          }
+        },
+        "vars": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "definition": {
+          "$ref": "#/definitions/protoSelectQuery"
+        }
+      }
+    },
+    "protoURI": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "title": "full URI"
+        },
+        "value": {
+          "type": "string"
+        },
+        "variable": {
+          "type": "string",
+          "title": "variable"
+        },
+        "pattern": {
+          "$ref": "#/definitions/protoPattern"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeStreamError": {
+      "type": "object",
+      "properties": {
+        "grpc_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "http_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "http_status": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  },
+  "x-stream-definitions": {
+    "protoTupleUpdate": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/protoTupleUpdate"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of protoTupleUpdate"
+    }
+  }
+}

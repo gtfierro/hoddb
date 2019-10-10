@@ -1,0 +1,30 @@
+.fullpage {
+    height: 800px;
+}
+
+body > .ui.container {
+  margin-top: 3em;
+  width: 1600px;
+}
+
+.ui.grid.container {
+    width: calc( 1600px  +  2rem ) !important;
+}
+
+.ui.relaxed.grid.container {
+    width: calc( 1600px  +  3rem ) !important;
+}
+
+.ui.very.relaxed.grid.container {
+    width: calc( 1600px  +  5rem ) !important;
+}
+
+#viewport {
+    border: 2px solid black;
+    border-radius: 5px;
+    padding:2px
+}
+
+body {
+    height: 100%;
+}
