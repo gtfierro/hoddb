@@ -142,7 +142,7 @@ func (n *Node) updateView(name string, v View) (bool, error) {
 		return false, err
 	}
 	dataset := expandTriples(q.Where, resp.Rows, q.Vars)
-	return n.db.AddTriples(name, dataset)
+	return n.db.AddTriplesWithChanged(name, dataset)
 }
 
 func (n *Node) Request(req *pb.TupleRequest, srv pb.P2P_RequestServer) error {
@@ -319,7 +319,7 @@ func (n *Node) handleUpdates(peer *noise.Peer) {
 		// add triples by substituting the query results into the query
 		dataset := expandTriples(upd.Definition.Where, upd.Rows, upd.Vars)
 
-		_, err := n.db.AddTriples("test", dataset)
+		err := n.db.AddTriples("test", dataset)
 		if err != nil {
 			return errors.Wrap(err, "Could not apply update")
 			//} else if changed {

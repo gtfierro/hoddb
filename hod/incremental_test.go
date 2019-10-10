@@ -33,7 +33,7 @@ database:
 	load_file := func(filename string) {
 		dataset, err := LoadTriplesFromFile(filename)
 		require.NoError(err, "Load "+filename)
-		changed, err := hod.AddTriples("test2", dataset)
+		changed, err := hod.AddTriplesWithChanged("test2", dataset)
 		require.NoError(err, "expand "+filename)
 		require.True(changed, "adding triples updated")
 	}
@@ -82,7 +82,7 @@ database:
 			},
 		},
 	}
-	changed, err := hod.AddTriples("test2", newDataset)
+	changed, err := hod.AddTriplesWithChanged("test2", newDataset)
 	require.NoError(err, "expand new triples")
 	require.True(changed, "adding triples updated")
 
