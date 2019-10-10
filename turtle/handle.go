@@ -96,7 +96,7 @@ func Parse(filename string) (DataSet, error) {
 		dataset.AddTripleStrings(triple.Subj.String(), triple.Pred.String(), triple.Obj.String())
 	}
 	for ns, uri := range dec.Namespaces() {
-		dataset.addNamespace(ns, uri)
+		dataset.AddNamespace(ns, uri)
 	}
 
 	return *dataset, nil

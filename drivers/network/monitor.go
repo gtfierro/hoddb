@@ -65,7 +65,9 @@ func (mon *NetworkMonitor) runQuery(qstr string) ([][]rdf.URI, error) {
 func (mon *NetworkMonitor) AddTriples(triples []rdf.Triple) error {
 	var ds = rdf.NewDataSet()
 	ds.Triples = triples
-	_, err := mon.db.AddTriples("test", *ds)
-	fmt.Println("added triples", len(triples))
+	ds.AddNamespace("net", string(NETWORK))
+	ds.AddNamespace("mynet", string(MYNET))
+	changed, err := mon.db.AddTriples("test", *ds)
+	fmt.Println("added triples", len(triples), "changed?", changed)
 	return err
 }

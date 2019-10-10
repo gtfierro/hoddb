@@ -40,7 +40,7 @@ func NewDataSet() *DataSet {
 		Triples:     []Triple{},
 	}
 	for k, v := range defaultNamespaces {
-		ds.addNamespace(k, v)
+		ds.AddNamespace(k, v)
 	}
 	return ds
 }
@@ -55,7 +55,7 @@ func (d *DataSet) AddTripleURIs(subject, predicate, object URI) {
 	d.Triples = append(d.Triples, Triple{subject, predicate, object})
 }
 
-func (d *DataSet) addNamespace(prefix, namespace string) {
+func (d *DataSet) AddNamespace(prefix, namespace string) {
 	d.nscount += 1
 	namespace = strings.TrimRight(namespace, "#")
 	d.Namespaces[prefix] = namespace
