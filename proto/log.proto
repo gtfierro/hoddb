@@ -10,7 +10,12 @@ service HodDB {
           body: "*"
         };
     };
-    rpc Parse(ParseRequest) returns (SelectQuery);
+    rpc Parse(ParseRequest) returns (SelectQuery) {
+        option (google.api.http) = {
+          post: "/v1/hoddb/parse"
+          body: "*"
+        };
+    };
     rpc Count(SelectQuery) returns (Response);
     rpc Versions(VersionQuery) returns (Response);
 }

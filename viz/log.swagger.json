@@ -1,6 +1,5 @@
 {
   "swagger": "2.0",
-  "host": "hoddb.mortardata.org",
   "info": {
     "title": "log.proto",
     "version": "version not set"
@@ -16,6 +15,32 @@
     "application/json"
   ],
   "paths": {
+    "/v1/hoddb/parse": {
+      "post": {
+        "operationId": "Parse",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protoSelectQuery"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protoParseRequest"
+            }
+          }
+        ],
+        "tags": [
+          "HodDB"
+        ]
+      }
+    },
     "/v1/hoddb/select": {
       "post": {
         "operationId": "Select",
@@ -57,6 +82,14 @@
         }
       },
       "title": "p2p messages for experiment"
+    },
+    "protoParseRequest": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        }
+      }
     },
     "protoPattern": {
       "type": "string",
