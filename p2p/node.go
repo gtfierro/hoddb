@@ -1,5 +1,5 @@
 //go:generate stringer -type=PeerState
-package main
+package p2p
 
 import (
 	"context"
@@ -99,6 +99,10 @@ func NewNode(cfg *Config) (*Node, error) {
 	go n.dialPeers()
 
 	return n, nil
+}
+
+func (n *Node) GetHodDB() *hod.HodDB {
+	return n.db
 }
 
 func (n *Node) updatePeerState(peerAddress string, state PeerState) {

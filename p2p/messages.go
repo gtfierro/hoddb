@@ -1,4 +1,4 @@
-package main
+package p2p
 
 import (
 	"time"
@@ -9,6 +9,14 @@ import (
 	"github.com/perlin-network/noise"
 	"github.com/perlin-network/noise/payload"
 )
+
+func init() {
+	opcodeRequestMessage = noise.RegisterMessage(noise.NextAvailableOpcode(), (*tupleRequest)(nil))
+	opcodeUpdateMessage = noise.RegisterMessage(noise.NextAvailableOpcode(), (*tupleUpdate)(nil))
+}
+
+var opcodeRequestMessage noise.Opcode
+var opcodeUpdateMessage noise.Opcode
 
 type header struct {
 	Timestamp time.Time

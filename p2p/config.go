@@ -1,11 +1,23 @@
-package main
+package p2p
 
 import (
 	"io"
+	"os"
 
 	"github.com/BurntSushi/toml"
 	"github.com/gtfierro/hoddb/hod"
+	noiselog "github.com/perlin-network/noise/log"
+	logrus "github.com/sirupsen/logrus"
 )
+
+var log = logrus.New()
+
+func init() {
+	log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, ForceColors: true})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(logrus.DebugLevel)
+	noiselog.Disable()
+}
 
 type Config struct {
 	HodConfig *hod.Config
