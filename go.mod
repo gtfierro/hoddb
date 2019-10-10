@@ -7,8 +7,10 @@ require (
 	github.com/RoaringBitmap/roaring v0.4.17
 	github.com/aws/aws-lambda-go v1.11.1
 	github.com/aws/aws-sdk-go v1.21.1
+	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/dgraph-io/badger v1.6.0
 	github.com/golang/protobuf v1.3.2
+	github.com/google/gopacket v1.1.17
 	github.com/grpc-ecosystem/grpc-gateway v1.11.2
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0
@@ -27,6 +29,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.3.0
+	github.com/urfave/cli v1.22.1
 	github.com/zhangxinngang/murmur v0.0.0-20140309145047-4e88ee1a5950
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
