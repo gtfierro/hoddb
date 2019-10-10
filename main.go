@@ -24,5 +24,4 @@ func main() {
 	}
 
 	log.Fatal(hod.ServeGRPC())
-
 }
