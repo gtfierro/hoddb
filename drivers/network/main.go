@@ -47,7 +47,8 @@ func (mon *NetworkMonitor) TriplesFromPacket(pkt gopacket.Packet) (triples []rdf
 	var src = MYNET.URI(uniuri.New())
 	var dst = MYNET.URI(uniuri.New())
 
-	addTriple := func(defaultsub, pred, obj rdf.URI) {
+	// add flow
+	addTriple := func(defaultsub, pred, obj rdf.URI) rdf.URI {
 		ents := mon.getEntitiesWithProperty(pred, obj)
 		if len(ents) > 0 {
 			defaultsub = ents[0]
@@ -63,6 +64,7 @@ func (mon *NetworkMonitor) TriplesFromPacket(pkt gopacket.Packet) (triples []rdf
 			Predicate: pred,
 			Object:    obj,
 		})
+		return defaultsub
 	}
 	// decode link layer
 	var linkflow gopacket.Flow
@@ -94,8 +96,13 @@ func (mon *NetworkMonitor) TriplesFromPacket(pkt gopacket.Packet) (triples []rdf
 	} else {
 		panic("no network layer")
 	}
-	addTriple(src, NETWORK.URI("hasAddress"), Value(networkflow.Src().String()))
-	addTriple(dst, NETWORK.URI("hasAddress"), Value(networkflow.Dst().String()))
+	newsrc := addTriple(src, NETWORK.URI("hasAddress"), Value(networkflow.Src().String()))
+	newdst := addTriple(dst, NETWORK.URI("hasAddress"), Value(networkflow.Dst().String()))
+	triples = append(triples, rdf.Triple{
+		Subject:   newsrc,
+		Predicate: NETWORK.URI("talksTo"),
+		Object:    newdst,
+	})
 
 	// decode transport layer
 	var transportflow gopacket.Flow

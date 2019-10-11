@@ -77,13 +77,17 @@ func NewOIDDatabase(r io.Reader) *OIDDatabase {
 }
 
 func (oid *OIDDatabase) Lookup(_mac string) string {
-	//longestmatch := 0
+	var longestmatch uint = 0
+	var manu = "unknown"
 	mac := parseMacAddr(_mac)
 	for _, ent := range oid.entries {
 		bytepfx := ent.prefixlen / 8
 		if bytes.Equal(mac[:bytepfx], ent.mac[:bytepfx]) {
-			return ent.manufacturer
+			if ent.prefixlen > longestmatch {
+				manu = ent.manufacturer
+				longestmatch = ent.prefixlen
+			}
 		}
 	}
-	return "unknown"
+	return manu
 }
