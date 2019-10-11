@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/gtfierro/hoddb/hod"
 	"github.com/gtfierro/hoddb/p2p"
@@ -14,13 +15,21 @@ import (
 type NetworkMonitor struct {
 	node *p2p.Node
 	db   *hod.HodDB
+	oid  *OIDDatabase
 	cfg  *p2p.Config
 }
 
 func NewNetworkMonitor(cfg *p2p.Config) (*NetworkMonitor, error) {
+
+	f, e := os.Open("oid_db.txt")
+	if e != nil {
+		panic(e)
+	}
+
 	var err error
 	mon := new(NetworkMonitor)
 	mon.cfg = cfg
+	mon.oid = NewOIDDatabase(f)
 	mon.node, err = p2p.NewNode(cfg)
 	//TODO: method
 	if err != nil {

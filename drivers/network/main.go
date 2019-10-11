@@ -74,6 +74,14 @@ func (mon *NetworkMonitor) TriplesFromPacket(pkt gopacket.Packet) (triples []rdf
 
 	addTriple(src, NETWORK.URI("hasMAC"), Value(linkflow.Src().String()))
 	addTriple(dst, NETWORK.URI("hasMAC"), Value(linkflow.Dst().String()))
+	src_manu := mon.oid.Lookup(linkflow.Src().String())
+	dst_manu := mon.oid.Lookup(linkflow.Dst().String())
+	if src_manu != "unknown" {
+		addTriple(src, NETWORK.URI("hasManufacturer"), Value(src_manu))
+	}
+	if dst_manu != "unknown" {
+		addTriple(dst, NETWORK.URI("hasManufacturer"), Value(dst_manu))
+	}
 
 	// test
 
