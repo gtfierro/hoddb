@@ -11,16 +11,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-const _GRAPHNAME = "test"
-
 type inferenceRule2 func() []rdf.Triple
 
-func (hod *HodDB) run_query(qstr string) ([]*pb.Row, error) {
+func (hod *HodDB) run_query(graphname string, qstr string) ([]*pb.Row, error) {
 	sq, err := hod.ParseQuery(qstr, 0)
 	if err != nil {
 		return nil, err
 	}
-	sq.Graphs = []string{_GRAPHNAME}
+	sq.Graphs = []string{graphname}
 	resp, err := hod.Select(context.Background(), sq)
 	if err != nil {
 		return nil, err
@@ -43,11 +41,11 @@ func tripleFromRow(row *pb.Row, s, p, o int) rdf.Triple {
 }
 
 //add rules to ourself
-func (hod *HodDB) inferRules() error {
+func (hod *HodDB) inferRules(graphname string) error {
 	// add inverse rules
 	// get all pairs of inverse edges
 	q := `SELECT ?s ?o WHERE { ?s owl:inverseOf ?o };`
-	rows, err := hod.run_query(q)
+	rows, err := hod.run_query(graphname, q)
 	if err != nil {
 		return err
 	}
@@ -58,7 +56,7 @@ func (hod *HodDB) inferRules() error {
 		inv_func := func() []rdf.Triple {
 			var ret []rdf.Triple
 			q1 := fmt.Sprintf("SELECT ?s ?o WHERE { ?s <%s> ?o };", pred)
-			resp, err := hod.run_query(q1)
+			resp, err := hod.run_query(graphname, q1)
 			if err != nil {
 				log.Error("running inv rule", err)
 				return nil
@@ -76,7 +74,7 @@ func (hod *HodDB) inferRules() error {
 		inv_func2 := func() []rdf.Triple {
 			var ret []rdf.Triple
 			q1 := fmt.Sprintf("SELECT ?s ?o WHERE { ?s <%s> ?o };", invpred)
-			resp, err := hod.run_query(q1)
+			resp, err := hod.run_query(graphname, q1)
 			if err != nil {
 				log.Error("running inv rule", err)
 				return nil
@@ -96,7 +94,7 @@ func (hod *HodDB) inferRules() error {
 			q1 := fmt.Sprintf(`SELECT ?src ?dst WHERE {
 				?src owl:sameAs ?dst .
 			};`)
-			resp, err := hod.run_query(q1)
+			resp, err := hod.run_query(graphname, q1)
 			if err != nil {
 				log.Error("running inv rule", err)
 				return nil
@@ -107,7 +105,7 @@ func (hod *HodDB) inferRules() error {
 				q2 := fmt.Sprintf(`SELECT ?p ?o WHERE {
 					<%s> ?p ?o .
 				};`, src)
-				properties, err := hod.run_query(q2)
+				properties, err := hod.run_query(graphname, q2)
 				if err != nil {
 					log.Error("running sameas rule", err)
 					return nil

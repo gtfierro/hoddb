@@ -93,7 +93,7 @@ func (hod *HodDB) LoadGraph(graph Graph) error {
 		return errors.Wrap(err, "last commit")
 	}
 
-	if err := hod.inferRules(); err != nil {
+	if err := hod.inferRules(graph.Name); err != nil {
 		return err
 	}
 	if err := hod.AddTriples(graph.Name, graph.Data); err != nil {
