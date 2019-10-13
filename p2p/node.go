@@ -60,7 +60,9 @@ func NewNode(cfg *Config) (*Node, error) {
 	if n.db == nil {
 		panic("null db")
 	}
-	go log.Fatal(n.db.ServeGRPC())
+	if cfg.HodConfig.Grpc.Enable {
+		go log.Fatal(n.db.ServeGRPC())
+	}
 
 	// set up views
 	if err := n.db.NewGraph("public"); err != nil {

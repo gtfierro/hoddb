@@ -215,6 +215,9 @@ processes = {
         XBOS.hasEntity: MYDEP['philipshue_entity'],
         XBOS.hasResource: [MYDEP['desk_lamp_resource'], MYDEP['corner_lamp_resource'], MYDEP['bulb_lamp_resource']]
     },
+    MYDEP['philipshue_entity']: {
+        A: XBOS.Entity,
+    },
     MYDEP['desk_lamp_resource']: {
         A: XBOS.Resource,
         XBOS.hasURI: Literal("lights/desk_lamp"),
@@ -229,6 +232,14 @@ processes = {
         A: XBOS.Resource,
         XBOS.hasURI: Literal("lights/bulb_lamp"),
         XBOS.hasNamespace: Literal("gabehome"),
+    },
+
+    MYDEP['ingester']: {
+        A: XBOS.Protocol,
+        XBOS.hasEntity: MYDEP['ingester_entity'],
+    },
+    MYDEP['ingester_entity']: {
+        A: XBOS.Entity,
     }
 }
 evaluate_rdf_dict(processes)

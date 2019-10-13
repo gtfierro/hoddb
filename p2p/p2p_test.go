@@ -122,7 +122,7 @@ func TestChangesPropagate2(t *testing.T) {
 	time.Sleep(30 * time.Second)
 	res2, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o };")
 	require.NoError(err, "query node2")
-	require.Equal(8290, len(res2), "results node2")
+	require.Equal(8304, len(res2), "results node2")
 }
 
 // root node gets populated with data from the leaf nodes
