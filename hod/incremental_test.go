@@ -43,7 +43,7 @@ database:
 	// infer rules
 	err = hod.inferRules("test2")
 	require.NoError(err, "Infer rule")
-	require.Equal(24, len(hod.rules), "number of hod rules")
+	require.Equal(36, len(hod.rules), "number of hod rules")
 
 	load_file("example.ttl")
 
