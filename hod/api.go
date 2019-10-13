@@ -58,7 +58,6 @@ func (hod *HodDB) LoadGraph(graph Graph) error {
 		return errors.Wrap(err, "get cursor")
 	}
 	for key, ent := range entities {
-
 		for _, pred := range ent.GetAllPredicates() {
 			e := edge{predicate: pred, pattern: logpb.Pattern_OnePlus}
 			newseen, _, err := cursor.followPathFromSubject(ent, e)
@@ -92,6 +91,13 @@ func (hod *HodDB) LoadGraph(graph Graph) error {
 	if err := txn.Commit(); err != nil {
 		txn.Discard()
 		return errors.Wrap(err, "last commit")
+	}
+
+	if err := hod.inferRules(); err != nil {
+		return err
+	}
+	if err := hod.AddTriples(graph.Name, graph.Data); err != nil {
+		return err
 	}
 
 	return nil

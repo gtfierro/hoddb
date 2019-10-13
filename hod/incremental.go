@@ -7,13 +7,13 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	pb "github.com/gtfierro/hoddb/proto"
-	turtle "github.com/gtfierro/hoddb/turtle"
+	rdf "github.com/gtfierro/hoddb/turtle"
 	"github.com/pkg/errors"
 )
 
-const _GRAPHNAME = "test2"
+const _GRAPHNAME = "test"
 
-type inferenceRule2 func() []turtle.Triple
+type inferenceRule2 func() []rdf.Triple
 
 func (hod *HodDB) run_query(qstr string) ([]*pb.Row, error) {
 	sq, err := hod.ParseQuery(qstr, 0)
@@ -28,16 +28,16 @@ func (hod *HodDB) run_query(qstr string) ([]*pb.Row, error) {
 	return resp.Rows, nil
 }
 
-func tripleFromRow(row *pb.Row, s, p, o int) turtle.Triple {
-	var t turtle.Triple
+func tripleFromRow(row *pb.Row, s, p, o int) rdf.Triple {
+	var t rdf.Triple
 	if s >= 0 {
-		t.Subject = turtle.URI{Namespace: row.Values[s].Namespace, Value: row.Values[s].Value}
+		t.Subject = rdf.URI{Namespace: row.Values[s].Namespace, Value: row.Values[s].Value}
 	}
 	if p >= 0 {
-		t.Predicate = turtle.URI{Namespace: row.Values[p].Namespace, Value: row.Values[p].Value}
+		t.Predicate = rdf.URI{Namespace: row.Values[p].Namespace, Value: row.Values[p].Value}
 	}
 	if o >= 0 {
-		t.Object = turtle.URI{Namespace: row.Values[o].Namespace, Value: row.Values[o].Value}
+		t.Object = rdf.URI{Namespace: row.Values[o].Namespace, Value: row.Values[o].Value}
 	}
 	return t
 }
@@ -52,11 +52,11 @@ func (hod *HodDB) inferRules() error {
 		return err
 	}
 	for _, row := range rows {
-		pred := turtle.URI{Namespace: row.Values[0].Namespace, Value: row.Values[0].Value}
-		invpred := turtle.URI{Namespace: row.Values[1].Namespace, Value: row.Values[1].Value}
+		pred := rdf.URI{Namespace: row.Values[0].Namespace, Value: row.Values[0].Value}
+		invpred := rdf.URI{Namespace: row.Values[1].Namespace, Value: row.Values[1].Value}
 
-		inv_func := func() []turtle.Triple {
-			var ret []turtle.Triple
+		inv_func := func() []rdf.Triple {
+			var ret []rdf.Triple
 			q1 := fmt.Sprintf("SELECT ?s ?o WHERE { ?s <%s> ?o };", pred)
 			resp, err := hod.run_query(q1)
 			if err != nil {
@@ -73,8 +73,8 @@ func (hod *HodDB) inferRules() error {
 		}
 		hod.rules = append(hod.rules, inv_func)
 
-		inv_func2 := func() []turtle.Triple {
-			var ret []turtle.Triple
+		inv_func2 := func() []rdf.Triple {
+			var ret []rdf.Triple
 			q1 := fmt.Sprintf("SELECT ?s ?o WHERE { ?s <%s> ?o };", invpred)
 			resp, err := hod.run_query(q1)
 			if err != nil {
@@ -90,6 +90,39 @@ func (hod *HodDB) inferRules() error {
 			return ret
 		}
 		hod.rules = append(hod.rules, inv_func2)
+
+		same_as := func() []rdf.Triple {
+			var ret []rdf.Triple
+			q1 := fmt.Sprintf(`SELECT ?src ?dst WHERE {
+				?src owl:sameAs ?dst .
+			};`)
+			resp, err := hod.run_query(q1)
+			if err != nil {
+				log.Error("running inv rule", err)
+				return nil
+			}
+			for _, row := range resp {
+				src := rdf.URI{Namespace: row.Values[0].Namespace, Value: row.Values[0].Value}
+				dst := rdf.URI{Namespace: row.Values[1].Namespace, Value: row.Values[1].Value}
+				q2 := fmt.Sprintf(`SELECT ?p ?o WHERE {
+					<%s> ?p ?o .
+				};`, src)
+				properties, err := hod.run_query(q2)
+				if err != nil {
+					log.Error("running sameas rule", err)
+					return nil
+				}
+				for _, prop := range properties {
+					triple := tripleFromRow(prop, -1, 0, 1)
+					triple.Subject = dst
+					ret = append(ret, triple)
+				}
+
+			}
+
+			return ret
+		}
+		hod.rules = append(hod.rules, same_as)
 	}
 	return nil
 }
@@ -97,11 +130,11 @@ func (hod *HodDB) inferRules() error {
 var __select_all_query = `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`
 
 // this is an alternative API for HodDB for incremental maintenance of views
-func (hod *HodDB) all_triples() (turtle.DataSet, error) {
+func (hod *HodDB) all_triples() (rdf.DataSet, error) {
 
 	_select_all_query, _ := hod.ParseQuery(__select_all_query, 0)
 	resp, err := hod.Select(context.Background(), _select_all_query)
-	data := turtle.DataSetFromRows(resp.Rows)
+	data := rdf.DataSetFromRows(resp.Rows)
 	if err != nil {
 		return data, err
 	}
@@ -126,7 +159,7 @@ func (hod *HodDB) all_triples() (turtle.DataSet, error) {
 
 // TODO: the problem is that we are overwriting entities when we have new
 // tuples about them.  need to have these entities merge in
-func (hod *HodDB) addTriples(graphname string, ds turtle.DataSet) error {
+func (hod *HodDB) addTriples(graphname string, ds rdf.DataSet) error {
 	graph := Graph{
 		Name: graphname,
 		hod:  hod,
@@ -167,12 +200,12 @@ func (hod *HodDB) addTriples(graphname string, ds turtle.DataSet) error {
 	return nil
 }
 
-func (hod *HodDB) AddTriples(graphname string, dataset turtle.DataSet) error {
+func (hod *HodDB) AddTriples(graphname string, dataset rdf.DataSet) error {
 	if err := hod.addTriples(graphname, dataset); err != nil {
 		return err
 	}
 
-	stable_triples := make(map[turtle.Triple]int)
+	stable_triples := make(map[rdf.Triple]int)
 
 	// add triples to the initial set
 	for _, triple := range dataset.Triples {
@@ -198,15 +231,12 @@ func (hod *HodDB) AddTriples(graphname string, dataset turtle.DataSet) error {
 			if generated != nil {
 				for _, pending_triple := range generated {
 					if _, found := stable_triples[pending_triple]; !found {
-						//log.Warning(pending_triple.Subject.Value, " ", pending_triple.Predicate.Value, " ", pending_triple.Object.Value)
 						changed = true
 						stable_triples[pending_triple] = 0
 					}
 				}
 			}
 		}
-
-		//log.Println("generated: ", len(stable_triples))
 	}
 
 	dataset.Triples = dataset.Triples[:0]
@@ -221,11 +251,8 @@ func (hod *HodDB) AddTriples(graphname string, dataset turtle.DataSet) error {
 	return nil
 }
 
-func (hod *HodDB) AddTriplesWithChanged(graphname string, dataset turtle.DataSet) (bool, error) {
+func (hod *HodDB) AddTriplesWithChanged(graphname string, dataset rdf.DataSet) (bool, error) {
 
-	//for _, pending_triple := range dataset.Triples {
-	//	log.Info(pending_triple.Subject, " ", pending_triple.Predicate, " ", pending_triple.Object)
-	//}
 	d1, err := hod.all_triples()
 	if err != nil {
 		panic(err)
@@ -236,7 +263,6 @@ func (hod *HodDB) AddTriplesWithChanged(graphname string, dataset turtle.DataSet
 		return false, err
 	}
 
-	//log.Infof("Added %d rows", len(dataset.Triples))
 	d1, err = hod.all_triples()
 	if err != nil {
 		panic(err)
