@@ -15,6 +15,7 @@
                 <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?r ?p ?o WHERE {?r rdf:type net:Host .?r ?p ?o};"><b>Network</b></li>
                 <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?r ?m ?mac WHERE { ?r rdf:type net:Host . ?r net:hasManufacturer ?m . ?r net:hasMAC ?mac};"><b>MAC + OID</b></li>
                 <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?src ?dst WHERE { ?src net:talksTo ?dst };"><b>Flows</b></li>
+                <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?x ?y ?t WHERE { ?x bf:isPartOf ?y . ?x rdf:type/rdfs:subClassOf* brick:Location . ?x rdf:type ?t };"><b>Locations</b></li>
             </ul>
         </div>
         <div class="row">
