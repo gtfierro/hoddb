@@ -1,4 +1,13 @@
 from rdflib import Graph, Literal, BNode, Namespace, RDF, URIRef, RDFS, OWL
+
+def evaluate_rdf_dict(d):
+    for subject, restof in d.items():
+        for pred, objects in restof.items():
+            if not isinstance(objects, list):
+                objects = [objects]
+            for obj in objects:
+                G.add((subject, pred, obj))
+
 G = Graph()
 BRICK_VERSION = '1.0.3'
 
@@ -13,9 +22,11 @@ DCTERMS = Namespace("http://purl.org/dc/terms#")
 SDO = Namespace("http://schema.org#")
 SOSA = Namespace("http://www.w3.org/ns/sosa#")
 NET = Namespace("http://xbos.io/ontologies/network#")
+XBOS = Namespace("https://xbos.io/ontologies/xbos#")
 
-MYBLDG = Namespace(f"http://xbos.io/example_building#")
-MYNET = Namespace(f"http://xbos.io/example_network#")
+MYBLDG = Namespace("http://xbos.io/example_building#")
+MYNET = Namespace("http://xbos.io/example_network#")
+MYDEP = Namespace("http://xbos.io/example_deployment#")
 
 A = RDF.type
 
@@ -29,9 +40,11 @@ G.bind('sosa', SOSA)
 G.bind('brick', BRICK)
 G.bind('bf', BF)
 G.bind('net', NET)
+G.bind('xbos', XBOS)
 
 G.bind("mybldg", MYBLDG)
 G.bind("mynet", MYNET)
+G.bind("mydep", MYDEP)
 
 # make network
 
@@ -148,27 +161,77 @@ building_stuff = {
             A: BRICK.Philips_Hue_Bridge,
             BF.controls: [MYBLDG['desk_lamp'], MYBLDG['corner_lamp'], MYBLDG['bulb_lamp']],
             # link to the network presence
-            OWL.sameAs: MYNET['huebridge'],
+            XBOS.hasHost: MYNET['huebridge'],
+            XBOS.hasProcess: MYDEP['philipshue_driver'],
         },
         MYBLDG['desk_lamp']: {
-            A: BRICK.Luminaire
+            A: BRICK.Luminaire,
+            BF.hasPoint: [MYBLDG['desk_lamp_state'], MYBLDG['desk_lamp_brightness']],
         },
         MYBLDG['bulb_lamp']: {
-            A: BRICK.Luminaire
+            A: BRICK.Luminaire,
+            BF.hasPoint: [MYBLDG['bulb_lamp_state'], MYBLDG['bulb_lamp_brightness']],
         },
         MYBLDG['corner_lamp']: {
-            A: BRICK.Luminaire
+            A: BRICK.Luminaire,
+            BF.hasPoint: [MYBLDG['corner_lamp_state'], MYBLDG['corner_lamp_brightness']],
         },
+        MYBLDG['desk_lamp_state']: {
+            A: BRICK.Luminance_Command,
+        },
+        MYBLDG['bulb_lamp_state']: {
+            A: BRICK.Luminance_Command,
+        },
+        MYBLDG['corner_lamp_state']: {
+            A: BRICK.Luminance_Command,
+        },
+        MYBLDG['desk_lamp_brightness']: {
+            A: BRICK.Luminance_Setpoint,
+        },
+        MYBLDG['bulb_lamp_brightness']: {
+            A: BRICK.Luminance_Setpoint,
+        },
+        MYBLDG['corner_lamp_brightness']: {
+            A: BRICK.Luminance_Setpoint,
+        },
+
+        BRICK.Luminaire: {
+            A: OWL.Class,
+            RDFS.subClassOf: BRICK.Equipment
+        }
     }
 
-def evaluate_rdf_dict(d):
-    for subject, restof in d.items():
-        for pred, objects in restof.items():
-            if not isinstance(objects, list):
-                objects = [objects]
-            for obj in objects:
-                G.add((subject, pred, obj))
 evaluate_rdf_dict(building_stuff)
+
+## process view
+processes = {
+    XBOS.Entity: {A: OWL.Class},
+    XBOS.Process: {A: OWL.Class},
+    XBOS.Namespace: {A: OWL.Class},
+    XBOS.Resource: {A: OWL.Class},
+
+    MYDEP['philipshue_driver']: {
+        A: XBOS.Process,
+        XBOS.hasEntity: MYDEP['philipshue_entity'],
+        XBOS.hasResource: [MYDEP['desk_lamp_resource'], MYDEP['corner_lamp_resource'], MYDEP['bulb_lamp_resource']]
+    },
+    MYDEP['desk_lamp_resource']: {
+        A: XBOS.Resource,
+        XBOS.hasURI: Literal("lights/desk_lamp"),
+        XBOS.hasNamespace: Literal("gabehome"),
+    },
+    MYDEP['corner_lamp_resource']: {
+        A: XBOS.Resource,
+        XBOS.hasURI: Literal("lights/corner_lamp"),
+        XBOS.hasNamespace: Literal("gabehome"),
+    },
+    MYDEP['bulb_lamp_resource']: {
+        A: XBOS.Resource,
+        XBOS.hasURI: Literal("lights/bulb_lamp"),
+        XBOS.hasNamespace: Literal("gabehome"),
+    }
+}
+evaluate_rdf_dict(processes)
 
 with open('out.ttl', 'wb') as f:
     f.write(G.serialize(format='ttl'))
