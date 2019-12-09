@@ -7,7 +7,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	logpb "github.com/gtfierro/hoddb/proto"
 	turtle "github.com/gtfierro/hoddb/turtle"
 )

@@ -1,8 +1,8 @@
 package hod
 
 import (
-	"github.com/dgraph-io/badger"
-	"github.com/dgraph-io/badger/options"
+	"github.com/dgraph-io/badger/v2"
+	"github.com/dgraph-io/badger/v2/options"
 	turtle "github.com/gtfierro/hoddb/turtle"
 	"github.com/pkg/errors"
 	"github.com/pkg/profile"

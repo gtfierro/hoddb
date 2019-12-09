@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/golang/protobuf/proto"
 	logpb "github.com/gtfierro/hoddb/proto"
 	turtle "github.com/gtfierro/hoddb/turtle"
