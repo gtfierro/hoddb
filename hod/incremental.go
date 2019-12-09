@@ -44,7 +44,7 @@ func tripleFromRow(row *pb.Row, s, p, o int) rdf.Triple {
 func (hod *HodDB) inferRules(graphname string) error {
 	// add inverse rules
 	// get all pairs of inverse edges
-	q := `SELECT ?s ?o WHERE { ?s owl:inverseOf ?o };`
+	q := `SELECT ?s ?o WHERE { ?s owl:inverseOf ?o }`
 	rows, err := hod.run_query(graphname, q)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func (hod *HodDB) inferRules(graphname string) error {
 
 		inv_func := func() []rdf.Triple {
 			var ret []rdf.Triple
-			q1 := fmt.Sprintf("SELECT ?s ?o WHERE { ?s <%s> ?o };", pred)
+			q1 := fmt.Sprintf("SELECT ?s ?o WHERE { ?s <%s> ?o }", pred)
 			resp, err := hod.run_query(graphname, q1)
 			if err != nil {
 				log.Error("running inv rule", err)
@@ -73,7 +73,7 @@ func (hod *HodDB) inferRules(graphname string) error {
 
 		inv_func2 := func() []rdf.Triple {
 			var ret []rdf.Triple
-			q1 := fmt.Sprintf("SELECT ?s ?o WHERE { ?s <%s> ?o };", invpred)
+			q1 := fmt.Sprintf("SELECT ?s ?o WHERE { ?s <%s> ?o }", invpred)
 			resp, err := hod.run_query(graphname, q1)
 			if err != nil {
 				log.Error("running inv rule", err)
@@ -93,7 +93,7 @@ func (hod *HodDB) inferRules(graphname string) error {
 			var ret []rdf.Triple
 			q1 := fmt.Sprintf(`SELECT ?src ?dst WHERE {
 				?src owl:sameAs ?dst .
-			};`)
+			}`)
 			resp, err := hod.run_query(graphname, q1)
 			if err != nil {
 				log.Error("running inv rule", err)
@@ -104,7 +104,7 @@ func (hod *HodDB) inferRules(graphname string) error {
 				dst := rdf.URI{Namespace: row.Values[1].Namespace, Value: row.Values[1].Value}
 				q2 := fmt.Sprintf(`SELECT ?p ?o WHERE {
 					<%s> ?p ?o .
-				};`, src)
+				}`, src)
 				properties, err := hod.run_query(graphname, q2)
 				if err != nil {
 					log.Error("running sameas rule", err)
@@ -125,7 +125,7 @@ func (hod *HodDB) inferRules(graphname string) error {
 	return nil
 }
 
-var __select_all_query = `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`
+var __select_all_query = `SELECT ?s ?p ?o WHERE { ?s ?p ?o }`
 
 // this is an alternative API for HodDB for incremental maintenance of views
 func (hod *HodDB) all_triples() (rdf.DataSet, error) {

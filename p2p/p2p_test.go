@@ -29,12 +29,12 @@ LogLevel = "info"
 `
 var public_policy_all = View{
 	Graphs:     []string{"test"},
-	Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`,
+	Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o }`,
 }
 
 var points_only_policy = View{
 	Graphs:     []string{"test"},
-	Definition: `SELECT ?s WHERE { ?s rdf:type/rdfs:subClassOf* brick:Point };`,
+	Definition: `SELECT ?s WHERE { ?s rdf:type/rdfs:subClassOf* brick:Point }`,
 }
 
 func setup_node(port int, initialfile string, publicpolicy []View, peers []Peer) (*Node, error) {
@@ -79,7 +79,7 @@ func TestChangesPropagate(t *testing.T) {
 	peer1 := Peer{
 		Address: "localhost:3000",
 		Wants: []View{
-			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o }`},
 		},
 	}
 	node2, err := setup_node(3001, "ns.ttl", nil, []Peer{peer1})
@@ -87,12 +87,12 @@ func TestChangesPropagate(t *testing.T) {
 	require.NotNil(node2, "setup node 2")
 	defer node2.Shutdown()
 
-	res, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o };")
+	res, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o }")
 	require.NoError(err, "query node2")
 	require.Equal(8289, len(res), "results node2")
 
 	time.Sleep(30 * time.Second)
-	res2, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o };")
+	res2, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o }")
 	require.NoError(err, "query node2")
 	require.Equal(8310, len(res2), "results node2")
 }
@@ -107,7 +107,7 @@ func TestChangesPropagate2(t *testing.T) {
 	peer1 := Peer{
 		Address: "localhost:3000",
 		Wants: []View{
-			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o }`},
 		},
 	}
 	node2, err := setup_node(3001, "ns.ttl", nil, []Peer{peer1})
@@ -115,12 +115,12 @@ func TestChangesPropagate2(t *testing.T) {
 	require.NotNil(node2, "setup node 2")
 	defer node2.Shutdown()
 
-	res, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o };")
+	res, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o }")
 	require.NoError(err, "query node2")
 	require.Equal(8289, len(res), "results node2")
 
 	time.Sleep(30 * time.Second)
-	res2, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o };")
+	res2, err := run_query(node2, "test", "SELECT ?s ?p ?o WHERE { ?s ?p ?o }")
 	require.NoError(err, "query node2")
 	require.Equal(8304, len(res2), "results node2")
 }
@@ -144,14 +144,14 @@ func TestStarTopo(t *testing.T) {
 	leaf1_peer := Peer{
 		Address: "localhost:3001",
 		Wants: []View{
-			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o }`},
 		},
 	}
 	_ = leaf1_peer
 	leaf2_peer := Peer{
 		Address: "localhost:3002",
 		Wants: []View{
-			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o }`},
 		},
 	}
 
@@ -161,7 +161,7 @@ func TestStarTopo(t *testing.T) {
 	defer root.Shutdown()
 
 	time.Sleep(30 * time.Second)
-	res, err := run_query(root, "test", "SELECT ?s WHERE { ?s rdf:type brick:Temperature_Sensor };")
+	res, err := run_query(root, "test", "SELECT ?s WHERE { ?s rdf:type brick:Temperature_Sensor }")
 	require.NoError(err, "query root")
 	require.Equal(2, len(res), "results root")
 }
@@ -174,7 +174,7 @@ func TestTransitive(t *testing.T) {
 	node1_peer := Peer{
 		Address: "localhost:3000",
 		Wants: []View{
-			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o }`},
 		},
 	}
 	defer node1.Shutdown()
@@ -184,7 +184,7 @@ func TestTransitive(t *testing.T) {
 	node2_peer := Peer{
 		Address: "localhost:3001",
 		Wants: []View{
-			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o };`},
+			View{Definition: `SELECT ?s ?p ?o WHERE { ?s ?p ?o }`},
 		},
 	}
 	defer node2.Shutdown()
@@ -194,7 +194,7 @@ func TestTransitive(t *testing.T) {
 	defer node3.Shutdown()
 
 	time.Sleep(40 * time.Second)
-	res, err := run_query(node3, "test", "SELECT ?s WHERE { ?s rdf:type brick:Temperature_Sensor };")
+	res, err := run_query(node3, "test", "SELECT ?s WHERE { ?s rdf:type brick:Temperature_Sensor }")
 	require.NoError(err, "query")
 	require.Equal(2, len(res), "results")
 }
