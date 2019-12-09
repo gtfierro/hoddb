@@ -20,10 +20,10 @@ quotedstring : _charstring ;
 
 /* syntax */
 QueryUnit
-    : SelectQuery ";" << $0, nil >>
-    | CountQuery  ";" << $0, nil >>
-    | UpdateQuery ";" << $0, nil >>
-    | VersionsQuery ";" << $0, nil >>
+    : SelectQuery << $0, nil >>
+    | CountQuery   << $0, nil >>
+    | UpdateQuery  << $0, nil >>
+    | VersionsQuery  << $0, nil >>
     ;
 
 SelectQuery
