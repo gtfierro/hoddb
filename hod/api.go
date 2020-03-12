@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/golang/protobuf/proto"
 	query "github.com/gtfierro/hoddb/lang"
 	sparql "github.com/gtfierro/hoddb/lang/ast"
@@ -16,15 +16,7 @@ import (
 	"github.com/zhangxinngang/murmur"
 )
 
-func (hod *HodDB) Load(bundle FileBundle) error {
-	if loaded, err := hod.isFileBundleLoaded(bundle); loaded && err == nil {
-		log.Infof("File bundle already loaded: %v", bundle)
-		return nil
-	}
-	graph, err := hod.loadFileBundle(bundle)
-	if err != nil {
-		return errors.Wrapf(err, "could not load file %s for graph %s", bundle.TTLFile, bundle.GraphName)
-	}
+func (hod *HodDB) LoadGraph(graph Graph) error {
 	graph.ExpandTriples()
 
 	entities := graph.CompileEntities()
@@ -66,7 +58,6 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 		return errors.Wrap(err, "get cursor")
 	}
 	for key, ent := range entities {
-
 		for _, pred := range ent.GetAllPredicates() {
 			e := edge{predicate: pred, pattern: logpb.Pattern_OnePlus}
 			newseen, _, err := cursor.followPathFromSubject(ent, e)
@@ -102,6 +93,30 @@ func (hod *HodDB) Load(bundle FileBundle) error {
 		return errors.Wrap(err, "last commit")
 	}
 
+	if err := hod.inferRules(graph.Name); err != nil {
+		return err
+	}
+	if err := hod.AddTriples(graph.Name, graph.Data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (hod *HodDB) Load(bundle FileBundle) error {
+	if loaded, err := hod.isFileBundleLoaded(bundle); loaded && err == nil {
+		log.Infof("File bundle already loaded: %v", bundle)
+		return nil
+	}
+	graph, err := hod.loadFileBundle(bundle)
+	if err != nil {
+		return errors.Wrapf(err, "could not load file %s for graph %s", bundle.TTLFile, bundle.GraphName)
+	}
+
+	if err := hod.LoadGraph(graph); err != nil {
+		return errors.Wrap(err, "could not load graph")
+	}
+
 	if err := hod.markBundleLoaded(bundle); err != nil {
 		return errors.Wrap(err, "could not mark bundle as loaded")
 	}
@@ -134,7 +149,6 @@ func (hod *HodDB) GetEntity(key EntityKey) (*Entity, error) {
 		compiled: new(logpb.Entity),
 		key:      key,
 	}
-	//log.Debug("Get Entity ", key)
 	err := hod.db.View(func(t *badger.Txn) error {
 		it, err := t.Get(key.Bytes())
 		if err != nil {
@@ -204,11 +218,10 @@ func (hod *HodDB) ParseQuery(qstr string, version int64) (*logpb.SelectQuery, er
 	}
 
 	sq := &logpb.SelectQuery{
-		Vars:      q.Variables,
+		Vars:      q.Select.Vars,
 		Graphs:    q.From.Databases,
 		Timestamp: version,
 		Filter:    logpb.TimeFilter_Before,
-		//Where:
 	}
 
 	for _, triple := range q.Where.Terms {
@@ -300,20 +313,29 @@ func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *l
 			return
 		}
 
+		var _vars = make(map[string]struct{})
 		var vars []string
+
+		trackVar := func(varname string) {
+			if _, found := _vars[varname]; !found {
+				_vars[varname] = struct{}{}
+				vars = append(vars, varname)
+			}
+		}
+
 		for idx, triple := range query.Where {
 			if isVariable(triple.Subject) {
-				vars = append(vars, triple.Subject.Value)
+				trackVar(triple.Subject.Value)
 			} else {
 				query.Where[idx].Subject = hod.expandURI(triple.Subject, graph)
 			}
 			if isVariable(triple.Predicate[0]) {
-				vars = append(vars, triple.Predicate[0].Value)
+				trackVar(triple.Predicate[0].Value)
 			} else {
 				query.Where[idx].Predicate[0] = hod.expandURI(triple.Predicate[0], graph)
 			}
 			if isVariable(triple.Object) {
-				vars = append(vars, triple.Object.Value)
+				trackVar(triple.Object.Value)
 			} else {
 				query.Where[idx].Object = hod.expandURI(triple.Object, graph)
 			}
@@ -326,7 +348,7 @@ func (hod *HodDB) Select(ctx context.Context, query *logpb.SelectQuery) (resp *l
 			log.Error(err)
 			return resp, err
 		}
-		qp.variables = query.Vars
+		qp.variables = vars
 		cursor.addQueryPlan(qp)
 		cursor.selectVars = query.Vars
 

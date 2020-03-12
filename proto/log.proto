@@ -10,9 +10,18 @@ service HodDB {
           body: "*"
         };
     };
-    rpc Parse(ParseRequest) returns (SelectQuery);
+    rpc Parse(ParseRequest) returns (SelectQuery) {
+        option (google.api.http) = {
+          post: "/v1/hoddb/parse"
+          body: "*"
+        };
+    };
     rpc Count(SelectQuery) returns (Response);
     rpc Versions(VersionQuery) returns (Response);
+}
+
+service P2P {
+    rpc Request(TupleRequest) returns (stream TupleUpdate);
 }
 
 enum TimeFilter {
@@ -109,4 +118,23 @@ message Entity {
 
 message Row {
     repeated URI values = 1;
+}
+
+/* p2p messages for experiment */
+message P2PHeader {
+    int64 time = 1;
+    bytes from = 2;
+}
+
+message TupleRequest {
+    P2PHeader header = 1;
+    // query string
+    SelectQuery definition = 2;
+}
+
+message TupleUpdate {
+    P2PHeader header = 1;
+    repeated Row rows = 2;
+    repeated string vars = 3;
+    SelectQuery definition = 4;
 }

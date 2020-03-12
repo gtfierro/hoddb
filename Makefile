@@ -3,7 +3,7 @@ RELEASE?=v0.7.2
 
 run: build
 	rm -rf _hod_
-	./log
+	./hoddb
 
 install-python-deps:
 	python -m pip install grpcio-tools googleapis-common-protos --user
@@ -13,12 +13,12 @@ proto: proto/log.proto
 	#python3 -m grpc_tools.protoc -I proto -I proto/grpc-gateway/third_party/googleapis --python_out=. --grpc_python_out=. proto/log.proto
 
 build:
-	go build -o log
+	go build -o hoddb
 
 test:
 	# the -count=1 flag makes the test non-cacheable
 	rm -rf _log_test_
-	go test -count=1 -v  ./...
+	go test -count=1 -v ./hod ./lang ./p2p ./turtle
 
 test-insert:
 	rm -rf _log_test_
@@ -34,7 +34,7 @@ clean:
 	rm -rf _hod_
 
 container: build
-	mv ./log containers/hoddb
+	mv ./hoddb containers/hoddb
 	docker build -t mortar/hoddb:$(RELEASE) containers/hoddb
 	docker build -t mortar/hoddb:latest containers/hoddb
 

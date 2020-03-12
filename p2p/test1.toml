@@ -1,0 +1,23 @@
+ListenPort = 3000
+
+[HodConfig.Database]
+Path = "/tmp/hod1"
+Ontologies = ["../BrickFrame.ttl","../Brick.ttl"]
+Buildings = {test="../example.ttl"}
+
+[HodConfig.Http]
+Enable = false
+[HodConfig.Grpc]
+Enable = false
+[HodConfig.Output]
+LogLevel = "info"
+
+[[PublicPolicy]]
+Graphs = ["test"]
+Definition = """SELECT ?s ?p ?o WHERE {
+    ?s  rdf:type/rdfs:subClassOf* brick:Point .
+    ?s ?p ?o
+};"""
+
+#[[Peer]]
+#Address = "localhost:3001"

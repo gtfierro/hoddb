@@ -1,6 +1,7 @@
 package turtle
 
 import (
+	pb "github.com/gtfierro/hoddb/proto"
 	rdf "github.com/gtfierro/hoddb/turtle/rdfparser"
 	"io"
 	"os"
@@ -74,10 +75,18 @@ func MakeTriple(sub, pred, obj string) Triple {
 	}
 }
 
+func TripleFromRow(row pb.Row) Triple {
+	return Triple{
+		Subject:   URI{Namespace: row.Values[0].Namespace, Value: row.Values[0].Value},
+		Predicate: URI{Namespace: row.Values[1].Namespace, Value: row.Values[1].Value},
+		Object:    URI{Namespace: row.Values[2].Namespace, Value: row.Values[2].Value},
+	}
+}
+
 // Parses the given filename using the turtle format.
 // Returns the dataset, and the time elapsed in parsing
 func Parse(filename string) (DataSet, error) {
-	dataset := newDataSet()
+	dataset := NewDataSet()
 	f, err := os.Open(filename)
 	if err != nil {
 		return *dataset, err
@@ -87,7 +96,7 @@ func Parse(filename string) (DataSet, error) {
 		dataset.AddTripleStrings(triple.Subj.String(), triple.Pred.String(), triple.Obj.String())
 	}
 	for ns, uri := range dec.Namespaces() {
-		dataset.addNamespace(ns, uri)
+		dataset.AddNamespace(ns, uri)
 	}
 
 	return *dataset, nil

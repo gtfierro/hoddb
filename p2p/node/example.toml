@@ -1,0 +1,11 @@
+ListenPort = 3000
+[HodConfig.Database]
+Path = "/tmp/examplehod"
+Ontologies = ["../../BrickFrame.ttl","../../Brick.ttl"]
+Buildings = {test="../../layers_example/out.ttl"}
+
+[HodConfig.Http]
+Enable = true
+
+[HodConfig.Grpc]
+Enable = true

@@ -1,0 +1,20 @@
+@prefix bf: <https://brickschema.org/schema/1.0.3/BrickFrame#> .
+@prefix brick: <https://brickschema.org/schema/1.0.3/Brick#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix bldg: <http://buildsys.org/ontologies/building_example#> .
+
+bldg:site a brick:Building .
+
+bldg:room1 a brick:Room ;
+        bf:isPartOf bldg:floor1 .
+bldg:room2 a brick:Room ;
+        bf:isPartOf bldg:floor1 .
+bldg:room3 a brick:Room ;
+        bf:isPartOf bldg:floor1 .
+bldg:zone1 a brick:HVAC_Zone ;
+    bf:hasPart bldg:room1 ,
+                bldg:room2 ,
+                bldg:room3 .

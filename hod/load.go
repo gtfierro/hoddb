@@ -7,7 +7,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	logpb "github.com/gtfierro/hoddb/proto"
 	turtle "github.com/gtfierro/hoddb/turtle"
 )
@@ -36,6 +36,9 @@ func (bundle FileBundle) getKeyValue() ([]byte, []byte) {
 	files = append(files, ontology_files...)
 	h := sha256.New()
 	for _, filename := range files {
+		if filename == "" {
+			continue
+		}
 		f, err := os.Open(filename)
 		if err != nil {
 			log.Fatal(err)
@@ -100,16 +103,25 @@ func (hod *HodDB) isFileBundleLoaded(bundle FileBundle) (bool, error) {
 }
 
 func (hod *HodDB) loadFileBundle(bundle FileBundle) (Graph, error) {
-
 	g := Graph{
 		Name: bundle.GraphName,
 		hod:  hod,
 	}
 
 	// load graph
-	dataset, err := turtle.Parse(bundle.TTLFile)
-	if err != nil {
-		return g, err
+	var (
+		dataset turtle.DataSet
+		err     error
+	)
+	log.Warning(bundle.TTLFile)
+	if bundle.TTLFile != "" {
+		dataset, err = turtle.Parse(bundle.TTLFile)
+		if err != nil {
+			return g, err
+		}
+	} else {
+		_dataset := turtle.NewDataSet()
+		dataset = *_dataset
 	}
 
 	// load ontologies
@@ -212,10 +224,20 @@ func (g *Graph) CompileEntities() map[EntityKey]*Entity {
 
 	getEntity := func(key EntityKey) *Entity {
 		ent, found := entities[key]
-		if !found {
+		if found {
+			return ent
+		}
+
+		ent, err := g.hod.GetEntity(key)
+		if err == badger.ErrKeyNotFound {
 			ent = newEntity(key)
 			entities[key] = ent
+			return ent
+		} else if err != nil {
+			log.Error(err)
 		}
+		ent.FromCompiled()
+		entities[key] = ent
 		return ent
 	}
 
@@ -241,4 +263,44 @@ func (g *Graph) CompileEntities() map[EntityKey]*Entity {
 	}
 
 	return entities
+}
+
+// what do we need for ad-hoc update sof triples?
+// - graph name
+// - triples
+// - ontology files?
+
+func (hod *HodDB) MakeTripleUpdate(data turtle.DataSet, name string) (Graph, error) {
+	// load ontologies
+	for _, ontology_file := range hod.cfg.Database.Ontologies {
+		ontology_dataset, _ := turtle.Parse(ontology_file)
+		for _, triple := range ontology_dataset.Triples {
+			data.Triples = append(data.Triples, triple)
+		}
+	}
+	g := Graph{
+		Name: name,
+		Data: data,
+		hod:  hod,
+	}
+	g.getInferenceRules()
+
+	return g, nil
+}
+
+func LoadTriplesFromFile(filename string) (turtle.DataSet, error) {
+	d, _ := turtle.Parse(filename)
+	return d, nil
+}
+
+func LoadTriplesFromFileIntoDataSet(filename string, dataset turtle.DataSet) error {
+	d, _ := turtle.Parse(filename)
+	for _, triple := range d.Triples {
+		dataset.Triples = append(dataset.Triples, triple)
+	}
+	for g, ns := range d.Namespaces {
+		dataset.Namespaces[g] = ns
+	}
+
+	return nil
 }

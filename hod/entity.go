@@ -84,6 +84,23 @@ func (ent *Entity) addEndpoints(subject, object EntityKey) {
 	ent.endpoints[[2]EntityKey{subject, object}] = struct{}{}
 }
 
+func (ent *Entity) FromCompiled() {
+	ent.key = EntityKeyFromBytes(ent.compiled.EntityKey)
+	ent.inedge = make(map[EntityKey]map[EntityKey]logpb.Pattern)
+	ent.outedge = make(map[EntityKey]map[EntityKey]logpb.Pattern)
+	ent.endpoints = make(map[[2]EntityKey]struct{})
+
+	for _, edge := range ent.compiled.In {
+		ent.addInEdge(EntityKeyFromBytes(edge.Predicate), EntityKeyFromBytes(edge.Value), edge.Pattern)
+	}
+	for _, edge := range ent.compiled.Out {
+		ent.addOutEdge(EntityKeyFromBytes(edge.Predicate), EntityKeyFromBytes(edge.Value), edge.Pattern)
+	}
+	for _, ep := range ent.compiled.Endpoints {
+		ent.addEndpoints(EntityKeyFromBytes(ep.Src), EntityKeyFromBytes(ep.Dst))
+	}
+}
+
 func (ent *Entity) Compile() {
 	ent.compiled = &logpb.Entity{}
 	ent.compiled.EntityKey = ent.key.Bytes()

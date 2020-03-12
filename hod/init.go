@@ -1,8 +1,8 @@
 package hod
 
 import (
-	"github.com/dgraph-io/badger"
-	"github.com/dgraph-io/badger/options"
+	"github.com/dgraph-io/badger/v2"
+	"github.com/dgraph-io/badger/v2/options"
 	turtle "github.com/gtfierro/hoddb/turtle"
 	"github.com/pkg/errors"
 	"github.com/pkg/profile"
@@ -42,6 +42,8 @@ type HodDB struct {
 	hashes map[hashkeyentry]EntityKey
 	uris   map[EntityKey]turtle.URI
 	sync.RWMutex
+
+	rules []inferenceRule2
 
 	// map graph name to namespaces (map[string]map[string]string)
 	namespaces sync.Map

@@ -1,0 +1,13 @@
+ListenPort = 3003
+
+[HodConfig.Database]
+Path = "_network_hod_"
+Ontologies = ["../../BrickFrame.ttl","../../Brick.ttl"]
+Buildings = {test="ns.ttl"}
+
+[HodConfig.Http]
+Enable = true
+[HodConfig.Grpc]
+Enable = true
+[HodConfig.Output]
+LogLevel = "info"

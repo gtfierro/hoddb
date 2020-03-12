@@ -13,8 +13,7 @@ func (c *Cursor) dumpResponse(resp *logpb.Response) {
 	table.SetHeader(resp.Variables)
 	for _, row := range resp.Rows {
 		var v []string
-		for _, varname := range resp.Variables {
-			idx := c.variablePosition[varname]
+		for idx := range resp.Variables {
 			uri := row.Values[idx].Namespace + "#" + row.Values[idx].Value
 			v = append(v, uri)
 		}

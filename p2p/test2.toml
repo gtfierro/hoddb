@@ -1,0 +1,28 @@
+ListenPort = 3001
+
+[HodConfig.Database]
+Path = "/tmp/hod1"
+Ontologies = ["../BrickFrame.ttl","../Brick.ttl"]
+Buildings = {test="../ns.ttl"}
+[HodConfig.Http]
+Enable = false
+[HodConfig.Grpc]
+Enable = false
+[HodConfig.Output]
+LogLevel = "info"
+
+[[Peer]]
+Address = "localhost:3000"
+[[Peer.Wants]]
+    Graphs = ["test"]
+    Definition = """SELECT ?s ?p ?o WHERE {
+                    ?s rdf:type/rdfs:subClassOf* brick:Point .
+                    ?s ?p ?o
+                 };"""
+[[Peer.Wants]]
+    Graphs = ["test"]
+    Definition = """SELECT ?room ?floor WHERE {
+                    ?room rdf:type brick:Room .
+                    ?room bf:isPartOf ?floor .
+                    ?floor rdf:type brick:Floor
+                 };"""

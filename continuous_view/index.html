@@ -1,0 +1,42 @@
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link href="css/vis-network.min.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="css/semantic.min.css">
+    <link href='css/yasqe.min.css' rel='stylesheet' type='text/css'/>
+    <link href="css/site.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="css/jquery.dataTables.css">
+</head>
+<body>
+    <div class="ui grid container">
+        <h1 class="ui top attached block header">Continuous Query View</h1>
+        <div class="row">
+            <ul class="list">
+                <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?r ?p ?o WHERE {?r rdf:type net:Host .?r ?p ?o};"><b>Network View</b></li>
+                <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?r ?m ?mac WHERE { ?r rdf:type net:Host . ?r net:hasManufacturer ?m . ?r net:hasMAC ?mac};"><b>MAC + OID</b></li>
+                <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?src ?dst WHERE { ?src net:talksTo ?dst };"><b>Network Flows</b></li>
+                <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?x ?y ?t WHERE { ?x bf:isPartOf ?y . ?x rdf:type/rdfs:subClassOf* brick:Location . ?x rdf:type ?t };"><b>Brick Locations</b></li>
+                <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?e ?p ?eclass ?pclass WHERE { ?e rdf:type/rdfs:subClassOf* brick:Equipment . ?e bf:hasPoint ?p . ?p rdf:type ?pclass . ?e rdf:type ?eclass };"><b>Brick Equipment </b></li>
+                <li class = "ui button viewbutton" id="network_view" data-query="SELECT ?proc ?res ?uri ?ns WHERE { ?proc rdf:type xbos:Process . ?proc xbos:hasResource ?res . ?res xbos:hasURI ?uri . ?res xbos:hasNamespace ?ns };"><b>Process View</b></li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="four wide column">
+                <div id="query" width="100%"></div>
+            </div>
+            <div class="twelve wide column fullpage">
+                <div id="viewport" width="100%" height="800px"></div>
+            </div>
+        </div>
+    </div>
+    <script src="js/jquery.min.js"></script>
+    <script src='js/yasqe.bundled.min.js'></script>
+    <script src="js/semantic.min.js"></script>
+    <script src="js/swagger-client.js"></script>
+    <script src="js/luxon.js"></script>  
+    <script src="js/vis.js"></script>  
+    <script type="text/javascript" charset="utf8" src="js/jquery.dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

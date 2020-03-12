@@ -31,41 +31,41 @@ var productionsTable = ProdTab{
 		},
 	},
 	ProdTabEntry{
-		String: `QueryUnit : SelectQuery ";"	<< X[0], nil >>`,
+		String: `QueryUnit : SelectQuery	<< X[0], nil >>`,
 		Id:         "QueryUnit",
 		NTType:     1,
 		Index:      1,
-		NumSymbols: 2,
+		NumSymbols: 1,
 		ReduceFunc: func(X []Attrib) (Attrib, error) {
 			return X[0], nil
 		},
 	},
 	ProdTabEntry{
-		String: `QueryUnit : CountQuery ";"	<< X[0], nil >>`,
+		String: `QueryUnit : CountQuery	<< X[0], nil >>`,
 		Id:         "QueryUnit",
 		NTType:     1,
 		Index:      2,
-		NumSymbols: 2,
+		NumSymbols: 1,
 		ReduceFunc: func(X []Attrib) (Attrib, error) {
 			return X[0], nil
 		},
 	},
 	ProdTabEntry{
-		String: `QueryUnit : UpdateQuery ";"	<< X[0], nil >>`,
+		String: `QueryUnit : UpdateQuery	<< X[0], nil >>`,
 		Id:         "QueryUnit",
 		NTType:     1,
 		Index:      3,
-		NumSymbols: 2,
+		NumSymbols: 1,
 		ReduceFunc: func(X []Attrib) (Attrib, error) {
 			return X[0], nil
 		},
 	},
 	ProdTabEntry{
-		String: `QueryUnit : VersionsQuery ";"	<< X[0], nil >>`,
+		String: `QueryUnit : VersionsQuery	<< X[0], nil >>`,
 		Id:         "QueryUnit",
 		NTType:     1,
 		Index:      4,
-		NumSymbols: 2,
+		NumSymbols: 1,
 		ReduceFunc: func(X []Attrib) (Attrib, error) {
 			return X[0], nil
 		},

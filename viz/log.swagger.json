@@ -1,11 +1,11 @@
 {
   "swagger": "2.0",
-  "host": "hoddb.mortardata.org",
   "info": {
     "title": "log.proto",
     "version": "version not set"
   },
   "schemes": [
+    "http",
     "https"
   ],
   "consumes": [
@@ -15,6 +15,32 @@
     "application/json"
   ],
   "paths": {
+    "/v1/hoddb/parse": {
+      "post": {
+        "operationId": "Parse",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protoSelectQuery"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protoParseRequest"
+            }
+          }
+        ],
+        "tags": [
+          "HodDB"
+        ]
+      }
+    },
     "/v1/hoddb/select": {
       "post": {
         "operationId": "Select",
@@ -43,6 +69,28 @@
     }
   },
   "definitions": {
+    "protoP2PHeader": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "from": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "p2p messages for experiment"
+    },
+    "protoParseRequest": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        }
+      }
+    },
     "protoPattern": {
       "type": "string",
       "enum": [
@@ -152,6 +200,29 @@
         }
       }
     },
+    "protoTupleUpdate": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "$ref": "#/definitions/protoP2PHeader"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protoRow"
+          }
+        },
+        "vars": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "definition": {
+          "$ref": "#/definitions/protoSelectQuery"
+        }
+      }
+    },
     "protoURI": {
       "type": "object",
       "properties": {
@@ -170,6 +241,57 @@
           "$ref": "#/definitions/protoPattern"
         }
       }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeStreamError": {
+      "type": "object",
+      "properties": {
+        "grpc_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "http_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "http_status": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  },
+  "x-stream-definitions": {
+    "protoTupleUpdate": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/protoTupleUpdate"
+        },
+        "error": {
+          "$ref": "#/definitions/runtimeStreamError"
+        }
+      },
+      "title": "Stream result of protoTupleUpdate"
     }
   }
 }
