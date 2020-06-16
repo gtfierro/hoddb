@@ -250,7 +250,6 @@ func (hod *HodDB) AddTriples(graphname string, dataset rdf.DataSet) error {
 }
 
 func (hod *HodDB) AddTriplesWithChanged(graphname string, dataset rdf.DataSet) (bool, error) {
-
 	d1, err := hod.all_triples()
 	if err != nil {
 		panic(err)
