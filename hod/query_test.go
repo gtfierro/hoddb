@@ -21,7 +21,7 @@ var example_graph_test_cases = []struct {
 	},
 	{
 		"SELECT ?x FROM test WHERE { bldg:room_1 rdf:type ?x }",
-		[][]*logpb.URI{{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Room")}},
+		[][]*logpb.URI{{stringtoURI("https://brickschema.org/schema/1.1/Brick#Room")}},
 	},
 	{
 		"SELECT ?x FROM test WHERE { bldg:room_1 ?x brick:Room }",
@@ -37,26 +37,26 @@ var example_graph_test_cases = []struct {
 	{
 		"SELECT ?x ?y FROM test WHERE { bldg:room_1 ?x ?y }",
 		[][]*logpb.URI{
-			{stringtoURI("https://brickschema.org/schema/1.0.3/BrickFrame#isPartOf"), stringtoURI("http://buildsys.org/ontologies/building_example#floor_1")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/BrickFrame#isPartOf"), stringtoURI("http://buildsys.org/ontologies/building_example#hvaczone_1")},
-			{stringtoURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Room")},
+			{stringtoURI("https://brickschema.org/schema/1.1/BrickFrame#isPartOf"), stringtoURI("http://buildsys.org/ontologies/building_example#floor_1")},
+			{stringtoURI("https://brickschema.org/schema/1.1/BrickFrame#isPartOf"), stringtoURI("http://buildsys.org/ontologies/building_example#hvaczone_1")},
+			{stringtoURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), stringtoURI("https://brickschema.org/schema/1.1/Brick#Room")},
 			{stringtoURI("http://www.w3.org/2000/01/rdf-schema#label"), &logpb.URI{Value: "Room 1"}},
 		},
 	},
 	{
 		"SELECT ?x ?y FROM test WHERE { ?r rdf:type brick:Room . ?r ?x ?y }",
 		[][]*logpb.URI{
-			{stringtoURI("https://brickschema.org/schema/1.0.3/BrickFrame#isPartOf"), stringtoURI("http://buildsys.org/ontologies/building_example#floor_1")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/BrickFrame#isPartOf"), stringtoURI("http://buildsys.org/ontologies/building_example#hvaczone_1")},
-			{stringtoURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Room")},
+			{stringtoURI("https://brickschema.org/schema/1.1/BrickFrame#isPartOf"), stringtoURI("http://buildsys.org/ontologies/building_example#floor_1")},
+			{stringtoURI("https://brickschema.org/schema/1.1/BrickFrame#isPartOf"), stringtoURI("http://buildsys.org/ontologies/building_example#hvaczone_1")},
+			{stringtoURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), stringtoURI("https://brickschema.org/schema/1.1/Brick#Room")},
 			{stringtoURI("http://www.w3.org/2000/01/rdf-schema#label"), &logpb.URI{Value: "Room 1"}},
 		},
 	},
 	{
 		"SELECT ?x ?y FROM test WHERE { ?r rdf:type brick:Room . ?x ?y ?r }",
 		[][]*logpb.URI{
-			{stringtoURI("https://brickschema.org/schema/1.0.3/BrickFrame#hasPart"), stringtoURI("http://buildsys.org/ontologies/building_example#floor_1")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/BrickFrame#hasPart"), stringtoURI("http://buildsys.org/ontologies/building_example#hvaczone_1")},
+			{stringtoURI("https://brickschema.org/schema/1.1/BrickFrame#hasPart"), stringtoURI("http://buildsys.org/ontologies/building_example#floor_1")},
+			{stringtoURI("https://brickschema.org/schema/1.1/BrickFrame#hasPart"), stringtoURI("http://buildsys.org/ontologies/building_example#hvaczone_1")},
 		},
 	},
 	////		{
@@ -67,7 +67,7 @@ var example_graph_test_cases = []struct {
 	////			},
 	////		},
 	{
-		"SELECT ?x FROM test WHERE { ?x rdf:type <https://brickschema.org/schema/1.0.3/Brick#Room> }",
+		"SELECT ?x FROM test WHERE { ?x rdf:type <https://brickschema.org/schema/1.1/Brick#Room> }",
 		[][]*logpb.URI{{stringtoURI("http://buildsys.org/ontologies/building_example#room_1")}},
 	},
 	{
@@ -121,15 +121,15 @@ var example_graph_test_cases = []struct {
 	{
 		"SELECT ?s ?p FROM test WHERE { ?s ?p brick:Zone_Temperature_Sensor . ?s rdfs:subClassOf brick:Zone_Temperature_Sensor }",
 		[][]*logpb.URI{
-			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Average_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Coldest_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Highest_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Lowest_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Warmest_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#VAV_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#AHU_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#FCU_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
-			{stringtoURI("https://brickschema.org/schema/1.0.3/Brick#Zone_Air_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
+			{stringtoURI("https://brickschema.org/schema/1.1/Brick#Average_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
+			{stringtoURI("https://brickschema.org/schema/1.1/Brick#Coldest_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
+			{stringtoURI("https://brickschema.org/schema/1.1/Brick#Highest_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
+			{stringtoURI("https://brickschema.org/schema/1.1/Brick#Lowest_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
+			{stringtoURI("https://brickschema.org/schema/1.1/Brick#Warmest_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
+			{stringtoURI("https://brickschema.org/schema/1.1/Brick#VAV_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
+			{stringtoURI("https://brickschema.org/schema/1.1/Brick#AHU_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
+			{stringtoURI("https://brickschema.org/schema/1.1/Brick#FCU_Zone_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
+			{stringtoURI("https://brickschema.org/schema/1.1/Brick#Zone_Air_Temperature_Sensor"), stringtoURI("http://www.w3.org/2000/01/rdf-schema#subClassOf")},
 		},
 	},
 }

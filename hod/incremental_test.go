@@ -73,11 +73,11 @@ database:
 			{
 				Subject:   turtle.ParseURI("https://buildsys.org/ontologies/building_example#vav_1"),
 				Predicate: turtle.ParseURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-				Object:    turtle.ParseURI("https://brickschema.org/schema/1.0.3/Brick#VAV"),
+				Object:    turtle.ParseURI("https://brickschema.org/schema/1.1/Brick#VAV"),
 			},
 			{
 				Subject:   turtle.ParseURI("https://buildsys.org/ontologies/building_example#ahu_1"),
-				Predicate: turtle.ParseURI("https://brickschema.org/schema/1.0.3/BrickFrame#feeds"),
+				Predicate: turtle.ParseURI("https://brickschema.org/schema/1.1/BrickFrame#feeds"),
 				Object:    turtle.ParseURI("https://buildsys.org/ontologies/building_example#vav_2"),
 			},
 		},
