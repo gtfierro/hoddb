@@ -5,9 +5,9 @@
     "version": "version not set"
   },
   "schemes": [
-    "http",
-    "https"
+    "http"
   ],
+  "host": "localhost:47809",
   "consumes": [
     "application/json"
   ],
